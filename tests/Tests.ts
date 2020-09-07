@@ -63,7 +63,7 @@ describe('', () => {
       reissuable: true,
       fee: 1000000,
       timestamp: 1598008066632,
-      script: "3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
+      script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE",
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
     };
     const signatureGenerator = TRANSACTIONS.ISSUE.V2(transaction);
@@ -76,7 +76,7 @@ describe('', () => {
     const transaction = {
       chainId: 1,
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
+      assetId: "WAVES",
       quantity: 10000000,
       reissuable: true,
       fee: 1000000,
@@ -93,7 +93,7 @@ describe('', () => {
     const transaction = {
       chainId: 1,
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
+      assetId: "WAVES",
       amount: "100000000",
       fee: 1000000,
       timestamp: 1598008066632,
@@ -107,7 +107,7 @@ describe('', () => {
 
   it('LEASE_V2', async () => {
     const transaction = {
-      assetId: "assetId",
+      assetId: "WAVES",
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       amount: "100000000",
@@ -139,7 +139,7 @@ describe('', () => {
   it('SPONSOR_FEE', async () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
+      assetId: "WAVES",
       isEnabled: true,
       fee: 1000000,
       timestamp: 1598008066632,
@@ -155,8 +155,8 @@ describe('', () => {
     const transaction = {
       chainId: 1,
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
-      script: "3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
+      assetId: "WAVES",
+      script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE",
       fee: 1000000,
       timestamp: 1598008066632,
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
@@ -201,7 +201,7 @@ describe('', () => {
   it('TRANSFER_V2', async () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
+      assetId: "WAVES",
       feeAssetId: "WAVES",
       timestamp: 1598008066632,
       amount: "100000000",
@@ -219,8 +219,13 @@ describe('', () => {
   it('MASS_TRANSFER', async () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
-      transfers: [1,2,3],
+      assetId: "WAVES",
+      transfers: [
+        {"recipient":"3NgSJRdMYu4ZbNpSbyRNZLJDX926W7e1EKQ","amount":"1000000000"},
+        {"recipient":"3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn","amount":"1000000000"},
+        {"recipient":"3NpkC1FSW9xNfmAMuhRSRArLgnfyGyEry7w","amount":"1000000000"},
+        {"recipient":"3NkZd8Xd4KsuPiNVsuphRNCZE3SqJycqv8d","amount":"1000000000"}
+        ],
       timestamp: 1598008066632,
       fee: 1000000,
       attachment: "",
@@ -235,8 +240,13 @@ describe('', () => {
   it('MASS_TRANSFER_V2', async () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      assetId: "assetId",
-      transfers: [1,2,3],
+      assetId: "WAVES",
+      transfers: [
+        {"recipient":"3NgSJRdMYu4ZbNpSbyRNZLJDX926W7e1EKQ","amount":"1000000000"},
+        {"recipient":"3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn","amount":"1000000000"},
+        {"recipient":"3NpkC1FSW9xNfmAMuhRSRArLgnfyGyEry7w","amount":"1000000000"},
+        {"recipient":"3NkZd8Xd4KsuPiNVsuphRNCZE3SqJycqv8d","amount":"1000000000"}
+      ],
       timestamp: 1598008066632,
       fee: 1000000,
       attachment: "",
@@ -467,7 +477,7 @@ describe('', () => {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
       tx: "",
       results: [{"type":"integer", "key": "height", "value": 100}],
-      resultsHash: "b48d1de58c39d2160a4b8a5a9cae90818da1212742ec1f11fba1209bed0a212c",
+      resultsHash: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
       validationProofs: "",
       timestamp: 1598008066632,
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
