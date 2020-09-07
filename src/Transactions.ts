@@ -11,6 +11,7 @@ import {
   Integer,
   Long,
   PermissionOpType,
+  PermissionOptions,
   Recipient,
   StringWithLength,
   Transfers,
@@ -192,7 +193,8 @@ const PERMIT = {
   sender: new Base58(true),
   target: new Recipient(true),
   timestamp: new Long(true),
-  fee: new Long(true)
+  fee: new Long(true),
+  permissionOp: new PermissionOptions(true)
 }
 
 const CREATE_POLICY = {

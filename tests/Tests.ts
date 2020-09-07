@@ -1,4 +1,4 @@
-import { TRANSACTIONS } from '../src';
+import { TRANSACTIONS } from '../src/';
 import { config } from "@vostokplatform/signature-generator";
 
 
@@ -171,7 +171,7 @@ describe('', () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
       author: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      data: "some_base64_encoded_string",
+      data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
       fee: 1000000,
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
@@ -186,7 +186,7 @@ describe('', () => {
     const transaction = {
       sender: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
       author: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
-      data: "some_base64_encoded_string",
+      data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
       fee: 1000000,
       feeAssetId: "WAVES",
@@ -207,7 +207,7 @@ describe('', () => {
       amount: "100000000",
       fee: 1000000,
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
-      attachment: "",
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
     };
     const signatureGenerator = TRANSACTIONS.TRANSFER.V2(transaction);
@@ -225,10 +225,10 @@ describe('', () => {
         {"recipient":"3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn","amount":"1000000000"},
         {"recipient":"3NpkC1FSW9xNfmAMuhRSRArLgnfyGyEry7w","amount":"1000000000"},
         {"recipient":"3NkZd8Xd4KsuPiNVsuphRNCZE3SqJycqv8d","amount":"1000000000"}
-        ],
+      ],
       timestamp: 1598008066632,
       fee: 1000000,
-      attachment: "",
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
     };
     const signatureGenerator = TRANSACTIONS.MASS_TRANSFER.V1(transaction);
@@ -249,7 +249,7 @@ describe('', () => {
       ],
       timestamp: 1598008066632,
       fee: 1000000,
-      attachment: "",
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       feeAssetId: "WAVES",
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
     };
@@ -265,7 +265,12 @@ describe('', () => {
       target: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       timestamp: 1598008066632,
       fee: 1000000,
-      permissionOp: "{'opType': 'remove', 'role: miner', 'dueTimestamp': 1572600785208}",
+      permissionOp: {
+        opType: "remove",
+        role: "miner",
+        timestamp: 1572600185208,
+        dueTimestamp: 1572600785208
+      },
       proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
     };
     const signatureGenerator = TRANSACTIONS.PERMIT.V1(transaction);
