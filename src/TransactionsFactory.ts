@@ -4,7 +4,6 @@ import {
   TxVersion,
   config
 } from '@vostokplatform/signature-generator'
-import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
 import {utils} from '@vostokplatform/signature-generator'
 
 const {concatUint8Arrays, cryptoGost, crypto} = utils
@@ -21,8 +20,8 @@ type TransactionType<T> = getTxType<T> & Processor
 
 
 class Transaction<T extends TransactionFields> {
-  public version: TRANSACTION_VERSIONS
-  public tx_type: TRANSACTION_TYPES
+  public version: number
+  public tx_type: number
   public val: T
 
   constructor(val: T, tx?: Partial<getTxType<T>>) {
