@@ -5,7 +5,6 @@ import {
   config,
   utils
 } from '@vostokplatform/signature-generator'
-import base58 from '../../waves-signature-generator/src/libs/base58';
 
 
 const {concatUint8Arrays, cryptoGost, crypto} = utils
