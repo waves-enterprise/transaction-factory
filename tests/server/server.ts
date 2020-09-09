@@ -28,7 +28,7 @@ app.post('/', async (req, res) => {
     return res.send({bytes: Array.from(Int8Bytes)})
   } catch (err) {
     console.trace(err)
-    res.send({error: err.message})
+    res.send({error: err.message || err})
   }
 });
 
