@@ -15,8 +15,8 @@ import {
   Integer,
   Long,
   PermissionOpType,
-  PermissionOptions,
   Recipient,
+  PermissionRole,
   StringWithLength,
   Transfers,
   TxType,
@@ -30,7 +30,7 @@ const REGISTER_NODE = {
   tx_type: new TxType(true, TRANSACTION_TYPES.REGISTER_NODE),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
-  targetPublicKey: new Base58(true),
+  targetPubKey: new Base58(true),
   nodeName: new StringWithLength(true),
   opType: new PermissionOpType(true),
   timestamp: new Long(true),
@@ -61,7 +61,7 @@ const ISSUE_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   chainId: new Byte(true),
   senderPublicKey: new Base58(true),
-  name: new ByteArrayWithSize(true, 140),
+  name: new ByteArrayWithSize(true),
   description: new ByteArrayWithSize(true, 1000),
   quantity: new Long(true),
   decimals: new Byte(true),
@@ -165,7 +165,7 @@ const TRANSFER_V2 = {
   amount: new Long(true),
   fee: new Long(true),
   recipient: new Recipient(true),
-  attachment: new ByteArrayWithSize(true, 140)
+  attachment: new Base58WithLength(true, 192)
 }
 
 const MASS_TRANSFER = {
@@ -176,7 +176,7 @@ const MASS_TRANSFER = {
   transfers: new Transfers(true),
   timestamp: new Long(true),
   fee: new Long(true),
-  attachment: new ByteArrayWithSize(true, 140)
+  attachment: new Base58WithLength(true, 192)
 }
 
 const MASS_TRANSFER_V2 = {
@@ -187,7 +187,7 @@ const MASS_TRANSFER_V2 = {
   transfers: new Transfers(true),
   timestamp: new Long(true),
   fee: new Long(true),
-  attachment: new ByteArrayWithSize(true, 140),
+  attachment: new Base58WithLength(true, 192),
   feeAssetId: new AssetId(false)
 }
 
@@ -198,7 +198,9 @@ const PERMIT = {
   target: new Recipient(true),
   timestamp: new Long(true),
   fee: new Long(true),
-  permissionOp: new PermissionOptions(true)
+  opType: new PermissionOpType(true),
+  role: new PermissionRole(true),
+  dueTimestamp: new Long(false)
 }
 
 const CREATE_POLICY = {
