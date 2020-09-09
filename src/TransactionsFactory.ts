@@ -40,9 +40,12 @@ class Transaction<T extends TransactionFields> {
     if (errors.length) {
       throw new Error(errors.join('\n'))
     }
-    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(key =>
-      this.val[key].getBytes(this[key]))
-    )
+    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(key => {
+      if (!this.val[key].required && !this[key]) {
+        return Promise.resolve(Uint8Array.from([]))
+      }
+      return this.val[key].getBytes(this[key])
+    }))
     if (multipleDataBytes.length === 1) {
       return multipleDataBytes[0]
     } else {

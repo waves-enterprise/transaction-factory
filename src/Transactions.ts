@@ -61,8 +61,8 @@ const ISSUE_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   chainId: new Byte(true),
   senderPublicKey: new Base58(true),
-  name: new ByteArrayWithSize(true),
-  description: new ByteArrayWithSize(true),
+  name: new ByteArrayWithSize(true, 140),
+  description: new ByteArrayWithSize(true, 1000),
   quantity: new Long(true),
   decimals: new Byte(true),
   reissuable: new Bool(true),
@@ -165,7 +165,7 @@ const TRANSFER_V2 = {
   amount: new Long(true),
   fee: new Long(true),
   recipient: new Recipient(true),
-  attachment: new ByteArrayWithSize(true)
+  attachment: new ByteArrayWithSize(true, 140)
 }
 
 const MASS_TRANSFER = {
@@ -176,7 +176,7 @@ const MASS_TRANSFER = {
   transfers: new Transfers(true),
   timestamp: new Long(true),
   fee: new Long(true),
-  attachment: new ByteArrayWithSize(true)
+  attachment: new ByteArrayWithSize(true, 140)
 }
 
 const MASS_TRANSFER_V2 = {
@@ -187,7 +187,7 @@ const MASS_TRANSFER_V2 = {
   transfers: new Transfers(true),
   timestamp: new Long(true),
   fee: new Long(true),
-  attachment: new ByteArrayWithSize(true),
+  attachment: new ByteArrayWithSize(true, 140),
   feeAssetId: new AssetId(false)
 }
 
