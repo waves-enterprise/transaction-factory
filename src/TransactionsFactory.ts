@@ -5,6 +5,7 @@ import {
   config,
   utils
 } from '@vostokplatform/signature-generator'
+import base58 from '../../waves-signature-generator/src/libs/base58';
 
 
 const {concatUint8Arrays, cryptoGost, crypto} = utils
@@ -40,9 +41,14 @@ class Transaction<T extends TransactionFields> {
     if (errors.length) {
       throw new Error(errors.join('\n'))
     }
-    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(key => {
-      if (!this.val[key].required && !this[key]) {
-        return Promise.resolve(Uint8Array.from([]))
+    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(async key => {
+      if (!this.val[key].required) {
+        if (!this[key]) {
+          return Promise.resolve(Uint8Array.from([0]))
+        } else {
+          const bytes = await this.val[key].getBytes(this[key])
+          return Promise.resolve(concatUint8Arrays(Uint8Array.from([1]), bytes))
+        }
       }
       return this.val[key].getBytes(this[key])
     }))
