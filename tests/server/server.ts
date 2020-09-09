@@ -1,5 +1,5 @@
 import express = require('express');
-import bodyParser = require('body-parser')
+import bodyParser = require('body-parser-bigint')
 import { TRANSACTION_TYPES, TRANSACTIONS } from '../../src'
 import {config} from '@vostokplatform/signature-generator'
 
