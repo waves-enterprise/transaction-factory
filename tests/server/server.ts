@@ -1,6 +1,11 @@
 import express = require('express');
 import bodyParser = require('body-parser')
 import { TRANSACTION_TYPES, TRANSACTIONS } from '../../src'
+import {config} from '@vostokplatform/signature-generator'
+
+config.set({
+  networkByte: 84
+})
 
 const app: express.Application = express();
 app.use(bodyParser.json())
@@ -22,6 +27,7 @@ app.post('/', async (req, res) => {
     const Int8Bytes = Int8Array.from(Uint8Bytes)
     return res.send({bytes: Array.from(Int8Bytes)})
   } catch (err) {
+    console.trace(err)
     res.send({error: err.message})
   }
 });

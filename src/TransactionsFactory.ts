@@ -2,9 +2,10 @@ import {
   ByteProcessor,
   TxType,
   TxVersion,
-  config
+  config,
+  utils
 } from '@vostokplatform/signature-generator'
-import {utils} from '@vostokplatform/signature-generator'
+
 
 const {concatUint8Arrays, cryptoGost, crypto} = utils
 
@@ -17,7 +18,6 @@ export interface Processor {
 type TransactionFields = {tx_type: TxType<any>, version: TxVersion<any>} & Record<string, ByteProcessor<any>>
 type getTxType <T> = { [key in keyof T]?: T[key] extends ByteProcessor<infer P> ? P : never }
 type TransactionType<T> = getTxType<T> & Processor
-
 
 class Transaction<T extends TransactionFields> {
   public version: number
@@ -40,7 +40,9 @@ class Transaction<T extends TransactionFields> {
     if (errors.length) {
       throw new Error(errors.join('\n'))
     }
-    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(key => this.val[key].getBytes(this[key])))
+    const multipleDataBytes = await Promise.all(Object.keys(this.val).map(key =>
+      this.val[key].getBytes(this[key]))
+    )
     if (multipleDataBytes.length === 1) {
       return multipleDataBytes[0]
     } else {
