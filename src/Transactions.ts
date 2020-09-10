@@ -142,7 +142,7 @@ const DATA = {
   tx_type: new TxType(true, TRANSACTION_TYPES.DATA),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
-  author: new Base58(true),
+  authorPublicKey: new Base58(true),
   data: new DataEntries(true),
   timestamp: new Long(true),
   fee: new Long(true)
@@ -152,7 +152,7 @@ const DATA_V2 = {
   tx_type: new TxType(true, TRANSACTION_TYPES.DATA),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   senderPublicKey: new Base58(true),
-  author: new Base58(true),
+  authorPublicKey: new Base58(true),
   data: new DataEntries(true),
   timestamp: new Long(true),
   fee: new Long(true),
@@ -204,6 +204,7 @@ const PERMIT = {
   fee: new Long(true),
   opType: new PermissionOpType(true),
   role: new PermissionRole(true),
+  duplicate_timestamp: new Long(true),
   dueTimestamp: new Long(false)
 }
 

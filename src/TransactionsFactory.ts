@@ -41,22 +41,25 @@ class Transaction<T extends TransactionFields> {
       throw new Error(errors.join('\n'))
     }
     const multipleDataBytes = await Promise.all(Object.keys(this.val).map(async key => {
-      let value: Uint8Array
+      let bytes: Uint8Array
+      let value = this[key]
+      if (key.startsWith('duplicate')) {
+        value = this[key.split('_').pop()]
+      }
       try {
         if (!this.val[key].required) {
-          if (!this[key]) {
-            value = Uint8Array.from([0])
+          if (!value) {
+            bytes = Uint8Array.from([0])
           } else {
-            const bytes = await this.val[key].getBytes(this[key])
-            value = concatUint8Arrays(Uint8Array.from([1]), bytes)
+            bytes = concatUint8Arrays(Uint8Array.from([1]), await this.val[key].getBytes(value))
           }
         } else {
-          value = await this.val[key].getBytes(this[key])
+          bytes = await this.val[key].getBytes(value)
         }
       } catch (err) {
         throw new Error(`${key}: ${err.message || err}`)
       }
-      return value
+      return bytes
     }))
     if (multipleDataBytes.length === 1) {
       return multipleDataBytes[0]
@@ -78,7 +81,7 @@ class Transaction<T extends TransactionFields> {
 
   getErrors = (): string[] | null => {
     const that = this
-    return [].concat(...Object.keys(that.val).map(key => {
+    return [].concat(...Object.keys(that.val).filter(key => !key.startsWith('duplicate')).map(key => {
       const error = that.val[key].getError(that[key])
       return error ? `${key}: ${error}` : null
     }).filter(Boolean))
