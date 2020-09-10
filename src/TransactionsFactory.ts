@@ -50,8 +50,9 @@ class Transaction<T extends TransactionFields> {
             const bytes = await this.val[key].getBytes(this[key])
             value = concatUint8Arrays(Uint8Array.from([1]), bytes)
           }
+        } else {
+          value = await this.val[key].getBytes(this[key])
         }
-        value = await this.val[key].getBytes(this[key])
       } catch (err) {
         throw new Error(`${key}: ${err.message || err}`)
       }
