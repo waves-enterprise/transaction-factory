@@ -41,15 +41,21 @@ class Transaction<T extends TransactionFields> {
       throw new Error(errors.join('\n'))
     }
     const multipleDataBytes = await Promise.all(Object.keys(this.val).map(async key => {
-      if (!this.val[key].required) {
-        if (!this[key]) {
-          return Promise.resolve(Uint8Array.from([0]))
-        } else {
-          const bytes = await this.val[key].getBytes(this[key])
-          return Promise.resolve(concatUint8Arrays(Uint8Array.from([1]), bytes))
+      let value: Uint8Array
+      try {
+        if (!this.val[key].required) {
+          if (!this[key]) {
+            value = Uint8Array.from([0])
+          } else {
+            const bytes = await this.val[key].getBytes(this[key])
+            value = concatUint8Arrays(Uint8Array.from([1]), bytes)
+          }
         }
+        value = await this.val[key].getBytes(this[key])
+      } catch (err) {
+        throw new Error(`${key}: ${err.message || err}`)
       }
-      return this.val[key].getBytes(this[key])
+      return value
     }))
     if (multipleDataBytes.length === 1) {
       return multipleDataBytes[0]

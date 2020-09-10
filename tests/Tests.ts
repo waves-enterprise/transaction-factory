@@ -14,12 +14,11 @@ describe('', () => {
   it('REGISTER_NODE', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      targetPublicKey: "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+      targetPubKey: "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
       nodeName: "node-0",
       opType: "add",
       timestamp: 1598008066632,
-      fee: 1000000,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      fee: 1000000
     };
     const signatureGenerator = TRANSACTIONS.REGISTER_NODE.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -32,8 +31,7 @@ describe('', () => {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       alias: "John",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.CREATE_ALIAS.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -47,8 +45,7 @@ describe('', () => {
       alias: "John",
       fee: 1000000,
       timestamp: 1598008066632,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.CREATE_ALIAS.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -67,8 +64,7 @@ describe('', () => {
       reissuable: true,
       fee: 1000000,
       timestamp: 1598008066632,
-      script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE"
     };
     const signatureGenerator = TRANSACTIONS.ISSUE.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -84,8 +80,7 @@ describe('', () => {
       quantity: 10000000,
       reissuable: true,
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.REISSUE.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -100,8 +95,7 @@ describe('', () => {
       assetId: "WAVES",
       amount: "100000000",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.BURN.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -116,8 +110,7 @@ describe('', () => {
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       amount: "100000000",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.LEASE.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -131,8 +124,7 @@ describe('', () => {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       fee: 1000000,
       timestamp: 1598008066632,
-      leaseId: "E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      leaseId: "E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG"
     };
     const signatureGenerator = TRANSACTIONS.LEASE_CANCEL.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -146,8 +138,7 @@ describe('', () => {
       assetId: "WAVES",
       isEnabled: true,
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.SPONSOR_FEE.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -162,8 +153,7 @@ describe('', () => {
       assetId: "WAVES",
       script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.SET_ASSET_SCRIPT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -177,8 +167,7 @@ describe('', () => {
       author: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
       data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
-      fee: 1000000,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      fee: 1000000
     };
     const signatureGenerator = TRANSACTIONS.DATA.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -193,8 +182,7 @@ describe('', () => {
       data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
       fee: 1000000,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.DATA.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -211,8 +199,7 @@ describe('', () => {
       amount: "100000000",
       fee: 1000000,
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
     const signatureGenerator = TRANSACTIONS.TRANSFER.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -232,8 +219,7 @@ describe('', () => {
       ],
       timestamp: 1598008066632,
       fee: 1000000,
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
     const signatureGenerator = TRANSACTIONS.MASS_TRANSFER.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -254,8 +240,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000,
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.MASS_TRANSFER.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -269,8 +254,9 @@ describe('', () => {
       target: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       timestamp: 1598008066632,
       fee: 1000000,
-      permissionOp: {"opType": "remove", "role": "miner", "timestamp": 1572600185208, "dueTimestamp": 1572600785208},
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      opType: "add",
+      role: "miner",
+      dueTimestamp: 1572600785208
     };
     const signatureGenerator = TRANSACTIONS.PERMIT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -286,8 +272,7 @@ describe('', () => {
       recipients: ["3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn", "3votNaBcgb25FdsdgsdSvYZW4ftJ2ZwLXex"],
       owners: ["3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn", "3votNaBcgb25FdsdgsdSvYZW4ftJ2ZwLXex"],
       timestamp: 1598008066632,
-      fee: 1000000,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      fee: 1000000
     };
     const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -304,8 +289,7 @@ describe('', () => {
       owners: ["3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn", "3votNaBcgb25FdsdgsdSvYZW4ftJ2ZwLXex"],
       timestamp: 1598008066632,
       fee: 1000000,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -321,8 +305,7 @@ describe('', () => {
       owners: ["3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn", "3votNaBcgb25FdsdgsdSvYZW4ftJ2ZwLXex"],
       opType: "add",
       timestamp: 1598008066632,
-      fee: 1000000,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      fee: 1000000
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -339,41 +322,9 @@ describe('', () => {
       opType: "add",
       timestamp: 1598008066632,
       fee: 1000000,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V2(transaction);
-    const Uint8Bytes = await signatureGenerator.getBytes();
-    const Int8Bytes = Int8Array.from(Uint8Bytes)
-    console.log(JSON.stringify(Array.from(Int8Bytes)));
-  })
-
-  it('POLICY_DATA_HASH', async () => {
-    const transaction = {
-      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      dataHash: "b48d1de58c39d2160a4b8a5a9cae90818da1212742ec1f11fba1209bed0a212c",
-      policyId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
-      timestamp: 1598008066632,
-      fee: 1000000,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
-    };
-    const signatureGenerator = TRANSACTIONS.POLICY_DATA_HASH.V1(transaction);
-    const Uint8Bytes = await signatureGenerator.getBytes();
-    const Int8Bytes = Int8Array.from(Uint8Bytes)
-    console.log(JSON.stringify(Array.from(Int8Bytes)));
-  })
-
-  it('POLICY_DATA_HASH_V2', async () => {
-    const transaction = {
-      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      dataHash: "b48d1de58c39d2160a4b8a5a9cae90818da1212742ec1f11fba1209bed0a212c",
-      policyId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
-      timestamp: 1598008066632,
-      fee: 1000000,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
-    };
-    const signatureGenerator = TRANSACTIONS.POLICY_DATA_HASH.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
     const Int8Bytes = Int8Array.from(Uint8Bytes)
     console.log(JSON.stringify(Array.from(Int8Bytes)));
@@ -387,8 +338,7 @@ describe('', () => {
       contractName: "SomeName",
       params: [{"type":"integer", "key": "height", "value": 100}],
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -405,8 +355,7 @@ describe('', () => {
       params: [{"type":"integer", "key": "height", "value": 100}],
       fee: 1000000,
       timestamp: 1598008066632,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -420,8 +369,7 @@ describe('', () => {
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
       params: [{"type":"integer", "key": "height", "value": 100}],
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -436,8 +384,7 @@ describe('', () => {
       params: [{"type":"integer", "key": "height", "value": 100}],
       fee: 1000000,
       timestamp: 1598008066632,
-      contractVersion: 2,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      contractVersion: 2
     };
     const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -453,40 +400,9 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632,
       contractVersion: 2,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V3(transaction);
-    const Uint8Bytes = await signatureGenerator.getBytes();
-    const Int8Bytes = Int8Array.from(Uint8Bytes)
-    console.log(JSON.stringify(Array.from(Int8Bytes)));
-  })
-
-  it('EXECUTED_CONTRACT', async () => {
-    const transaction = {
-      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      tx: "",
-      results: [{"type":"integer", "key": "height", "value": 100}],
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
-    };
-    const signatureGenerator = TRANSACTIONS.EXECUTED_CONTRACT.V1(transaction);
-    const Uint8Bytes = await signatureGenerator.getBytes();
-    const Int8Bytes = Int8Array.from(Uint8Bytes)
-    console.log(JSON.stringify(Array.from(Int8Bytes)));
-  })
-
-  it('EXECUTED_CONTRACT_V2', async () => {
-    const transaction = {
-      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      tx: "",
-      results: [{"type":"integer", "key": "height", "value": 100}],
-      resultsHash: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
-      validationProofs: "",
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
-    };
-    const signatureGenerator = TRANSACTIONS.EXECUTED_CONTRACT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
     const Int8Bytes = Int8Array.from(Uint8Bytes)
     console.log(JSON.stringify(Array.from(Int8Bytes)));
@@ -497,8 +413,7 @@ describe('', () => {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -512,8 +427,7 @@ describe('', () => {
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
       fee: 1000000,
       timestamp: 1598008066632,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -528,8 +442,7 @@ describe('', () => {
       image: "localhost:5000/smart-kv",
       imageHash: "b48d1de58c39d2160a4b8a5a9cae90818da1212742ec1f11fba1209bed0a212c",
       fee: 1000000,
-      timestamp: 1598008066632,
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -545,8 +458,7 @@ describe('', () => {
       imageHash: "b48d1de58c39d2160a4b8a5a9cae90818da1212742ec1f11fba1209bed0a212c",
       fee: 1000000,
       timestamp: 1598008066632,
-      feeAssetId: "WAVES",
-      proofs: ["5wMeGz4xzrs1AYJQR7DQU8jK8KJZ4g7HGxiGiZ1H8rfUHJKyKxTcZWFWHhojWuJMjst6kbDYL4EkcV2GyXKffyPU"]
+      feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();

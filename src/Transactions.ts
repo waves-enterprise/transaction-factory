@@ -12,11 +12,13 @@ import {
   Bool,
   Byte,
   ByteArrayWithSize,
+  DataEntries,
+  DockerCreateParamsEntries,
   Integer,
   Long,
   PermissionOpType,
-  Recipient,
   PermissionRole,
+  Recipient,
   StringWithLength,
   Transfers,
   TxType,
@@ -141,6 +143,7 @@ const DATA = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
   author: new Base58(true),
+  data: new DataEntries(true),
   timestamp: new Long(true),
   fee: new Long(true)
 }
@@ -150,6 +153,7 @@ const DATA_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   senderPublicKey: new Base58(true),
   author: new Base58(true),
+  data: new DataEntries(true),
   timestamp: new Long(true),
   fee: new Long(true),
   feeAssetId: new AssetId(false)
@@ -253,25 +257,6 @@ const UPDATE_POLICY_V2 = {
   feeAssetId: new AssetId(false)
 }
 
-const POLICY_DATA_HASH = {
-  tx_type: new TxType(true, TRANSACTION_TYPES.POLICY_DATA_HASH),
-  version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
-  senderPublicKey: new Base58(true),
-  policyId: new Base58WithLength(true),
-  timestamp: new Long(true),
-  fee: new Long(true)
-}
-
-const POLICY_DATA_HASH_V2 = {
-  tx_type: new TxType(true, TRANSACTION_TYPES.POLICY_DATA_HASH),
-  version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
-  senderPublicKey: new Base58(true),
-  policyId: new Base58WithLength(true),
-  timestamp: new Long(true),
-  fee: new Long(true),
-  feeAssetId: new AssetId(false)
-}
-
 const CREATE_CONTRACT = {
   tx_type: new TxType(true, TRANSACTION_TYPES.CREATE_CONTRACT),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
@@ -279,6 +264,7 @@ const CREATE_CONTRACT = {
   image: new StringWithLength(true),
   imageHash: new StringWithLength(true),
   contractName: new StringWithLength(true),
+  params: new DockerCreateParamsEntries(true),
   fee: new Long(true),
   timestamp: new Long(true)
 }
@@ -290,6 +276,7 @@ const CREATE_CONTRACT_V2 = {
   image: new StringWithLength(true),
   imageHash: new StringWithLength(true),
   contractName: new StringWithLength(true),
+  params: new DockerCreateParamsEntries(true),
   fee: new Long(true),
   timestamp: new Long(true),
   feeAssetId: new AssetId(false)
@@ -300,6 +287,7 @@ const CALL_CONTRACT = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
+  params: new DockerCreateParamsEntries(true),
   fee: new Long(true),
   timestamp: new Long(true)
 }
@@ -309,6 +297,7 @@ const CALL_CONTRACT_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
+  params: new DockerCreateParamsEntries(true),
   fee: new Long(true),
   timestamp: new Long(true),
   contractVersion: new Integer(true)
@@ -319,25 +308,11 @@ const CALL_CONTRACT_V3 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
+  params: new DockerCreateParamsEntries(true),
   fee: new Long(true),
   timestamp: new Long(true),
   contractVersion: new Integer(true),
   feeAssetId: new AssetId(false)
-}
-
-const EXECUTED_CONTRACT = {
-  tx_type: new TxType(true, TRANSACTION_TYPES.EXECUTED_CONTRACT),
-  version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
-  senderPublicKey: new Base58(true),
-  timestamp: new Long(true)
-}
-
-const EXECUTED_CONTRACT_V2 = {
-  tx_type: new TxType(true, TRANSACTION_TYPES.EXECUTED_CONTRACT),
-  version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
-  senderPublicKey: new Base58(true),
-  resultsHash: new Base58WithLength(true),
-  timestamp: new Long(true)
 }
 
 const DISABLE_CONTRACT = {
@@ -433,10 +408,6 @@ export const TRANSACTIONS = {
     V1: getTransactionsFactory(UPDATE_POLICY),
     V2: getTransactionsFactory(UPDATE_POLICY_V2)
   },
-  POLICY_DATA_HASH: {
-    V1: getTransactionsFactory(POLICY_DATA_HASH),
-    V2: getTransactionsFactory(POLICY_DATA_HASH_V2)
-  },
   CREATE_CONTRACT: {
     V1: getTransactionsFactory(CREATE_CONTRACT),
     V2: getTransactionsFactory(CREATE_CONTRACT_V2)
@@ -445,10 +416,6 @@ export const TRANSACTIONS = {
     V1: getTransactionsFactory(CALL_CONTRACT),
     V2: getTransactionsFactory(CALL_CONTRACT_V2),
     V3: getTransactionsFactory(CALL_CONTRACT_V3)
-  },
-  EXECUTED_CONTRACT: {
-    V1: getTransactionsFactory(EXECUTED_CONTRACT),
-    V2: getTransactionsFactory(EXECUTED_CONTRACT_V2)
   },
   DISABLE_CONTRACT: {
     V1: getTransactionsFactory(DISABLE_CONTRACT),
