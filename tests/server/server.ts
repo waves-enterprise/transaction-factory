@@ -9,7 +9,9 @@ config.set({
 
 const app: express.Application = express();
 app.use(bodyParser.json())
-
+app.get('/', (req, res) => {
+  res.send()
+})
 app.post('/', async (req, res) => {
   try {
     const { version, type, ...tx } = req.body
