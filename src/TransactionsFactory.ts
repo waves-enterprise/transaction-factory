@@ -47,7 +47,7 @@ class Transaction<T extends TransactionFields> {
         value = this[key.split('_').pop()]
       }
       try {
-        if (!this.val[key].required) {
+        if (!this.val[key].required && !this.val[key].allowNull) {
           if (!value) {
             bytes = Uint8Array.from([0])
           } else {

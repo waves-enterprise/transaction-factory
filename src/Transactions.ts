@@ -22,7 +22,8 @@ import {
   StringWithLength,
   Transfers,
   TxType,
-  TxVersion
+  TxVersion,
+  PermissionDueTimestamp
 } from '@vostokplatform/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
 import { getTransactionsFactory, Processor } from './TransactionsFactory'
@@ -205,7 +206,7 @@ const PERMIT = {
   opType: new PermissionOpType(true),
   role: new PermissionRole(true),
   duplicate_timestamp: new Long(true),
-  dueTimestamp: new Long(false)
+  dueTimestamp: new PermissionDueTimestamp(false)
 }
 
 const CREATE_POLICY = {
