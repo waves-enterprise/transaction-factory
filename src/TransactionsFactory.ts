@@ -17,7 +17,8 @@ export interface Processor {
 }
 type TransactionFields = {tx_type: TxType<any>, version: TxVersion<any>} & Record<string, ByteProcessor<any>>
 type getTxType <T> = { [key in keyof T]?: T[key] extends ByteProcessor<infer P> ? P : never }
-type TransactionType<T> = getTxType<T> & Processor
+export type TransactionType<T> = getTxType<T> & Processor
+export type TransactionFactory<T> = (tx?: Partial<getTxType<T>>) => TransactionType<T>
 
 class Transaction<T extends TransactionFields> {
   public version: number
@@ -88,6 +89,6 @@ class Transaction<T extends TransactionFields> {
   }
 }
 
-export const getTransactionsFactory = <T extends TransactionFields> (val: T) =>
+export const createTransactionsFactory = <T extends TransactionFields> (val: T) =>
   (tx?: Partial<getTxType<T>>): TransactionType<T> =>
     (new Transaction(val, tx)) as unknown as TransactionType<T>

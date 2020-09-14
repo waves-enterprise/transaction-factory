@@ -26,7 +26,7 @@ import {
   TxVersion
 } from '@vostokplatform/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
-import { getTransactionsFactory, Processor } from './TransactionsFactory'
+import { createTransactionsFactory, Processor, TransactionFactory } from './TransactionsFactory'
 
 
 const REGISTER_NODE = {
@@ -373,73 +373,81 @@ const SET_SCRIPT = {
 
 export const TRANSACTIONS = {
   REGISTER_NODE: {
-    V1: getTransactionsFactory(REGISTER_NODE)
+    V1: createTransactionsFactory(REGISTER_NODE)
   },
   CREATE_ALIAS: {
-    V2: getTransactionsFactory(CREATE_ALIAS_V2),
-    V3: getTransactionsFactory(CREATE_ALIAS_V3)
+    V2: createTransactionsFactory(CREATE_ALIAS_V2),
+    V3: createTransactionsFactory(CREATE_ALIAS_V3)
   },
   ISSUE: {
-    V2: getTransactionsFactory(ISSUE_V2)
+    V2: createTransactionsFactory(ISSUE_V2)
   },
   REISSUE: {
-    V2: getTransactionsFactory(REISSUE_V2)
+    V2: createTransactionsFactory(REISSUE_V2)
   },
   BURN: {
-    V2: getTransactionsFactory(BURN_V2)
+    V2: createTransactionsFactory(BURN_V2)
   },
   LEASE: {
-    V2: getTransactionsFactory(LEASE_V2)
+    V2: createTransactionsFactory(LEASE_V2)
   },
   LEASE_CANCEL: {
-    V2: getTransactionsFactory(LEASE_CANCEL_V2)
+    V2: createTransactionsFactory(LEASE_CANCEL_V2)
   },
   SPONSOR_FEE: {
-    V1: getTransactionsFactory(SPONSOR_FEE)
+    V1: createTransactionsFactory(SPONSOR_FEE)
   },
   SET_ASSET_SCRIPT: {
-    V1: getTransactionsFactory(SET_ASSET_SCRIPT)
+    V1: createTransactionsFactory(SET_ASSET_SCRIPT)
   },
   DATA: {
-    V1: getTransactionsFactory(DATA),
-    V2: getTransactionsFactory(DATA_V2)
+    V1: createTransactionsFactory(DATA),
+    V2: createTransactionsFactory(DATA_V2)
   },
   TRANSFER: {
-    V2: getTransactionsFactory(TRANSFER_V2)
+    V2: createTransactionsFactory(TRANSFER_V2)
   },
   MASS_TRANSFER: {
-    V1: getTransactionsFactory(MASS_TRANSFER),
-    V2: getTransactionsFactory(MASS_TRANSFER_V2)
+    V1: createTransactionsFactory(MASS_TRANSFER),
+    V2: createTransactionsFactory(MASS_TRANSFER_V2)
   },
   PERMIT: {
-    V1: getTransactionsFactory(PERMIT)
+    V1: createTransactionsFactory(PERMIT)
   },
   CREATE_POLICY: {
-    V1: getTransactionsFactory(CREATE_POLICY),
-    V2: getTransactionsFactory(CREATE_POLICY_V2)
+    V1: createTransactionsFactory(CREATE_POLICY),
+    V2: createTransactionsFactory(CREATE_POLICY_V2)
   },
   UPDATE_POLICY: {
-    V1: getTransactionsFactory(UPDATE_POLICY),
-    V2: getTransactionsFactory(UPDATE_POLICY_V2)
+    V1: createTransactionsFactory(UPDATE_POLICY),
+    V2: createTransactionsFactory(UPDATE_POLICY_V2)
   },
   CREATE_CONTRACT: {
-    V1: getTransactionsFactory(CREATE_CONTRACT),
-    V2: getTransactionsFactory(CREATE_CONTRACT_V2)
+    V1: createTransactionsFactory(CREATE_CONTRACT),
+    V2: createTransactionsFactory(CREATE_CONTRACT_V2)
   },
   CALL_CONTRACT: {
-    V1: getTransactionsFactory(CALL_CONTRACT),
-    V2: getTransactionsFactory(CALL_CONTRACT_V2),
-    V3: getTransactionsFactory(CALL_CONTRACT_V3)
+    V1: createTransactionsFactory(CALL_CONTRACT),
+    V2: createTransactionsFactory(CALL_CONTRACT_V2),
+    V3: createTransactionsFactory(CALL_CONTRACT_V3)
   },
   DISABLE_CONTRACT: {
-    V1: getTransactionsFactory(DISABLE_CONTRACT),
-    V2: getTransactionsFactory(DISABLE_CONTRACT_V2)
+    V1: createTransactionsFactory(DISABLE_CONTRACT),
+    V2: createTransactionsFactory(DISABLE_CONTRACT_V2)
   },
   UPDATE_CONTRACT: {
-    V1: getTransactionsFactory(UPDATE_CONTRACT),
-    V2: getTransactionsFactory(UPDATE_CONTRACT_V2)
+    V1: createTransactionsFactory(UPDATE_CONTRACT),
+    V2: createTransactionsFactory(UPDATE_CONTRACT_V2)
   },
   SET_SCRIPT: {
-    V1: getTransactionsFactory(SET_SCRIPT)
+    V1: createTransactionsFactory(SET_SCRIPT)
   }
+}
+
+export const getTransactionFactory = (version: number, type: number) : TransactionFactory<any> => {
+  const key = Object.keys(TRANSACTION_TYPES).find(key => TRANSACTION_TYPES[key] === type)
+  if (!key || !TRANSACTIONS[key][`V${version}`]) {
+    throw new Error(`no such transaction type: ${type} and version: ${version}`)
+  }
+  return TRANSACTIONS[key][version]
 }
