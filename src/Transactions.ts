@@ -16,14 +16,14 @@ import {
   DockerCreateParamsEntries,
   Integer,
   Long,
+  PermissionDueTimestamp,
   PermissionOpType,
   PermissionRole,
   Recipient,
   StringWithLength,
   Transfers,
   TxType,
-  TxVersion,
-  PermissionDueTimestamp
+  TxVersion
 } from '@vostokplatform/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
 import { getTransactionsFactory, Processor } from './TransactionsFactory'
@@ -359,6 +359,18 @@ const UPDATE_CONTRACT_V2 = {
   feeAssetId: new AssetId(false)
 }
 
+const SET_SCRIPT = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.SET_SCRIPT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
+  chainId: new Byte(true),
+  senderPublicKey: new Base58(true),
+  script: new Base64(false),
+  name: new ByteArrayWithSize(true),
+  description: new ByteArrayWithSize(true, 1000),
+  fee: new Long(true),
+  timestamp: new Long(true)
+}
+
 export const TRANSACTIONS = {
   REGISTER_NODE: {
     V1: getTransactionsFactory(REGISTER_NODE)
@@ -426,5 +438,8 @@ export const TRANSACTIONS = {
   UPDATE_CONTRACT: {
     V1: getTransactionsFactory(UPDATE_CONTRACT),
     V2: getTransactionsFactory(UPDATE_CONTRACT_V2)
+  },
+  SET_SCRIPT: {
+    V1: getTransactionsFactory(SET_SCRIPT)
   }
 }

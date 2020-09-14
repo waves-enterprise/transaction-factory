@@ -164,7 +164,7 @@ describe('', () => {
   it('DATA', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      author: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
+      authorPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
       fee: 1000000
@@ -178,7 +178,7 @@ describe('', () => {
   it('DATA_V2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      author: "3NotQaBygbSvYZW4ftJ2ZwLXex4rTHY1Qzn",
+      authorPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       data: [{"type":"integer", "key": "height", "value": 100}],
       timestamp: 1598008066632,
       fee: 1000000,
@@ -256,6 +256,7 @@ describe('', () => {
       fee: 1000000,
       opType: "add",
       role: "miner",
+      duplicate_timestamp: 1598008066632,
       dueTimestamp: 1572600785208
     };
     const signatureGenerator = TRANSACTIONS.PERMIT.V1(transaction);
@@ -461,6 +462,22 @@ describe('', () => {
       feeAssetId: "WAVES"
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V2(transaction);
+    const Uint8Bytes = await signatureGenerator.getBytes();
+    const Int8Bytes = Int8Array.from(Uint8Bytes)
+    console.log(JSON.stringify(Array.from(Int8Bytes)));
+  })
+
+  it('SET_SCRIPT', async () => {
+    const transaction = {
+      chainId: 1,
+      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
+      script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE",
+      name: "D56Gk8tvSAhNesghXgjAw67rSYDf4F2vo7HmsFTuGweC",
+      description: "Some script",
+      fee: 1000000,
+      timestamp: 1598008066632
+    };
+    const signatureGenerator = TRANSACTIONS.SET_SCRIPT.V1(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
     const Int8Bytes = Int8Array.from(Uint8Bytes)
     console.log(JSON.stringify(Array.from(Int8Bytes)));
