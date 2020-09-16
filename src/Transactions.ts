@@ -449,5 +449,5 @@ export const getTransactionFactory = (version: number, type: number) : Transacti
   if (!key || !TRANSACTIONS[key][`V${version}`]) {
     throw new Error(`no such transaction type: ${type} and version: ${version}`)
   }
-  return TRANSACTIONS[key][version]
+  return TRANSACTIONS[key][`V${version}`]
 }
