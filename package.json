@@ -1,5 +1,5 @@
 {
-  "name": "@vostokplatform/transactions-factory",
+  "name": "@wavesenterprise/transactions-factory",
   "version": "1.0.4",
   "main": "dist/index.js",
   "files": [
@@ -7,7 +7,7 @@
   ],
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@vostokplatform/signature-generator": "2.0.3",
+    "@wavesenterprise/signature-generator": "2.0.3",
     "@waves/data-entities": "^1.6.0",
     "base64-js": "1.3.0",
     "crypto-js": "3.1.9-1"

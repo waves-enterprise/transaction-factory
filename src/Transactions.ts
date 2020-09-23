@@ -24,7 +24,7 @@ import {
   Transfers,
   TxType,
   TxVersion
-} from '@vostokplatform/signature-generator'
+} from '@wavesenterprise/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
 import { createTransactionsFactory, Processor, TransactionFactory } from './TransactionsFactory'
 

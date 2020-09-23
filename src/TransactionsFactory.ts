@@ -4,7 +4,7 @@ import {
   TxVersion,
   config,
   utils
-} from '@vostokplatform/signature-generator'
+} from '@wavesenterprise/signature-generator'
 
 
 const {concatUint8Arrays, cryptoGost, crypto} = utils
