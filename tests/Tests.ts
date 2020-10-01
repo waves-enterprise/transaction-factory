@@ -3,14 +3,14 @@
 */
 
 import { TRANSACTIONS } from '../src/';
-import { config } from "@wavesenterprise/signature-generator";
+import { config } from "@vostokplatform/signature-generator";
 
 
 describe('', () => {
   beforeEach(() => {
     config.set({networkByte: 84, crypto: 'waves'})
   });
-
+  
   it('REGISTER_NODE', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",

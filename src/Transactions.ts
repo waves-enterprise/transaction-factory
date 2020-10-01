@@ -24,9 +24,9 @@ import {
   Transfers,
   TxType,
   TxVersion
-} from '@wavesenterprise/signature-generator'
+} from '@vostokplatform/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
-import { createTransactionsFactory, Processor, TransactionFactory } from './TransactionsFactory'
+import { createTransactionsFactory, Processor } from './TransactionsFactory'
 
 
 const REGISTER_NODE = {
@@ -365,8 +365,8 @@ const SET_SCRIPT = {
   chainId: new Byte(true),
   senderPublicKey: new Base58(true),
   script: new Base64(false),
-  name: new ByteArrayWithSize(true),
-  description: new ByteArrayWithSize(true, 1000),
+  name: new ByteArrayWithSize(true, 128),
+  description: new ByteArrayWithSize(true, 32767),
   fee: new Long(true),
   timestamp: new Long(true)
 }
