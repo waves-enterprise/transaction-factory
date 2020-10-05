@@ -4,7 +4,7 @@ import { TRANSACTION_TYPES, TRANSACTIONS } from '../../src'
 import {config} from '@wavesenterprise/signature-generator'
 
 config.set({
-  networkByte: 86
+  networkByte: 84
 })
 
 const app: express.Application = express();
@@ -26,7 +26,6 @@ app.post('/', async (req, res) => {
 
     const signatureGenerator = generator(tx);
     const Uint8Bytes = await signatureGenerator.getBytes();
-    console.log('Uint8Bytes', Uint8Bytes)
     const Int8Bytes = Int8Array.from(Uint8Bytes)
     return res.send({bytes: Array.from(Int8Bytes)})
   } catch (err) {
