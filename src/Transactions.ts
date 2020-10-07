@@ -6,6 +6,8 @@ import {
   Alias,
   ArrayOfStringsWithLength,
   AssetId,
+  AtomicBadge,
+  AtomicInnerTransactions,
   Base58,
   Base58WithLength,
   Base64,
@@ -26,7 +28,7 @@ import {
   TxVersion
 } from '@wavesenterprise/signature-generator'
 import { TRANSACTION_TYPES, TRANSACTION_VERSIONS } from './constants'
-import { createTransactionsFactory, Processor, TransactionFactory } from './TransactionsFactory'
+import { createTransactionsFactory, Processor } from './TransactionsFactory'
 
 
 const REGISTER_NODE = {
@@ -173,6 +175,20 @@ const TRANSFER_V2 = {
   attachment: new Base58WithLength(true, 192)
 }
 
+const TRANSFER_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.TRANSFER),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  assetId: new AssetId(false),
+  feeAssetId: new AssetId(false),
+  timestamp: new Long(true),
+  amount: new Long(true),
+  fee: new Long(true),
+  recipient: new Recipient(true),
+  attachment: new Base58WithLength(true, 192),
+  atomicBadge: new AtomicBadge(false)
+}
+
 const MASS_TRANSFER = {
   tx_type: new TxType(true, TRANSACTION_TYPES.MASS_TRANSFER),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
@@ -209,6 +225,20 @@ const PERMIT = {
   dueTimestamp: new PermissionDueTimestamp(false)
 }
 
+const PERMIT_V2 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.PERMIT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
+  senderPublicKey: new Base58(true),
+  target: new Recipient(true),
+  timestamp: new Long(true),
+  fee: new Long(true),
+  opType: new PermissionOpType(true),
+  role: new PermissionRole(true),
+  duplicate_timestamp: new Long(true),
+  dueTimestamp: new PermissionDueTimestamp(false),
+  atomicBadge: new AtomicBadge(false)
+}
+
 const CREATE_POLICY = {
   tx_type: new TxType(true, TRANSACTION_TYPES.CREATE_POLICY),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
@@ -232,6 +262,20 @@ const CREATE_POLICY_V2 = {
   timestamp: new Long(true),
   fee: new Long(true),
   feeAssetId: new AssetId(false)
+}
+
+const CREATE_POLICY_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.CREATE_POLICY),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  policyName: new StringWithLength(true),
+  description: new StringWithLength(true),
+  recipients: new ArrayOfStringsWithLength(true),
+  owners: new ArrayOfStringsWithLength(true),
+  timestamp: new Long(true),
+  fee: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
 }
 
 const UPDATE_POLICY = {
@@ -259,6 +303,32 @@ const UPDATE_POLICY_V2 = {
   feeAssetId: new AssetId(false)
 }
 
+const UPDATE_POLICY_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.UPDATE_POLICY),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  policyId: new Base58WithLength(true),
+  recipients: new ArrayOfStringsWithLength(true),
+  owners: new ArrayOfStringsWithLength(true),
+  opType: new PermissionOpType(true),
+  timestamp: new Long(true),
+  fee: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
+}
+
+const POLICY_DATA_HASH_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.POLICY_DATA_HASH),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  dataHash: new Base58WithLength(true),
+  policyId: new Base58WithLength(true),
+  timestamp: new Long(true),
+  fee: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
+}
+
 const CREATE_CONTRACT = {
   tx_type: new TxType(true, TRANSACTION_TYPES.CREATE_CONTRACT),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
@@ -282,6 +352,20 @@ const CREATE_CONTRACT_V2 = {
   fee: new Long(true),
   timestamp: new Long(true),
   feeAssetId: new AssetId(false)
+}
+
+const CREATE_CONTRACT_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.CREATE_CONTRACT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  image: new StringWithLength(true),
+  imageHash: new StringWithLength(true),
+  contractName: new StringWithLength(true),
+  params: new DockerCreateParamsEntries(true),
+  fee: new Long(true),
+  timestamp: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
 }
 
 const CALL_CONTRACT = {
@@ -317,6 +401,19 @@ const CALL_CONTRACT_V3 = {
   feeAssetId: new AssetId(false)
 }
 
+const CALL_CONTRACT_V4 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.CALL_CONTRACT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V4),
+  senderPublicKey: new Base58(true),
+  contractId: new Base58WithLength(true),
+  params: new DockerCreateParamsEntries(true),
+  fee: new Long(true),
+  timestamp: new Long(true),
+  contractVersion: new Integer(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
+}
+
 const DISABLE_CONTRACT = {
   tx_type: new TxType(true, TRANSACTION_TYPES.DISABLE_CONTRACT),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
@@ -334,6 +431,17 @@ const DISABLE_CONTRACT_V2 = {
   fee: new Long(true),
   timestamp: new Long(true),
   feeAssetId: new AssetId(false)
+}
+
+const DISABLE_CONTRACT_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.DISABLE_CONTRACT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  contractId: new Base58WithLength(true),
+  fee: new Long(true),
+  timestamp: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
 }
 
 const UPDATE_CONTRACT = {
@@ -359,15 +467,36 @@ const UPDATE_CONTRACT_V2 = {
   feeAssetId: new AssetId(false)
 }
 
+const UPDATE_CONTRACT_V3 = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.UPDATE_CONTRACT),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
+  senderPublicKey: new Base58(true),
+  contractId: new Base58WithLength(true),
+  image: new StringWithLength(true),
+  imageHash: new StringWithLength(true),
+  fee: new Long(true),
+  timestamp: new Long(true),
+  feeAssetId: new AssetId(false),
+  atomicBadge: new AtomicBadge(false)
+}
+
 const SET_SCRIPT = {
   tx_type: new TxType(true, TRANSACTION_TYPES.SET_SCRIPT),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   chainId: new Byte(true),
   senderPublicKey: new Base58(true),
   script: new Base64(false),
-  name: new ByteArrayWithSize(true),
-  description: new ByteArrayWithSize(true, 1000),
+  name: new ByteArrayWithSize(true, 128),
+  description: new ByteArrayWithSize(true, 32767),
   fee: new Long(true),
+  timestamp: new Long(true)
+}
+
+const ATOMIC = {
+  tx_type: new TxType(true, TRANSACTION_TYPES.ATOMIC),
+  version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
+  senderPublicKey: new Base58(true),
+  transactions: new AtomicInnerTransactions(true),
   timestamp: new Long(true)
 }
 
@@ -405,41 +534,55 @@ export const TRANSACTIONS = {
     V2: createTransactionsFactory(DATA_V2)
   },
   TRANSFER: {
-    V2: createTransactionsFactory(TRANSFER_V2)
+    V2: createTransactionsFactory(TRANSFER_V2),
+    V3: createTransactionsFactory(TRANSFER_V3)
   },
   MASS_TRANSFER: {
     V1: createTransactionsFactory(MASS_TRANSFER),
     V2: createTransactionsFactory(MASS_TRANSFER_V2)
   },
   PERMIT: {
-    V1: createTransactionsFactory(PERMIT)
+    V1: createTransactionsFactory(PERMIT),
+    V2: createTransactionsFactory(PERMIT_V2)
   },
   CREATE_POLICY: {
     V1: createTransactionsFactory(CREATE_POLICY),
-    V2: createTransactionsFactory(CREATE_POLICY_V2)
+    V2: createTransactionsFactory(CREATE_POLICY_V2),
+    V3: createTransactionsFactory(CREATE_POLICY_V3)
   },
   UPDATE_POLICY: {
     V1: createTransactionsFactory(UPDATE_POLICY),
-    V2: createTransactionsFactory(UPDATE_POLICY_V2)
+    V2: createTransactionsFactory(UPDATE_POLICY_V2),
+    V3: createTransactionsFactory(UPDATE_POLICY_V3)
+  },
+  POLICY_DATA_HASH: {
+    V3: createTransactionsFactory(POLICY_DATA_HASH_V3)
   },
   CREATE_CONTRACT: {
     V1: createTransactionsFactory(CREATE_CONTRACT),
-    V2: createTransactionsFactory(CREATE_CONTRACT_V2)
+    V2: createTransactionsFactory(CREATE_CONTRACT_V2),
+    V3: createTransactionsFactory(CREATE_CONTRACT_V3)
   },
   CALL_CONTRACT: {
     V1: createTransactionsFactory(CALL_CONTRACT),
     V2: createTransactionsFactory(CALL_CONTRACT_V2),
-    V3: createTransactionsFactory(CALL_CONTRACT_V3)
+    V3: createTransactionsFactory(CALL_CONTRACT_V3),
+    V4: createTransactionsFactory(CALL_CONTRACT_V4)
   },
   DISABLE_CONTRACT: {
     V1: createTransactionsFactory(DISABLE_CONTRACT),
-    V2: createTransactionsFactory(DISABLE_CONTRACT_V2)
+    V2: createTransactionsFactory(DISABLE_CONTRACT_V2),
+    V3: createTransactionsFactory(DISABLE_CONTRACT_V3)
   },
   UPDATE_CONTRACT: {
     V1: createTransactionsFactory(UPDATE_CONTRACT),
-    V2: createTransactionsFactory(UPDATE_CONTRACT_V2)
+    V2: createTransactionsFactory(UPDATE_CONTRACT_V2),
+    V3: createTransactionsFactory(UPDATE_CONTRACT_V3)
   },
   SET_SCRIPT: {
     V1: createTransactionsFactory(SET_SCRIPT)
+  },
+  ATOMIC: {
+    V1: createTransactionsFactory(ATOMIC)
   }
 }
