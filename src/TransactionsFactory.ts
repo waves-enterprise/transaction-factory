@@ -14,6 +14,7 @@ export interface Processor {
   isValid() : boolean
   getErrors() : string[]
   getSignature (privateKey: string): Promise<string>
+  getId (): Promise<string>
 }
 type TransactionFields = {tx_type: TxType<any>, version: TxVersion<any>} & Record<string, ByteProcessor<any>>
 type getTxType <T> = { [key in keyof T]?: T[key] extends ByteProcessor<infer P> ? P : never }
@@ -74,6 +75,14 @@ class Transaction<T extends TransactionFields> {
     return config.isCryptoGost()
       ? cryptoGost.buildTransactionSignature(dataBytes, privateKey)
       : crypto.buildTransactionSignature(dataBytes, privateKey)
+  }
+
+  getId = async () => {
+    const dataBytes = await this.getBytes()
+    if (config.isCryptoGost()) {
+      return cryptoGost.buildTransactionId(dataBytes)
+    }
+    return crypto.buildTransactionId(dataBytes)
   }
 
   isValid = () => {
