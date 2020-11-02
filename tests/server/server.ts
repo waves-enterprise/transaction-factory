@@ -12,6 +12,20 @@ app.use(bodyParser.json())
 app.get('/', (req, res) => {
   res.send()
 })
+app.post('/networkByte', (req, res) => {
+  try {
+    const { networkByte } = req.body
+    if (!networkByte) {
+      res.status(400).send({ error: 'networkByte is required' })
+    }
+    config.set({
+      networkByte: parseInt(networkByte)
+    })
+    res.status(200).send()
+  } catch (err) {
+    res.send({error: err.message || err})
+  }
+})
 app.post('/', async (req, res) => {
   try {
     const { version, type, ...tx } = req.body
