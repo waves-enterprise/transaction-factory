@@ -10,7 +10,7 @@ describe('', () => {
   beforeEach(() => {
     config.set({networkByte: 84, crypto: 'waves'})
   });
-  
+
   it('REGISTER_NODE', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -217,7 +217,7 @@ describe('', () => {
       fee: 1000000,
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.TRANSFER.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -293,7 +293,7 @@ describe('', () => {
       role: "miner",
       duplicate_timestamp: 1598008066632,
       dueTimestamp: 1572600785208,
-      atomicBadge: ""
+      atomicBadge: null,
     };
     const signatureGenerator = TRANSACTIONS.PERMIT.V2(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -344,7 +344,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -395,7 +395,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -411,7 +411,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.POLICY_DATA_HASH.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -462,7 +462,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -524,7 +524,7 @@ describe('', () => {
       timestamp: 1598008066632,
       contractVersion: 2,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V4(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -566,7 +566,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -614,7 +614,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632,
       feeAssetId: "WAVES",
-      atomicBadge: ""
+      atomicBadge: null
     };
     const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V3(transaction);
     const Uint8Bytes = await signatureGenerator.getBytes();
@@ -641,7 +641,7 @@ describe('', () => {
   it('ATOMIC', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
-      transactions: "",
+      transactions: [],
       timestamp: 1598008066632
     };
     const signatureGenerator = TRANSACTIONS.ATOMIC.V1(transaction);
