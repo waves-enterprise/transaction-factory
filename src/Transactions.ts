@@ -7,7 +7,7 @@ import {
   ArrayOfStringsWithLength,
   AssetId,
   AtomicBadge,
-  AtomicInnerTransactions,
+  AtomicInnerTransaction,
   Base58,
   Base58WithLength,
   Base64,
@@ -497,7 +497,7 @@ const ATOMIC = {
   tx_type: new TxType(true, TRANSACTION_TYPES.ATOMIC),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
-  transactions: new AtomicInnerTransactions(true),
+  transactions: new List(true, AtomicInnerTransaction),
   timestamp: new Long(true)
 }
 
