@@ -7,7 +7,7 @@ import {
   ArrayOfStringsWithLength,
   AssetId,
   AtomicBadge,
-  AtomicInnerTransactions,
+  AtomicInnerTransaction,
   Base58,
   Base58WithLength,
   Base64,
@@ -147,7 +147,7 @@ const DATA = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
   authorPublicKey: new Base58(true),
-  data: new List(true, DataEntry),
+  data: new List(DataEntry),
   timestamp: new Long(true),
   fee: new Long(true)
 }
@@ -157,7 +157,7 @@ const DATA_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   senderPublicKey: new Base58(true),
   authorPublicKey: new Base58(true),
-  data: new List(true, DataEntry),
+  data: new List(DataEntry),
   timestamp: new Long(true),
   fee: new Long(true),
   feeAssetId: new AssetId(false)
@@ -337,7 +337,7 @@ const CREATE_CONTRACT = {
   image: new StringWithLength(true),
   imageHash: new StringWithLength(true),
   contractName: new StringWithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true)
 }
@@ -349,7 +349,7 @@ const CREATE_CONTRACT_V2 = {
   image: new StringWithLength(true),
   imageHash: new StringWithLength(true),
   contractName: new StringWithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true),
   feeAssetId: new AssetId(false)
@@ -362,7 +362,7 @@ const CREATE_CONTRACT_V3 = {
   image: new StringWithLength(true),
   imageHash: new StringWithLength(true),
   contractName: new StringWithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true),
   feeAssetId: new AssetId(false),
@@ -374,7 +374,7 @@ const CALL_CONTRACT = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true)
 }
@@ -384,7 +384,7 @@ const CALL_CONTRACT_V2 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V2),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true),
   contractVersion: new Integer(true)
@@ -395,7 +395,7 @@ const CALL_CONTRACT_V3 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V3),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true),
   contractVersion: new Integer(true),
@@ -407,7 +407,7 @@ const CALL_CONTRACT_V4 = {
   version: new TxVersion(true, TRANSACTION_VERSIONS.V4),
   senderPublicKey: new Base58(true),
   contractId: new Base58WithLength(true),
-  params: new List(true, DockerParamEntry),
+  params: new List(DockerParamEntry),
   fee: new Long(true),
   timestamp: new Long(true),
   contractVersion: new Integer(true),
@@ -497,7 +497,7 @@ const ATOMIC = {
   tx_type: new TxType(true, TRANSACTION_TYPES.ATOMIC),
   version: new TxVersion(true, TRANSACTION_VERSIONS.V1),
   senderPublicKey: new Base58(true),
-  transactions: new AtomicInnerTransactions(true),
+  transactions: new List(AtomicInnerTransaction),
   timestamp: new Long(true)
 }
 
