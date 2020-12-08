@@ -13,7 +13,7 @@ describe('', () => {
     config.set({networkByte: 84, crypto: 'waves'})
   });
   
-  it('REGISTER_NODE', async () => {
+  it('RegisterNode', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       targetPubKey: "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -22,7 +22,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000
     };
-    const signatureGenerator = TRANSACTIONS.REGISTER_NODE.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.RegisterNode.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -33,14 +33,14 @@ describe('', () => {
     )
   })
 
-  it('CREATE_ALIAS_V2', async () => {
+  it('CreateAliasV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       alias: "John",
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_ALIAS.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.CreateAlias.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -51,7 +51,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_ALIAS_V3', async () => {
+  it('CreateAliasV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       alias: "John",
@@ -59,7 +59,7 @@ describe('', () => {
       timestamp: 1598008066632,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_ALIAS.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.CreateAlias.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -70,7 +70,7 @@ describe('', () => {
     )
   })
 
-  it('ISSUE_V2', async () => {
+  it('IssueV2', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -83,7 +83,7 @@ describe('', () => {
       timestamp: 1598008066632,
       script: "base64:3rbFDtbPwAvSp2vBvqGfGR9nRS1nBVnfuSCN3HxSZ7fVRpt3tuFG5JSmyTmvHPxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtE"
     };
-    const signatureGenerator = TRANSACTIONS.ISSUE.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Issue.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -94,7 +94,7 @@ describe('', () => {
     )
   })
 
-  it('REISSUE_V2', async () => {
+  it('ReissueV2', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -104,7 +104,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.REISSUE.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Reissue.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -115,7 +115,7 @@ describe('', () => {
     )
   })
 
-  it('BURN_V2', async () => {
+  it('BurnV2', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -124,7 +124,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.BURN.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Burn.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -135,7 +135,7 @@ describe('', () => {
     )
   })
 
-  it('LEASE_V2', async () => {
+  it('LeaseV2', async () => {
     const transaction = {
       assetId: "WAVES",
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -144,7 +144,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.LEASE.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Lease.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -155,7 +155,7 @@ describe('', () => {
     )
   })
 
-  it('LEASE_CANCEL_V2', async () => {
+  it('LeaseCancelV2', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -163,7 +163,7 @@ describe('', () => {
       timestamp: 1598008066632,
       leaseId: "E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG"
     };
-    const signatureGenerator = TRANSACTIONS.LEASE_CANCEL.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.LeaseCancel.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -174,7 +174,7 @@ describe('', () => {
     )
   })
 
-  it('SPONSOR_FEE', async () => {
+  it('SponsorFee', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
@@ -182,7 +182,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.SPONSOR_FEE.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.SponsorFee.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -193,7 +193,7 @@ describe('', () => {
     )
   })
 
-  it('SET_ASSET_SCRIPT', async () => {
+  it('SetAssetScript', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -202,7 +202,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.SET_ASSET_SCRIPT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.SetAssetScript.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -213,7 +213,7 @@ describe('', () => {
     )
   })
 
-  it('DATA', async () => {
+  it('Data', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       authorPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -221,7 +221,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000
     };
-    const signatureGenerator = TRANSACTIONS.DATA.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.Data.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -232,7 +232,7 @@ describe('', () => {
     )
   })
 
-  it('DATA_V2', async () => {
+  it('DataV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       authorPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -241,7 +241,7 @@ describe('', () => {
       fee: 1000000,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.DATA.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Data.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -252,7 +252,7 @@ describe('', () => {
     )
   })
 
-  it('TRANSFER_V2', async () => {
+  it('TransferV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
@@ -263,7 +263,7 @@ describe('', () => {
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
-    const signatureGenerator = TRANSACTIONS.TRANSFER.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Transfer.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -274,7 +274,7 @@ describe('', () => {
     )
   })
 
-  it('TRANSFER_V3', async () => {
+  it('TransferV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
@@ -286,7 +286,7 @@ describe('', () => {
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.TRANSFER.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.Transfer.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -297,7 +297,7 @@ describe('', () => {
     )
   })
 
-  it('MASS_TRANSFER', async () => {
+  it('MassTransfer', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
@@ -311,7 +311,7 @@ describe('', () => {
       fee: 1000000,
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
-    const signatureGenerator = TRANSACTIONS.MASS_TRANSFER.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.MassTransfer.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -322,7 +322,7 @@ describe('', () => {
     )
   })
 
-  it('MASS_TRANSFER_V2', async () => {
+  it('MassTransferV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
@@ -337,7 +337,7 @@ describe('', () => {
       attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.MASS_TRANSFER.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.MassTransfer.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -348,7 +348,7 @@ describe('', () => {
     )
   })
 
-  it('PERMIT', async () => {
+  it('Permit', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       target: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
@@ -359,7 +359,7 @@ describe('', () => {
       duplicate_timestamp: 1598008066632,
       dueTimestamp: 1572600785208
     };
-    const signatureGenerator = TRANSACTIONS.PERMIT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.Permit.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -370,7 +370,7 @@ describe('', () => {
     )
   })
 
-  it('PERMIT_V2', async () => {
+  it('PermitV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       target: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
@@ -382,7 +382,7 @@ describe('', () => {
       dueTimestamp: 1572600785208,
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.PERMIT.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.Permit.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -393,7 +393,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_POLICY', async () => {
+  it('CreatePolicy', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyName: "SomeName",
@@ -403,7 +403,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.CreatePolicy.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -414,7 +414,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_POLICY_V2', async () => {
+  it('CreatePolicyV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyName: "SomeName",
@@ -425,7 +425,7 @@ describe('', () => {
       fee: 1000000,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.CreatePolicy.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -436,7 +436,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_POLICY_V3', async () => {
+  it('CreatePolicyV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyName: "SomeName",
@@ -448,7 +448,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_POLICY.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.CreatePolicy.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -459,7 +459,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_POLICY', async () => {
+  it('UpdatePolicy', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -469,7 +469,7 @@ describe('', () => {
       timestamp: 1598008066632,
       fee: 1000000
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdatePolicy.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -480,7 +480,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_POLICY_V2', async () => {
+  it('UpdatePolicyV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -491,7 +491,7 @@ describe('', () => {
       fee: 1000000,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdatePolicy.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -502,7 +502,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_POLICY_V3', async () => {
+  it('UpdatePolicyV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       policyId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -514,7 +514,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_POLICY.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdatePolicy.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -525,7 +525,7 @@ describe('', () => {
     )
   })
 
-  it('POLICY_DATA_HASH_V3', async () => {
+  it('PolicyDataHashV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       dataHash: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -535,7 +535,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.POLICY_DATA_HASH.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.PolicyDataHash.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -546,7 +546,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_CONTRACT', async () => {
+  it('CreateContract', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       image: "localhost:5000/smart-kv",
@@ -556,7 +556,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.CreateContract.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -567,7 +567,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_CONTRACT_V2', async () => {
+  it('CreateContractV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       image: "localhost:5000/smart-kv",
@@ -578,7 +578,7 @@ describe('', () => {
       timestamp: 1598008066632,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.CreateContract.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -589,7 +589,7 @@ describe('', () => {
     )
   })
 
-  it('CREATE_CONTRACT_V3', async () => {
+  it('CreateContractV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       image: "localhost:5000/smart-kv",
@@ -601,7 +601,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.CREATE_CONTRACT.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.CreateContract.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -612,7 +612,7 @@ describe('', () => {
     )
   })
 
-  it('CALL_CONTRACT', async () => {
+  it('CallContract', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -620,7 +620,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.CallContract.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -631,7 +631,7 @@ describe('', () => {
     )
   })
 
-  it('CALL_CONTRACT_V2', async () => {
+  it('CallContractV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -640,7 +640,7 @@ describe('', () => {
       timestamp: 1598008066632,
       contractVersion: 2
     };
-    const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.CallContract.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -651,7 +651,7 @@ describe('', () => {
     )
   })
 
-  it('CALL_CONTRACT_V3', async () => {
+  it('CallContractV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -661,7 +661,7 @@ describe('', () => {
       contractVersion: 2,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.CallContract.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -672,7 +672,7 @@ describe('', () => {
     )
   })
 
-  it('CALL_CONTRACT_V4', async () => {
+  it('CallContractV4', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -683,7 +683,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.CALL_CONTRACT.V4(transaction);
+    const signatureGenerator = TRANSACTIONS.CallContract.V4(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -694,14 +694,14 @@ describe('', () => {
     )
   })
 
-  it('DISABLE_CONTRACT', async () => {
+  it('DisableContract', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.DisableContract.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -712,7 +712,7 @@ describe('', () => {
     )
   })
 
-  it('DISABLE_CONTRACT_V2', async () => {
+  it('DisableContractV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -720,7 +720,7 @@ describe('', () => {
       timestamp: 1598008066632,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.DisableContract.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -731,7 +731,7 @@ describe('', () => {
     )
   })
 
-  it('DISABLE_CONTRACT_V3', async () => {
+  it('DisableContractV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -740,7 +740,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.DISABLE_CONTRACT.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.DisableContract.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -751,7 +751,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_CONTRACT', async () => {
+  it('UpdateContract', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -760,7 +760,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdateContract.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -771,7 +771,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_CONTRACT_V2', async () => {
+  it('UpdateContractV2', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -781,7 +781,7 @@ describe('', () => {
       timestamp: 1598008066632,
       feeAssetId: "WAVES"
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V2(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdateContract.V2(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -792,7 +792,7 @@ describe('', () => {
     )
   })
 
-  it('UPDATE_CONTRACT_V3', async () => {
+  it('UpdateContractV3', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       contractId: "DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg",
@@ -803,7 +803,7 @@ describe('', () => {
       feeAssetId: "WAVES",
       atomicBadge: ""
     };
-    const signatureGenerator = TRANSACTIONS.UPDATE_CONTRACT.V3(transaction);
+    const signatureGenerator = TRANSACTIONS.UpdateContract.V3(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -814,7 +814,7 @@ describe('', () => {
     )
   })
 
-  it('SET_SCRIPT', async () => {
+  it('SetScript', async () => {
     const transaction = {
       chainId: 1,
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
@@ -824,7 +824,7 @@ describe('', () => {
       fee: 1000000,
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.SET_SCRIPT.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.SetScript.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))
@@ -835,13 +835,13 @@ describe('', () => {
     )
   })
 
-  it('ATOMIC', async () => {
+  it('Atomic', async () => {
     const transaction = {
       senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       transactions: "",
       timestamp: 1598008066632
     };
-    const signatureGenerator = TRANSACTIONS.ATOMIC.V1(transaction);
+    const signatureGenerator = TRANSACTIONS.Atomic.V1(transaction);
     const bytes = await signatureGenerator.getBytes();
     
     expect(decoder.decode(bytes))

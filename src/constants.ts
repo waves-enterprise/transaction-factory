@@ -24,7 +24,7 @@ export const TRANSACTION_TYPES = {
   CreatePolicy: 112,
   UpdatePolicy: 113,
   PolicyDataHash: 114,
-  Atomic: 120,
+  Atomic: 120
 }
 
 export const TRANSACTION_VERSIONS = {
