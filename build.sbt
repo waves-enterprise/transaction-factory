@@ -239,13 +239,11 @@ inConfig(Compile)(
     sourceGenerators += coreVersionSource
   ))
 
-// The bash scripts classpath only needs the fat jar
+// The bash scripts classpath only needs the jar
 scriptClasspath := Seq((assemblyJarName in assembly).value)
 
 commands += Command.command("packageAll") { state =>
-  "clean" ::
-    "assembly" ::
-    state
+  "clean" :: "assembly" :: state
 }
 
 inConfig(Linux)(
@@ -482,9 +480,6 @@ addCommandAlias(
 
 val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
 
-//val debianPackage = taskKey[File]("debian-package")
-//debianPackage := (baseDirectory in Compile).value / "target" / s"${name.value}_${version.value}_all.deb"
-
 lazy val core = project
   .in(file("."))
   .dependsOn(models)
@@ -575,56 +570,11 @@ def printMessageTask(msg: String) = Def.task {
 
 /* ********************************************************* */
 
-/**
-  * Some convenient assembly machinery:
-  * task "prepareJars": compiles and assembles core, puts resulting fat jars to cleaned 'jars' dir
-  * task "cleanJars": deletes 'jars' directory
-  */
-lazy val jarsDir = settingKey[File]("Jars output directory")
-
-jarsDir := (baseDirectory in (core, Compile)).value / "jars"
-
-lazy val movePrepareJarsArtifacts = Def.task[Unit] {
-  val coreJarName = (assemblyJarName in (core, assembly)).value
-  val coreJar     = (target in (core, Compile)).value / coreJarName
-
-  IO.delete(jarsDir.value)
-  IO.createDirectory(jarsDir.value)
-
-  IO.copyFile(coreJar, jarsDir.value / coreJarName)
-}
-
-/* ********************************************************* */
-
-lazy val cleanJars = taskKey[Unit]("Delete jars directory")
-
-cleanJars := IO.delete(jarsDir.value)
-
-/* ********************************************************* */
-
-lazy val prepareJars = taskKey[Unit]("Package everything")
-
-prepareJars := Def
-  .sequential(
-    printMessageTask("Pre-stage: check JCSP installed in JRE"),
-    checkJCSP,
-    printMessageTask("Stage 1: compile core"),
-    compile in (core, Compile),
-    printMessageTask("Stage 3: assembly core jar"),
-    assembly in (core, assembly),
-    printMessageTask("Stage 5: create jars dir and move assembled jars there"),
-    movePrepareJarsArtifacts,
-    printMessageTask("All done!")
-  )
-  .value
-
-/* ********************************************************* */
-
 lazy val buildAllDir =
   settingKey[File]("Directory for artifacts, generated with 'buildAll' task")
 buildAllDir := (baseDirectory in (core, Compile)).value / "artifacts"
 
-lazy val moveCoreFatJar = Def.task[Unit] {
+lazy val moveCoreJar = Def.task[Unit] {
   val coreJar = (target in (core, Compile)).value / coreJarName.value
   IO.copyFile(coreJar, buildAllDir.value / coreJarName.value)
 }
@@ -648,7 +598,7 @@ lazy val cleanTypeScript = Def.task[Unit] {
 /**
   * More machinery:
   * * cleanAll - cleans all sub-projects;
-  * * buildAll - builds core (to fat jar)
+  * * buildAll - builds core (to jar)
   */
 lazy val cleanAll = taskKey[Unit]("Clean all sub-projects")
 
@@ -681,10 +631,10 @@ buildAll := Def
     checkJCSP,
     printMessageTask("Recreate /artifacts dir"),
     recreateBuildAllDir,
-    printMessageTask("Assembly core (fat jar)"),
+    printMessageTask("Assembly core (jar)"),
     assembly,
-    printMessageTask("Move core fat jar to /artifacts"),
-    moveCoreFatJar
+    printMessageTask("Move core jar to /artifacts"),
+    moveCoreJar
   )
   .value
 
@@ -696,7 +646,7 @@ release := Def
   .sequential(
     printMessageTask("Recreating /artifacts dir"),
     recreateBuildAllDir,
-    printMessageTask("Assembling fat jar"),
+    printMessageTask("Assembling jar"),
     assembly,
     printMessageTask("Done")
   )
