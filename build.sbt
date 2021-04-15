@@ -165,6 +165,14 @@ javaOptions in run ++= Seq(
   "-XX:+IgnoreUnrecognizedVMOptions"
 )
 
+Test / fork := true
+Test / javaOptions ++= Seq(
+  "-XX:+IgnoreUnrecognizedVMOptions",
+  "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+  "-Dnode.waves-crypto=true"
+)
+Test / parallelExecution := true
+
 val aopMerge: MergeStrategy = new MergeStrategy {
   val name = "aopMerge"
 
@@ -237,6 +245,17 @@ inConfig(Compile)(
     sourceGenerators += coreVersionSource
   ))
 
+inConfig(Test)(
+  Seq(
+    logBuffered := false,
+    parallelExecution := true,
+    testListeners := Seq.empty,
+    testOptions += Tests.Argument("-oIDOF", "-u", "target/test-reports"),
+    testOptions += Tests.Setup({ _ =>
+      sys.props("sbt-testing") = "true"
+    })
+  ))
+
 // The bash scripts classpath only needs the jar
 scriptClasspath := Seq((assemblyJarName in assembly).value)
 
@@ -268,13 +287,9 @@ addCommandAlias(
 lazy val checkPRRaw = taskKey[Unit]("Build a project and run unit tests")
 checkPRRaw in Global := {
   try {
-    clean
-      .all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile)))
-      .value
+    clean.all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile))).value
   } finally {
-    test
-      .all(ScopeFilter(inProjects(langJVM, core), inConfigurations(Test)))
-      .value
+    test.all(ScopeFilter(inProjects(langJVM, core), inConfigurations(Test))).value
     (langJS / Compile / fastOptJS).value
   }
 }
@@ -294,7 +309,6 @@ lazy val lang =
           Dependencies.scalacheck ++
           Dependencies.scorex ++
           Dependencies.scalatest ++
-          Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
           Dependencies.fastparse.value,
@@ -473,7 +487,7 @@ lazy val typescriptArchives = (project in file("we-transaction-typescript"))
 
 addCommandAlias(
   "compileAll",
-  "; cleanAll; checkJCSP; compile"
+  "; cleanAll; checkJCSP; compile; test:compile"
 )
 
 val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
@@ -486,13 +500,9 @@ lazy val core = project
   .settings(
     addCompilerPlugin(Dependencies.kindProjector),
     libraryDependencies ++=
-      Dependencies.network ++
-        Dependencies.db ++
-        Dependencies.http ++
+      Dependencies.http ++
         Dependencies.serialization ++
-        Dependencies.testKit.map(_ % "test") ++
         Dependencies.logging ++
-        Dependencies.metrics ++
         Dependencies.fp ++
         Dependencies.meta ++
         Dependencies.ficus ++
@@ -500,10 +510,7 @@ lazy val core = project
         Dependencies.commonsNet ++
         Dependencies.commonsLang ++
         Dependencies.monix.value ++
-        Dependencies.docker ++
         Dependencies.enumeratum ++
-        Dependencies.dbDependencies ++
-        Dependencies.awsDependencies ++
         Dependencies.javaplot ++
         Dependencies.pureConfig ++
         Dependencies.licenseDependencies,

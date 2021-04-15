@@ -9,6 +9,7 @@ variables:
 
 stages:
   - compile
+  - test
   - assembly
   - publish
 
@@ -36,6 +37,8 @@ stages:
   - cp lib/java-csp/Rutoken.jar moduleCrypto/lib
   - cp lib/java-csp/XAdES.jar moduleCrypto/lib
   - cp lib/java-csp/XMLDSigRI.jar moduleCrypto/lib
+  # Copy keys for tests
+  - cp -r src/test/resources/gost_keystore/* /var/opt/cprocsp/keys/root/
   - chmod -R u=rwX,go=-rwx /var/opt/cprocsp/keys/root/
   - ls -al /var/opt/cprocsp/keys/root/
   - 'java -cp moduleCrypto/lib/*: ru.CryptoPro.JCSP.JCSPLicense -serial "PF405-60030-00REK-39KYH-LZXTX" -company we -store'
@@ -75,12 +78,26 @@ compile:
       - managed.tar.gz
     expire_in: 1 day
 
+### Testing jobs
+test-core:
+  <<: *create-environment
+  stage: test
+  script:
+    - *unpack-build-products
+    - sbt -mem 2048 test lang/test
+  artifacts:
+    reports:
+      junit:
+        - target/test-reports/*.xml
+        - lang/jvm/target/test-reports/*.xml
+
 ### Artifact assembly jobs
 assembly-core-jar:
   <<: *create-environment
   stage: assembly
   needs:
     - compile
+    - test-core
   script:
     - *unpack-build-products
     - sbt -mem 2048 assembly
@@ -97,6 +114,6 @@ publish-nexus-artifacts:
     - assembly-core-jar
   script:
     - *unpack-build-products
-    - sbt -mem 2048 "core/publish"
+    - sbt -mem 2048 core/publish
   only:
     - tags
