@@ -9,7 +9,6 @@ variables:
 
 stages:
   - compile
-#  - test
   - assembly
   - publish
 
@@ -37,9 +36,6 @@ stages:
   - cp lib/java-csp/Rutoken.jar moduleCrypto/lib
   - cp lib/java-csp/XAdES.jar moduleCrypto/lib
   - cp lib/java-csp/XMLDSigRI.jar moduleCrypto/lib
-#  # Copy keys for tests
-#  - cp -r src/test/resources/gost_keystore/* /var/opt/cprocsp/keys/root/
-#  - cp -r it/src/main/resources/storages/*/* /var/opt/cprocsp/keys/root/
   - chmod -R u=rwX,go=-rwx /var/opt/cprocsp/keys/root/
   - ls -al /var/opt/cprocsp/keys/root/
   - 'java -cp moduleCrypto/lib/*: ru.CryptoPro.JCSP.JCSPLicense -serial "PF405-60030-00REK-39KYH-LZXTX" -company we -store'
@@ -79,80 +75,12 @@ compile:
       - managed.tar.gz
     expire_in: 1 day
 
-### Testing jobs
-#test-node:
-#  <<: *create-environment
-#  stage: test
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 test lang/test
-#  artifacts:
-#    reports:
-#      junit:
-#        - target/test-reports/*.xml
-#        - lang/jvm/target/test-reports/*.xml
-
-#test-generator:
-#  <<: *create-environment
-#  stage: test
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 generator/test
-#  artifacts:
-#    reports:
-#      junit:
-#        - target/generator/test-reports/*.xml
-
-#test-transactions-signer:
-#  <<: *create-environment
-#  stage: test
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 transactionsSigner/test
-#  artifacts:
-#    reports:
-#      junit:
-#        - target/transactions-signer/test-reports/*.xml
-
-#test-integration:
-#  <<: *create-environment
-#  stage: test
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_TLS_CERTDIR: ""
-#    NODE_HOST: docker
-#    SBT_THREAD_NUMBER: 5
-#  before_script:
-#    - rm -rf transactions-factory 2>/dev/null || true
-#    - git submodule sync --recursive
-#    - git submodule update --init --recursive
-#    - curl -o /tmp/docker-ce-cli.deb https://download.docker.com/linux/debian/dists/stretch/pool/stable/amd64/docker-ce-cli_19.03.13~3-0~debian-stretch_amd64.deb
-#    - dpkg -i /tmp/docker-ce-cli.deb
-#    - *jcsp-install-script
-#    - cat "$SBT_CREDENTIALS" > /root/.sbt/.credentials
-#    - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASSWORD}" "${REGISTRY}"
-#    - sed -i "s/\${REGISTRY}/${REGISTRY}/g" it/build.sbt
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 40960 it/docker it/test
-#  artifacts:
-#    reports:
-#      junit:
-#        - target/integration-test-reports/*.xml
-#    paths:
-#      - it/target/logs
-#    expire_in: 7 day
-#    when: always
-#  tags:
-#    - integration-tests
-
 ### Artifact assembly jobs
 assembly-core-jar:
   <<: *create-environment
   stage: assembly
   needs:
     - compile
-#    - test-node
   script:
     - *unpack-build-products
     - sbt -mem 2048 assembly
@@ -161,94 +89,14 @@ assembly-core-jar:
       - target/we-core*.jar
     expire_in: 1 day
 
-#assembly-node-deb:
-#  <<: *create-environment
-#  stage: assembly
-#  needs:
-#    - compile
-#    - test-node
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 debian:packageBin
-#  artifacts:
-#    paths:
-#      - target/waves-enterprise*all.deb
-#    expire_in: 1 day
-
-#assembly-generator-jar:
-#  <<: *create-environment
-#  stage: assembly
-#  needs:
-#    - compile
-#    - test-generator
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 generator/assembly
-#  artifacts:
-#    paths:
-#      - generator/target/generators*.jar
-#    expire_in: 1 day
-
-#assembly-transactions-signer-jar:
-#  <<: *create-environment
-#  stage: assembly
-#  needs:
-#    - compile
-#    - test-transactions-signer
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 transactionsSigner/assembly
-#  artifacts:
-#    paths:
-#      - transactions-signer/target/transactions-signer*.jar
-#    expire_in: 1 day
-
-### Publish jobs
-#publish-docker-images:
-#  stage: publish
-#  tags:
-#    - wavesenterprise
-#  needs:
-#    - assembly-node-jar
-#    - assembly-node-deb
-#    - assembly-generator-jar
-#  script:
-#    - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASSWORD}" "${REGISTRY}"
-#    # Pull latest image for using cache
-#    - docker pull "${REGISTRY}/vostok/node-public:latest" || true
-#    # Public image
-#    - cat Dockerfile | sed "s/\${REGISTRY}/${REGISTRY}/g" | docker build
-#      --rm
-#      --cache-from ${REGISTRY}/vostok/node-public:latest
-#      --tag ${REGISTRY}/vostok/node-public:${CI_COMMIT_REF_NAME}
-#      --tag ${REGISTRY}/vostok/node-public:latest
-#      --file -
-#      .
-#    - docker push "${REGISTRY}/vostok/node-public:${CI_COMMIT_REF_NAME}"
-#    - docker push "${REGISTRY}/vostok/node-public:latest"
-#    # Internal image
-#    - cat src/docker/Dockerfile | sed "s/\${REGISTRY}/${REGISTRY}/g" | docker build
-#      --rm
-#      --build-arg NODE_VERSION=${CI_COMMIT_REF_NAME}
-#      --tag ${REGISTRY}/vostok/node:${CI_COMMIT_REF_NAME}
-#      --tag ${REGISTRY}/vostok/node:latest
-#      --file -
-#      .
-#    - docker push "${REGISTRY}/vostok/node:${CI_COMMIT_REF_NAME}"
-#    - docker push "${REGISTRY}/vostok/node:latest"
-#  cache: { }
-
 publish-nexus-artifacts:
   <<: *create-environment
   stage: publish
   needs:
     - compile
     - assembly-core-jar
-#    - assembly-node-deb
-#    - assembly-generator-jar
-#    - assembly-transactions-signer-jar
   script:
     - *unpack-build-products
-    - sbt -mem 2048 "node/publish"
+    - sbt -mem 2048 "core/publish"
   only:
     - tags

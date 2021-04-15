@@ -1,7 +1,5 @@
-import com.lightbend.sbt.SbtProguard.autoImport._
 import com.typesafe.sbt.SbtGit.GitKeys.gitUncommittedChanges
 import com.typesafe.sbt.git.JGit
-import com.typesafe.sbt.packager.archetypes.TemplateWriter
 import com.wavesplatform.transaction.generator.{TxSchemePlugin, TxSchemeProtoPlugin, TxSchemeTypeScriptPlugin}
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode
 import sbt.Keys.{credentials, sourceGenerators, _}
@@ -12,7 +10,6 @@ import sbtassembly.MergeStrategy
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 import java.io.File
-import scala.sys.process.{Process, ProcessLogger}
 
 excludeDependencies ++= Seq(
   // workaround for https://github.com/sbt/sbt/issues/3618
@@ -169,14 +166,6 @@ javaOptions in run ++= Seq(
   "-XX:+IgnoreUnrecognizedVMOptions"
 )
 
-//Test / fork := true
-//Test / javaOptions ++= Seq(
-//  "-XX:+IgnoreUnrecognizedVMOptions",
-//  "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
-//  "-Dnode.waves-crypto=true"
-//)
-//Test / parallelExecution := true
-
 val aopMerge: MergeStrategy = new MergeStrategy {
   val name = "aopMerge"
 
@@ -250,24 +239,12 @@ inConfig(Compile)(
     sourceGenerators += coreVersionSource
   ))
 
-//inConfig(Test)(
-//  Seq(
-//    logBuffered := false,
-//    parallelExecution := true,
-//    testListeners := Seq.empty,
-//    testOptions += Tests.Argument("-oIDOF", "-u", "target/test-reports"),
-//    testOptions += Tests.Setup({ _ =>
-//      sys.props("sbt-testing") = "true"
-//    })
-//  ))
-
 // The bash scripts classpath only needs the fat jar
 scriptClasspath := Seq((assemblyJarName in assembly).value)
 
 commands += Command.command("packageAll") { state =>
   "clean" ::
     "assembly" ::
-//    "debian:packageBin" ::
     state
 }
 
@@ -277,88 +254,6 @@ inConfig(Linux)(
     packageSummary := "WE core",
     packageDescription := "WE core"
   ))
-
-//bashScriptExtraDefines += s"""addJava "-Dnode.directory=/var/lib/${normalizedName.value}""""
-//
-//val linuxScriptPattern = "bin/(.+)".r
-//val batScriptPattern   = "bin/([^.]+)\\.bat".r
-
-//inConfig(Universal)(
-//  Seq(
-//    mappings += (baseDirectory.value / s"node-example.conf" -> "doc/we.conf.sample"),
-//    mappings := {
-//      val fatJar = (assembly in Compile).value
-//      val universalMappings = mappings.value.map {
-//        case (file, batScriptPattern(script)) =>
-//          (file, s"bin/$script.bat")
-//        case (file, linuxScriptPattern(script)) =>
-//          (file, s"bin/$script")
-//        case other => other
-//      }
-//
-//      // Filter all jar dependencies because they already exists in the fat jar
-//      val filtered = universalMappings filter {
-//        case (_, name) => !name.endsWith(".jar")
-//      }
-//
-//      filtered :+ (fatJar -> ("lib/" + fatJar.getName))
-//    },
-//    javaOptions ++= Seq(
-//      // -J prefix is required by the bash script
-//      "-J-server",
-//      // JVM memory tuning for 2g ram
-//      "-J-Xms128m",
-//      "-J-Xmx2g",
-//      "-J-XX:+ExitOnOutOfMemoryError",
-//      // Java 9 support
-//      "-J-XX:+IgnoreUnrecognizedVMOptions",
-//      // from https://groups.google.com/d/msg/akka-user/9s4Yl7aEz3E/zfxmdc0cGQAJ
-//      "-J-XX:+UseG1GC",
-//      "-J-XX:+UseNUMA",
-//      "-J-XX:+AlwaysPreTouch",
-//      // probably can't use these with jstack and others tools
-//      "-J-XX:+PerfDisableSharedMem",
-//      "-J-XX:+ParallelRefProcEnabled",
-//      "-J-XX:+UseStringDeduplication"
-//    )
-//  ))
-
-//val packageSource = Def.setting {
-//  sourceDirectory.value / "package"
-//}
-
-//val upstartScript = Def.task {
-//  val src = packageSource.value / "upstart.conf"
-//  val dest = (target in Debian).value / "upstart" / s"${packageName.value}.conf"
-//  val result = TemplateWriter.generateScript(src.toURI.toURL,
-//    linuxScriptReplacements.value)
-//  IO.write(dest, result)
-//  dest
-//}
-
-//linuxPackageMappings ++= Seq(
-//  (upstartScript.value, s"/etc/init/${packageName.value}.conf")
-//).map(packageMapping(_).withConfig().withPerms("644"))
-//
-//linuxScriptReplacements += "detect-loader" ->
-//  """is_systemd() {
-//    |    which systemctl >/dev/null 2>&1 && \
-//    |    systemctl | grep -- -\.mount >/dev/null 2>&1
-//    |}
-//    |is_upstart() {
-//    |    /sbin/init --version | grep upstart >/dev/null 2>&1
-//    |}
-//    |""".stripMargin
-
-//inConfig(Debian)(
-//  Seq(
-//    linuxStartScriptTemplate := (packageSource.value / "systemd.service").toURI.toURL,
-//    debianPackageDependencies += "java11-runtime-headless",
-//    serviceAutostart := false,
-//    maintainerScripts := maintainerScriptsFromDirectory(
-//      packageSource.value / "debian",
-//      Seq("preinst", "postinst", "postrm", "prerm"))
-//  ))
 
 // https://stackoverflow.com/a/48592704/4050580
 def allProjects: List[ProjectReference] =
@@ -385,9 +280,6 @@ checkPRRaw in Global := {
       .all(ScopeFilter(inProjects(langJVM, core), inConfigurations(Test)))
       .value
     (langJS / Compile / fastOptJS).value
-//    compile
-//      .all(ScopeFilter(inProjects(generator), inConfigurations(Test)))
-//      .value
   }
 }
 
@@ -633,18 +525,7 @@ lazy val core = project
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
     addArtifact(artifact in (Compile, assembly), assembly)
-//    artifact in(Compile, debianPackage) ~= ((art: Artifact) =>
-//      art.withType("deb").withExtension("deb")),
-//    addArtifact(artifact in(Compile, debianPackage), debianPackage),
-//    publish := (publish dependsOn (packageBin in Debian) dependsOn (assembly in Compile)).value
   )
-
-//lazy val it = project
-//  .dependsOn(core % "test->test; compile->compile")
-//  .disablePlugins(plugins.JUnitXmlReportPlugin)
-//  .settings(
-//    dependencyOverrides ++= Dependencies.fastparse.value
-//  )
 
 lazy val javaHomeProguardOption = Def.task[String] {
   (for {
@@ -682,251 +563,6 @@ lazy val extLibrariesProguardExclusions = Def.task[Seq[String]] {
     }
 }
 
-//lazy val generator = project
-//  .dependsOn(core)
-//  .dependsOn(core % "test->test; compile->compile")
-//  .enablePlugins(SbtProguard)
-//  .settings(
-//    Global / cancelable := true,
-//    fork in run := true,
-//    fork in Test := true,
-//    connectInput in run := true,
-//    libraryDependencies += "com.github.scopt" %% "scopt" % "3.6.0",
-//    assemblyJarName in assembly := s"generators-${version.value}.jar",
-//    mainClass in assembly := Some(
-//      "com.wavesplatform.generator.GeneratorLauncher"),
-//    testOptions in Test += Tests.Argument("-oIDOF",
-//      "-u",
-//      "target/generator/test-reports"),
-//    javaOptions in Test ++= Seq(
-//      "-XX:+IgnoreUnrecognizedVMOptions",
-//      "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
-//      "-Dnode.waves-crypto=true"
-//    ),
-//    assemblyExcludedJars in assembly := excludedCryptoProJars.value,
-//    assemblyMergeStrategy in assembly := {
-//      case PathList("META-INF", "io.netty.versions.properties") =>
-//        MergeStrategy.concat
-//      case PathList("META-INF", "aop.xml") => MergeStrategy.discard
-//      case sign if sign.endsWith(".CP") => MergeStrategy.discard
-//      case PathList("com", "google", "thirdparty", xs@_*) =>
-//        MergeStrategy.discard
-//      case PathList("com", "kenai", xs@_*) => MergeStrategy.discard
-//      case PathList("javax", "ws", xs@_*) => MergeStrategy.discard
-//      case PathList("jersey", "repackaged", xs@_*) => MergeStrategy.discard
-//      case PathList("jnr", xs@_*) => MergeStrategy.discard
-//      case PathList("org", "aopalliance", xs@_*) => MergeStrategy.discard
-//      case PathList("org", "jvnet", xs@_*) => MergeStrategy.discard
-//      case PathList("com", "sun", "activation", xs@_*) =>
-//        MergeStrategy.discard
-//      case PathList("javax", "activation", xs@_*) => MergeStrategy.discard
-//      case PathList("jakarta", "activation", xs@_*) => MergeStrategy.discard
-//      case "application.conf" => MergeStrategy.concat
-//      case path if path.endsWith("module-info.class") => MergeStrategy.discard
-//      case PathList("com", "google", "protobuf", xs@_*) => MergeStrategy.first
-//      case other => (assemblyMergeStrategy in assembly).value(other)
-//    },
-//    proguardInputs in Proguard := Seq((assemblyOutputPath in assembly).value),
-//    proguardOutputs in Proguard := Seq(
-//      (proguardDirectory in Proguard).value / (assemblyJarName in assembly).value),
-//    proguardOptions in Proguard ++= Seq(
-//      "-dontnote",
-//      "-dontwarn",
-//      "-dontoptimize",
-//      "-dontusemixedcaseclassnames",
-//      javaHomeProguardOption.value,
-//      // to keep logback
-//      "-keep public class org.slf4j.** { *; }",
-//      "-keep public class ch.** { *; }",
-//      "-keep class org.bouncycastle.** { *; }",
-//      "-keep class scala.** { *; }",
-//      "-keep interface scala.** { *; }",
-//      "-keep enum scala.** { *; }",
-//      "-keep class akka.actor.** { *; }",
-//      "-keep interface akka.actor.** { *; }",
-//      "-keep enum akka.actor.** { *; }",
-//      """-keepnames public class * {
-//        |public static ** classTag();
-//        |}""".stripMargin,
-//      """-keepclasseswithmembers public class * {
-//        | public static void main(java.lang.String[]);
-//        |}""".stripMargin,
-//      """-keepclassmembers class * {
-//        |** MODULE$;
-//        |}""".stripMargin,
-//      """-keepclasseswithmembernames,includedescriptorclasses class * {
-//        |native <methods>;
-//        |}""".stripMargin,
-//      """-keepclassmembers,allowoptimization enum * {
-//        |public static **[] values();
-//        |public static ** valueOf(java.lang.String);
-//        |}""".stripMargin,
-//      "-keepattributes SourceFile,LineNumberTable"
-//    ) ++ extLibrariesProguardExclusions.value,
-//    javaOptions in(Proguard, proguard) := Seq("-Xmx2G"),
-//    proguardOptions in Proguard += ProguardOptions.keepMain(
-//      "com.wavesplatform.generator.GeneratorLauncher"),
-//    proguardInputFilter in Proguard := { file =>
-//      None
-//    },
-//    proguardVersion in Proguard := "6.2.2",
-//    (proguard in Proguard) := ((proguard in Proguard) dependsOn assembly).value
-//  )
-//  .settings(
-//    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-//    publishTo := weReleasesRepo,
-//    publishArtifact in(Compile, packageSrc) := false,
-//    publishArtifact in(Compile, packageBin) := false,
-//    publishArtifact in(Compile, packageDoc) := false,
-//    publishArtifact in(Proguard, proguard) := false,
-//    addArtifact(artifact in(Compile, assembly), assembly)
-//  )
-
-//lazy val apiTests = (project in file("api-testing"))
-//  .dependsOn(core)
-
-//lazy val transactionsSigner = (project in file("transactions-signer"))
-//  .dependsOn(core)
-//  .settings(
-//    name := "transactions-signer",
-//    mainClass := Some("com.wavesplatform.TxSignerApplication"),
-//    libraryDependencies ++= Dependencies.console,
-//    testOptions in Test += Tests
-//      .Argument("-oIDOF", "-u", "target/transactions-signer/test-reports")
-//  )
-//  .settings(
-//    assemblyExcludedJars in assembly := excludedCryptoProJars.value,
-//    assemblyMergeStrategy in assembly := {
-//      case PathList("META-INF", "io.netty.versions.properties") =>
-//        MergeStrategy.concat
-//      case PathList("META-INF", "aop.xml") => MergeStrategy.discard
-//      case PathList("META-INF", "mailcap.default") => MergeStrategy.discard
-//      case PathList("META-INF", "mimetypes.default") => MergeStrategy.discard
-//      case sign if sign.endsWith(".CP") => MergeStrategy.discard
-//      case PathList("com", "google", "thirdparty", xs@_*) =>
-//        MergeStrategy.discard
-//      case PathList("com", "kenai", xs@_*) => MergeStrategy.discard
-//      case PathList("javax", "ws", xs@_*) => MergeStrategy.discard
-//      case PathList("jersey", "repackaged", xs@_*) => MergeStrategy.discard
-//      case PathList("jnr", xs@_*) => MergeStrategy.discard
-//      case PathList("org", "aopalliance", xs@_*) => MergeStrategy.discard
-//      case PathList("org", "jvnet", xs@_*) => MergeStrategy.discard
-//      case PathList("javax", "activation", xs@_*) => MergeStrategy.discard
-//      case PathList("com", "sun", "activation", xs@_*) =>
-//        MergeStrategy.discard
-//      case "application.conf" => MergeStrategy.concat
-//      case path if path.endsWith("module-info.class") => MergeStrategy.discard
-//      case "META-INF/maven/com.kohlschutter.junixsocket/junixsocket-native-common/pom.properties" =>
-//        MergeStrategy.first
-//      case PathList("com", "google", "protobuf", xs@_*) => MergeStrategy.first
-//      case other => (assemblyMergeStrategy in assembly).value(other)
-//    }
-//  )
-//  .settings(
-//    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-//    publishTo := weReleasesRepo,
-//    publishArtifact in(Compile, packageSrc) := false,
-//    publishArtifact in(Compile, packageBin) := false,
-//    publishArtifact in(Compile, packageDoc) := false,
-//    addArtifact(artifact in(Compile, assembly), assembly)
-//  )
-
-/* ********************************************************* */
-
-/**
-  * Some stuff to handle moving licensees' Public Keys before the build or the tests
-  */
-//lazy val targetPubkeysDir =
-//  Def.setting((resourceDirectory in(core, Compile)).value / "licensees")
-//lazy val targetTestPubkeysDir =
-//  Def.setting((resourceDirectory in(core, Test)).value / "licensees")
-//val pubKeysSourceDir =
-//  Def.setting((baseDirectory in(core, Compile)).value / "licenseesPubKeys")
-
-// matches RSA public key files
-//val pubFileNameFilter = NameFilter.fnToNameFilter(_.endsWith(".pub"))
-//
-//val prodKeysDir = Def.setting(pubKeysSourceDir.value / "prod")
-//val testKeysDir = Def.setting(pubKeysSourceDir.value / "test")
-//val testingKeys =
-//  Def.taskDyn(Def.task(IO.listFiles(testKeysDir.value, pubFileNameFilter)))
-//val productionKeys =
-//  Def.task(IO.listFiles(prodKeysDir.value, pubFileNameFilter))
-//
-//lazy val cleanLicensePubKeysDir = Def.task[Unit] {
-//  printMessage(s"Clearing ${targetPubkeysDir.value}")
-//  IO.delete(IO.listFiles(targetPubkeysDir.value, pubFileNameFilter))
-//  printMessage(s"Clearing ${targetTestPubkeysDir.value}")
-//  IO.delete(IO.listFiles(targetTestPubkeysDir.value, pubFileNameFilter))
-//}
-
-/**
-  * Copies RSA public keys that are used for license checks
-  * For regular builds both production and testing keys are used
-  * For release versions (for a clean "v1.2.3"-type version) only the production key is copied
-  */
-//val releaseVersionPattern = """\d+\.\d+\.\d+"""
-//
-//lazy val moveLicensePubKeys = Def
-//  .task[Unit] {
-//    val log = streams.value.log
-//
-//    cleanLicensePubKeysDir.value
-//
-//    log.info(s"Current version is v${version.value}")
-//
-//    val usedTestingKeys: Array[File] = Def.taskDyn {
-//      val isNotProduction = !version.value.matches(releaseVersionPattern)
-//      if (isNotProduction)
-//        testingKeys
-//      else
-//        Def.task(Array.empty[File])
-//    }.value
-//
-//    val pubKeyFilesToCopy: Map[String, Array[File]] =
-//      Map("production" -> productionKeys.value, "testing" -> usedTestingKeys)
-//
-//    val showFiles = pubKeyFilesToCopy
-//      .map {
-//        case (keysType, keyFiles) if keyFiles.nonEmpty =>
-//          s"$keysType:\n" + keyFiles.map(f => s"\t${f.getName}").mkString("\n")
-//        case _ => ""
-//      }
-//      .mkString("\n")
-//    log.info("Copying RSA public keys for license checks:")
-//    log.info(showFiles)
-//
-//    val targetDir = targetPubkeysDir.value
-//
-//    pubKeyFilesToCopy.values.flatten.foreach { keyFile =>
-//      IO.copyFile(keyFile, targetDir / keyFile.getName)
-//    }
-//  }
-//
-//lazy val moveTestingPubKeys = Def.task[Unit] {
-//  val log = streams.value.log
-//  log.info("Moving testing public keys for unit-tests")
-//
-//  cleanLicensePubKeysDir.value
-//
-//  val targetDir = targetTestPubkeysDir.value
-//
-//  // copy testing keys to tests resources dir
-//  IO.listFiles(testKeysDir.value, pubFileNameFilter).foreach { keyFile =>
-//    log.info("\t" + keyFile.getName)
-//    IO.copyFile(keyFile, targetDir / keyFile.getName)
-//  }
-//}
-
-/* ********************************************************* */
-
-// makes moveLicensePubKeys task execute before assembly
-//(assembly in core) := ((assembly in core) dependsOn moveLicensePubKeys).value
-
-// it's a hack, suggested in [[https://stackoverflow.com/questions/32906818/how-can-i-make-test-and-testonly-tasks-both-depend-on-a-new-task]]
-// `testLoader` appears to be a common Task for `test` and `testOnly`
-//(testLoader in(core, Test)) := ((testLoader in(core, Test)) dependsOn moveTestingPubKeys).value
-
 /* ********************************************************* */
 
 def printMessage(msg: String): Unit = {
@@ -941,7 +577,7 @@ def printMessageTask(msg: String) = Def.task {
 
 /**
   * Some convenient assembly machinery:
-  * task "prepareJars": compiles and assembles node and generator, puts resulting fat jars to cleaned 'jars' dir
+  * task "prepareJars": compiles and assembles core, puts resulting fat jars to cleaned 'jars' dir
   * task "cleanJars": deletes 'jars' directory
   */
 lazy val jarsDir = settingKey[File]("Jars output directory")
@@ -949,26 +585,13 @@ lazy val jarsDir = settingKey[File]("Jars output directory")
 jarsDir := (baseDirectory in (core, Compile)).value / "jars"
 
 lazy val movePrepareJarsArtifacts = Def.task[Unit] {
-  val nodeJarName = (assemblyJarName in (core, assembly)).value
-  val nodeJar     = (target in (core, Compile)).value / nodeJarName
-
-//  val generatorJarName = (assemblyJarName in(generator, assembly)).value
-//  val generatorJar = (target in(generator, Compile)).value / generatorJarName
-
-//  val generatorConfigs = (resourceDirectory in(generator, Compile)).value
-//    .listFiles()
-//    .filter(_.getName.endsWith(".conf"))
+  val coreJarName = (assemblyJarName in (core, assembly)).value
+  val coreJar     = (target in (core, Compile)).value / coreJarName
 
   IO.delete(jarsDir.value)
   IO.createDirectory(jarsDir.value)
 
-//  generatorConfigs.foreach { configFile =>
-//    val fileName = configFile.getName.split(File.separator).last
-//    IO.copyFile(configFile, jarsDir.value / (fileName + ".sample"))
-//  }
-
-  IO.copyFile(nodeJar, jarsDir.value / nodeJarName)
-//  IO.copyFile(generatorJar, jarsDir.value / generatorJarName)
+  IO.copyFile(coreJar, jarsDir.value / coreJarName)
 }
 
 /* ********************************************************* */
@@ -985,14 +608,10 @@ prepareJars := Def
   .sequential(
     printMessageTask("Pre-stage: check JCSP installed in JRE"),
     checkJCSP,
-    printMessageTask("Stage 1: compile node"),
+    printMessageTask("Stage 1: compile core"),
     compile in (core, Compile),
-//    printMessageTask("Stage 2: compile generator"),
-//    compile in(generator, Compile),
-    printMessageTask("Stage 3: assembly node jar"),
+    printMessageTask("Stage 3: assembly core jar"),
     assembly in (core, assembly),
-//    printMessageTask("Stage 4: assembly generator jar"),
-//    assembly in(generator, assembly),
     printMessageTask("Stage 5: create jars dir and move assembled jars there"),
     movePrepareJarsArtifacts,
     printMessageTask("All done!")
@@ -1005,25 +624,10 @@ lazy val buildAllDir =
   settingKey[File]("Directory for artifacts, generated with 'buildAll' task")
 buildAllDir := (baseDirectory in (core, Compile)).value / "artifacts"
 
-lazy val moveNodeFatJar = Def.task[Unit] {
-  val nodeJar = (target in (core, Compile)).value / coreJarName.value
-  IO.copyFile(nodeJar, buildAllDir.value / coreJarName.value)
+lazy val moveCoreFatJar = Def.task[Unit] {
+  val coreJar = (target in (core, Compile)).value / coreJarName.value
+  IO.copyFile(coreJar, buildAllDir.value / coreJarName.value)
 }
-
-//lazy val moveNodeDeb = Def.task[Unit] {
-//  val nodeDeb = (target in(core, Compile)).value / nodeDebName.value
-//  IO.copyFile(nodeDeb, buildAllDir.value / nodeDebName.value)
-//}
-
-//lazy val moveGeneratorFatJar = Def.task[Unit] {
-//  val generatorJar = (target in(generator, Compile)).value / generatorJarName.value
-//  IO.copyFile(generatorJar, buildAllDir.value / generatorJarName.value)
-//}
-
-//lazy val moveGeneratorObfuscatedJar = Def.task[Unit] {
-//  val obfuscatedJar = (proguardOutputs in(generator, Proguard)).value.head
-//  IO.copyFile(obfuscatedJar, buildAllDir.value / generatorJarName.value)
-//}
 
 lazy val recreateBuildAllDir = Def.task[Unit] {
   IO.delete(buildAllDir.value)
@@ -1044,13 +648,12 @@ lazy val cleanTypeScript = Def.task[Unit] {
 /**
   * More machinery:
   * * cleanAll - cleans all sub-projects;
-  * * buildAll - builds node (to fat jar and deb-package) and generator (just fat jar)
+  * * buildAll - builds core (to fat jar)
   */
 lazy val cleanAll = taskKey[Unit]("Clean all sub-projects")
 
 cleanAll := Def
   .sequential(
-//    cleanLicensePubKeysDir,
     printMessageTask("Clean grpcProtobuf"),
     clean in grpcProtobuf,
     printMessageTask("Clean transactionProtobuf"),
@@ -1059,24 +662,18 @@ cleanAll := Def
     printMessageTask("Clean transactionTypeScript"),
     clean in transactionTypeScript,
     cleanTypeScript,
-    printMessageTask("Clean node"),
+    printMessageTask("Clean core"),
     clean in core,
-//    printMessageTask("Clean generator"),
-//    clean in generator,
     printMessageTask("Clean moduleCrypto"),
     clean in moduleCrypto,
     printMessageTask("Clean models"),
     clean in models,
     printMessageTask("Clean utils"),
     clean in utils
-//    printMessageTask("Clean transactionsSigner"),
-//    clean in transactionsSigner,
-//    printMessageTask("Clean it"),
-//    clean in it
   )
   .value
 
-lazy val buildAll = taskKey[Unit]("Build node (jar + deb) and generator (jar)")
+lazy val buildAll = taskKey[Unit]("Build core (jar)")
 
 buildAll := Def
   .sequential(
@@ -1084,53 +681,23 @@ buildAll := Def
     checkJCSP,
     printMessageTask("Recreate /artifacts dir"),
     recreateBuildAllDir,
-    printMessageTask("Assembly node (fat jar)"),
+    printMessageTask("Assembly core (fat jar)"),
     assembly,
-    printMessageTask("Move node fat jar to /artifacts"),
-    moveNodeFatJar
-//    printMessageTask("Package node (deb)"),
-//    packageBin in Debian,
-//    printMessageTask("Move node deb to /artifacts"),
-//    moveNodeDeb,
-//    printMessageTask("Assembly generator (fat jar)"),
-//    assembly in generator,
-//    printMessageTask("Move generator fat jar to /artifacts"),
-//    moveGeneratorFatJar
+    printMessageTask("Move core fat jar to /artifacts"),
+    moveCoreFatJar
   )
   .value
 
 /* ********************************************************* */
 
-//lazy val errLogger = ProcessLogger(_ => (), err => sys.error(err))
-//
-//lazy val dockerBuild = taskKey[Unit]("Runs Docker build")
-//dockerBuild := Def.task(
-//  Process(s"docker build -t wavesenterprise/node:v${version.value} .")
-//    .!(errLogger))
-//
-//lazy val dockerLifeCheck = taskKey[Unit]("Checks if Docker is running")
-//dockerLifeCheck := Def.task {
-//  Process("docker info").!(errLogger)
-//}
-//
 lazy val release = taskKey[Unit]("Prepares artifacts for release. Since 1.1.1, it assembles and obfuscates generator jar")
 
 release := Def
   .sequential(
-//    printMessageTask("Checking is Docker running"),
-//    dockerLifeCheck,
     printMessageTask("Recreating /artifacts dir"),
     recreateBuildAllDir,
     printMessageTask("Assembling fat jar"),
     assembly,
-//    printMessageTask("Building Docker image"),
-//    dockerBuild,
-//    printMessageTask("Assembling generator"),
-//    assembly in generator,
-//    printMessageTask("Obfuscating assembled generator"),
-//    proguard in(generator, Proguard),
-//    printMessageTask("Moving obfuscated generator jar to /artifacts"),
-//    moveGeneratorObfuscatedJar,
     printMessageTask("Done")
   )
   .value
