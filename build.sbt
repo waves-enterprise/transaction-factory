@@ -500,8 +500,7 @@ lazy val core = project
   .settings(
     addCompilerPlugin(Dependencies.kindProjector),
     libraryDependencies ++=
-      Dependencies.http ++
-        Dependencies.serialization ++
+      Dependencies.serialization ++
         Dependencies.logging ++
         Dependencies.fp ++
         Dependencies.meta ++
@@ -511,12 +510,8 @@ lazy val core = project
         Dependencies.commonsLang ++
         Dependencies.monix.value ++
         Dependencies.enumeratum ++
-        Dependencies.javaplot ++
-        Dependencies.pureConfig ++
-        Dependencies.licenseDependencies,
-    dependencyOverrides ++= Seq(
-      Dependencies.AkkaHTTP
-    ) ++ Dependencies.fastparse.value
+        Dependencies.pureConfig,
+    dependencyOverrides ++= Dependencies.fastparse.value
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
