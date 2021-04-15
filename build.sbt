@@ -123,7 +123,6 @@ checkJCSP := Def
 
 publishArtifact in (Compile, packageDoc) := false
 publishArtifact in (Compile, packageSrc) := false
-//mainClass in Compile := Some("com.wavesplatform.Application")
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
@@ -233,7 +232,6 @@ inTask(assembly)(
 
 inConfig(Compile)(
   Seq(
-    mainClass := Some("com.wavesplatform.Application"),
     publishArtifact in packageDoc := false,
     publishArtifact in packageSrc := false,
     sourceGenerators += coreVersionSource
