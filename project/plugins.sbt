@@ -9,7 +9,6 @@ Seq(
   "com.eed3si9n"            % "sbt-assembly"             % "0.14.10",
   "com.typesafe.sbt"        % "sbt-native-packager"      % "1.3.25",
   "org.scalastyle"          %% "scalastyle-sbt-plugin"   % "1.0.0",
-  "se.marcuslonnberg"       % "sbt-docker"               % "1.8.2",
   "com.typesafe.sbt"        % "sbt-git"                  % "1.0.0",
   "org.scala-js"            % "sbt-scalajs"              % "0.6.29",
   "org.portable-scala"      % "sbt-crossproject"         % "0.6.1",
@@ -20,7 +19,3 @@ Seq(
   "com.codacy"              % "sbt-codacy-coverage"      % "3.0.3",
   "com.lightbend.akka.grpc" % "sbt-akka-grpc"            % "0.8.4"
 ).map(addSbtPlugin)
-
-libraryDependencies ++= Seq(
-  "org.vafer" % "jdeb" % "1.5" artifacts Artifact("jdeb", "jar", "jar")
-)
