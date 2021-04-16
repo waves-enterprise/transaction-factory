@@ -500,18 +500,7 @@ lazy val core = project
   .dependsOn(transactionTypeScript)
   .settings(
     addCompilerPlugin(Dependencies.kindProjector),
-    libraryDependencies ++=
-      Dependencies.serialization ++
-        Dependencies.logging ++
-        Dependencies.fp ++
-        Dependencies.meta ++
-        Dependencies.ficus ++
-        Dependencies.scorex ++
-        Dependencies.commonsLang ++
-        Dependencies.monix.value ++
-        Dependencies.enumeratum ++
-        Dependencies.pureConfig,
-    dependencyOverrides ++= Dependencies.fastparse.value
+    libraryDependencies ++= Dependencies.commonsLang,
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
