@@ -45,10 +45,7 @@ object GostKeystoreSpec {
   }
   val keyStoreFile: File = {
     val pathToResource = getClass.getResource(keyStoreDirName).getPath
-    val f              = new File(pathToResource)
-    println("files!!!")
-    f.listFiles().map(_.getPath).foreach(println)
-    f
+    new File(pathToResource)
   }
   val keyStore: KeyStore[GostKeyPair] = gostContext.keyStore(file = Some(keyStoreFile), password = keyStorePassword.toCharArray)
   val keyStoreAliases: List[String]   = keyStore.aliases().toList

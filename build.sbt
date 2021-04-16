@@ -369,7 +369,8 @@ lazy val models = (project in file("models"))
       Dependencies.monix.value,
       Dependencies.protobuf,
       Dependencies.scodec.value,
-      Dependencies.serialization
+      Dependencies.serialization,
+      Dependencies.commonsNet
     ).flatten
   )
 
@@ -506,7 +507,6 @@ lazy val core = project
         Dependencies.meta ++
         Dependencies.ficus ++
         Dependencies.scorex ++
-        Dependencies.commonsNet ++
         Dependencies.commonsLang ++
         Dependencies.monix.value ++
         Dependencies.enumeratum ++

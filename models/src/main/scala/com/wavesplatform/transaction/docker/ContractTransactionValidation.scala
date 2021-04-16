@@ -1,7 +1,9 @@
 package com.wavesplatform.transaction.docker
 
 import cats.implicits._
-import com.wavesplatform.state.DataEntry
+import com.google.common.io.ByteStreams.newDataOutput
+import com.wavesplatform.crypto
+import com.wavesplatform.state.{ByteStr, DataEntry}
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.{Transaction, ValidationError}
 
@@ -69,4 +71,13 @@ trait ContractTransactionValidation {
     Either.cond(size <= limit, (), ValidationError.ContractTransactionTooBig(size, limit))
   }
 
+}
+
+object ContractTransactionValidation {
+  //noinspection UnstableApiUsage
+  def resultsHash(results: Seq[DataEntry[_]]): ByteStr = {
+    val output = newDataOutput()
+    results.sorted.foreach(ContractTransactionEntryOps.writeBytes(_, output))
+    ByteStr(crypto.fastHash(output.toByteArray))
+  }
 }

@@ -38,8 +38,11 @@ object Dependencies {
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
   )
 
-  lazy val commonsNet  = Seq("commons-net"        % "commons-net"   % "3.6")
-  lazy val commonsLang = Seq("org.apache.commons" % "commons-lang3" % "3.8")
+  lazy val commonsNet = Seq("commons-net" % "commons-net" % "3.6")
+  lazy val commonsLang = Seq(
+    "org.apache.commons" % "commons-lang3" % "3.8",
+    "commons-codec"      % "commons-codec" % "1.11"
+  )
 
   lazy val scalatest  = Seq("org.scalatest"  %% "scalatest"  % "3.0.8")
   lazy val scalacheck = Seq("org.scalacheck" %% "scalacheck" % "1.14.1")
@@ -53,7 +56,7 @@ object Dependencies {
   lazy val enumeratum    = Seq("com.beachape" %% "enumeratum-play-json" % "1.5.16")
 
   lazy val pureConfig = Seq(
-    "com.github.pureconfig" %% "pureconfig"            % "0.12.2"
+    "com.github.pureconfig" %% "pureconfig" % "0.12.2"
   )
 
   lazy val protobuf = Seq("com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf")
