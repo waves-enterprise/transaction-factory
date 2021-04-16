@@ -114,6 +114,6 @@ publish-nexus-artifacts:
     - assembly-core-jar
   script:
     - *unpack-build-products
-    - sbt -mem 2048 core/publish
+    - sbt -mem 2048 ";core/publish;protobufArchives/publish"
   only:
     - tags
