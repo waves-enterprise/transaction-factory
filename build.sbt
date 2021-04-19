@@ -15,7 +15,6 @@ enablePlugins(GitVersioning)
 scalafmtOnCompile in ThisBuild := true
 Global / cancelable := true
 fork in run := true
-//connectInput in run := true
 
 name := "we-core"
 
@@ -113,8 +112,8 @@ checkJCSP := Def
   )
   .value
 
-publishArtifact in (Compile, packageDoc) := false
-publishArtifact in (Compile, packageSrc) := true
+//publishArtifact in (Compile, packageDoc) := false
+//publishArtifact in (Compile, packageSrc) := true
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
@@ -232,8 +231,8 @@ inTask(assembly)(
 
 inConfig(Compile)(
   Seq(
-    publishArtifact in packageDoc := false,
-    publishArtifact in packageSrc := true,
+//    publishArtifact in packageDoc := false,
+//    publishArtifact in packageSrc := true,
     sourceGenerators += coreVersionSource
   ))
 
@@ -255,13 +254,6 @@ commands += Command.command("packageAll") { state =>
   "clean" :: "assembly" :: state
 }
 
-//inConfig(Linux)(
-//  Seq(
-//    maintainer := "wavesenterprise.com",
-//    packageSummary := "WE core",
-//    packageDescription := "WE core"
-//  ))
-//
 // https://stackoverflow.com/a/48592704/4050580
 def allProjects: List[ProjectReference] =
   ReflectUtilities.allVals[Project](this).values.toList map { p =>
@@ -500,6 +492,9 @@ lazy val core = project
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Test, packageSrc) := false,
+    publishArtifact in (Test, packageBin) := false,
+    publishArtifact in (Test, packageDoc) := false,
     addArtifact(artifact in (Compile, assembly), assembly)
   )
 
