@@ -489,7 +489,7 @@ lazy val core = project
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
+    publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
     publishArtifact in (Test, packageSrc) := false,
