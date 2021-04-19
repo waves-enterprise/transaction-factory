@@ -11,19 +11,11 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 import java.io.File
 
-excludeDependencies ++= Seq(
-  // workaround for https://github.com/sbt/sbt/issues/3618
-  // include "jakarta.ws.rs" % "jakarta.ws.rs-api" instead
-  ExclusionRule("javax.ws.rs", "javax.ws.rs-api")
-)
-
-libraryDependencies += "jakarta.ws.rs" % "jakarta.ws.rs-api" % "2.1.5"
-
-enablePlugins(SystemdPlugin, GitVersioning)
+enablePlugins(GitVersioning)
 scalafmtOnCompile in ThisBuild := true
 Global / cancelable := true
 fork in run := true
-connectInput in run := true
+//connectInput in run := true
 
 name := "we-core"
 
@@ -122,7 +114,7 @@ checkJCSP := Def
   .value
 
 publishArtifact in (Compile, packageDoc) := false
-publishArtifact in (Compile, packageSrc) := false
+publishArtifact in (Compile, packageSrc) := true
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
@@ -241,7 +233,7 @@ inTask(assembly)(
 inConfig(Compile)(
   Seq(
     publishArtifact in packageDoc := false,
-    publishArtifact in packageSrc := false,
+    publishArtifact in packageSrc := true,
     sourceGenerators += coreVersionSource
   ))
 
@@ -263,13 +255,13 @@ commands += Command.command("packageAll") { state =>
   "clean" :: "assembly" :: state
 }
 
-inConfig(Linux)(
-  Seq(
-    maintainer := "wavesenterprise.com",
-    packageSummary := "WE core",
-    packageDescription := "WE core"
-  ))
-
+//inConfig(Linux)(
+//  Seq(
+//    maintainer := "wavesenterprise.com",
+//    packageSummary := "WE core",
+//    packageDescription := "WE core"
+//  ))
+//
 // https://stackoverflow.com/a/48592704/4050580
 def allProjects: List[ProjectReference] =
   ReflectUtilities.allVals[Project](this).values.toList map { p =>
@@ -488,7 +480,7 @@ lazy val typescriptArchives = (project in file("we-transaction-typescript"))
 
 addCommandAlias(
   "compileAll",
-  "; cleanAll; checkJCSP; compile; test:compile"
+  "; cleanAll; checkJCSP; transactionProtobuf/compile; compile; test:compile"
 )
 
 val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
@@ -500,12 +492,12 @@ lazy val core = project
   .dependsOn(transactionTypeScript)
   .settings(
     addCompilerPlugin(Dependencies.kindProjector),
-    libraryDependencies ++= Dependencies.commonsLang,
+    libraryDependencies ++= Dependencies.commonsLang
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := false,
+    publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
     addArtifact(artifact in (Compile, assembly), assembly)
