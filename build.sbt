@@ -252,7 +252,9 @@ lazy val langJVM = lang.jvm
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := false,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
   )
 
 lazy val utils = (project in file("utils"))
@@ -278,7 +280,7 @@ lazy val models = (project in file("models"))
   .dependsOn(langJVM)
   .dependsOn(grpcProtobuf)
   .dependsOn(transactionProtobuf)
-  .aggregate(crypto, grpcProtobuf, transactionProtobuf)
+  .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
