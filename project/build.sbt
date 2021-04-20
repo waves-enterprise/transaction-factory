@@ -3,4 +3,4 @@ libraryDependencies ++= Seq(
   "com.google.guava" % "guava"       % "28.1-jre"
 )
 
-Compile / unmanagedJars ++= (baseDirectory.value / ".." / "moduleCrypto" / "lib" ** "*.jar").classpath
+Compile / unmanagedJars ++= (baseDirectory.value / ".." / "crypto" / "lib" ** "*.jar").classpath
