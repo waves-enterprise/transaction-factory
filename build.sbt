@@ -209,7 +209,6 @@ lazy val lang =
     .withoutSuffixFor(JVMPlatform)
     .settings(
       version := "1.0.0",
-      moduleName := "we-lang",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       addCompilerPlugin(Dependencies.kindProjector),
@@ -223,11 +222,7 @@ lazy val lang =
           Dependencies.scodec.value ++
           Dependencies.fastparse.value,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins"),
-      resolvers += Resolver.sbtPluginRepo("releases"),
-      publishTo := weReleasesRepo,
-      publishArtifact in (Compile, packageSrc) := true,
-      publishArtifact in (Compile, packageBin) := true,
-      publishArtifact in (Compile, packageDoc) := false
+      resolvers += Resolver.sbtPluginRepo("releases")
     )
     .jsSettings(
       scalaJSLinkerConfig ~= {
@@ -235,7 +230,6 @@ lazy val lang =
       }
     )
     .jvmSettings(
-      publishMavenStyle := true,
       credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
       name := "RIDE Compiler",
       normalizedName := "lang",
@@ -249,8 +243,17 @@ lazy val lang =
         .map(_ % "test") // scrypto logs an error if a signature verification was failed
     )
 
-lazy val langJS  = lang.js
-lazy val langJVM = lang.jvm.dependsOn(crypto).dependsOn(utils)
+lazy val langJS = lang.js
+lazy val langJVM = lang.jvm
+  .dependsOn(crypto)
+  .dependsOn(utils)
+  .settings(
+    moduleName := "we-lang",
+    publishTo := weReleasesRepo,
+    publishArtifact in (Compile, packageSrc) := true,
+    publishArtifact in (Compile, packageBin) := true,
+    publishArtifact in (Compile, packageDoc) := false
+  )
 
 lazy val utils = (project in file("utils"))
   .settings(
@@ -448,7 +451,6 @@ lazy val core = project
     publishArtifact in (Test, packageSrc) := false,
     publishArtifact in (Test, packageBin) := false,
     publishArtifact in (Test, packageDoc) := false
-//    addArtifact(artifact in (Compile, assembly), assembly)
   )
 
 lazy val javaHomeProguardOption = Def.task[String] {
