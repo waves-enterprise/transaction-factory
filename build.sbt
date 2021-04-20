@@ -314,7 +314,9 @@ lazy val crypto: Project = project
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := false,
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := false,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
   )
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
