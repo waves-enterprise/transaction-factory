@@ -7,11 +7,11 @@ inConfig(Compile)(Seq(sourceGenerators += gostCryptoVersionSource))
 scalacOptions += "-Yresolve-term-conflict:object"
 
 lazy val gostCryptoVersionSource = Def.task {
-  val gostCryptoVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesplatform" / "CryptoVersion.scala"
+  val gostCryptoVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesenterprise" / "CryptoVersion.scala"
 
   IO.write(
     gostCryptoVersionFile,
-    s"""package com.wavesplatform
+    s"""package com.wavesenterprise
        |
        |object CryptoVersion {
        |  val supportedCspVersion              = "${Dependencies.supportedCspVersion}"

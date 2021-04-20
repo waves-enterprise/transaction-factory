@@ -2,7 +2,7 @@ syntax = "proto3";
 package wavesenterprise;
 
 option java_multiple_files = true;
-option java_package = "com.wavesplatform.protobuf.service.contract";
+option java_package = "com.wavesenterprise.protobuf.service.contract";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 

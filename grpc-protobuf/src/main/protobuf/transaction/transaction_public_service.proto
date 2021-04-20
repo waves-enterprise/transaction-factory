@@ -1,7 +1,7 @@
 syntax = "proto3";
 package wavesenterprise.grpc;
 
-option java_package = "com.wavesplatform.protobuf.service.transaction";
+option java_package = "com.wavesenterprise.protobuf.service.transaction";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package wavesenterprise;
 
-option java_package = "com.wavesplatform.protobuf.service.messagebroker";
+option java_package = "com.wavesenterprise.protobuf.service.messagebroker";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 

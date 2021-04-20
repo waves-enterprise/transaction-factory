@@ -1,12 +1,11 @@
 import com.typesafe.sbt.SbtGit.GitKeys.gitUncommittedChanges
 import com.typesafe.sbt.git.JGit
-import com.wavesplatform.transaction.generator.{TxSchemePlugin, TxSchemeProtoPlugin, TxSchemeTypeScriptPlugin}
+import com.wavesenterprise.transaction.generator.{TxSchemePlugin, TxSchemeProtoPlugin, TxSchemeTypeScriptPlugin}
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode
 import sbt.Keys.{credentials, sourceGenerators, _}
 import sbt.internal.inc.ReflectUtilities
 import sbt.librarymanagement.ivy.IvyDependencyResolution
 import sbt.{Compile, Credentials, Def, Path, _}
-//import sbtassembly.MergeStrategy
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 import java.io.File
@@ -43,9 +42,6 @@ credentials += {
   }
 }
 
-//lazy val coreJarName = settingKey[String]("Name for assembled we-core jar")
-//coreJarName := s"we-core-${version.value}.jar"
-
 val coreVersionSource = Def.task {
   // WARNING!!!
   // Please, update the fallback version every major and minor releases.
@@ -53,7 +49,7 @@ val coreVersionSource = Def.task {
   // In case of not updating the version cores build from headless sources will fail to connect to newer versions
   val FallbackVersion = (1, 0, 0)
 
-  val coreVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesplatform" / "Version.scala"
+  val coreVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesenterprise" / "Version.scala"
   val versionExtractor      = """(\d+)\.(\d+)\.(\d+).*""".r
   val (major, minor, patch) = version.value match {
     case versionExtractor(ma, mi, pa) => (ma.toInt, mi.toInt, pa.toInt)
@@ -62,7 +58,7 @@ val coreVersionSource = Def.task {
 
   IO.write(
     coreVersionFile,
-    s"""package com.wavesplatform
+    s"""package com.wavesenterprise
        |
        |object Version {
        |  val VersionString = "${version.value}"
@@ -112,8 +108,6 @@ checkJCSP := Def
   )
   .value
 
-//publishArtifact in (Compile, packageDoc) := false
-//publishArtifact in (Compile, packageSrc) := true
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
@@ -130,7 +124,7 @@ logBuffered := false
 inThisBuild(
   Seq(
     scalaVersion := "2.12.10",
-    organization := "com.wavesplatform",
+    organization := "com.wavesenterprise",
     crossPaths := false,
     scalacOptions ++= Seq("-feature",
                           "-deprecation",
@@ -146,7 +140,7 @@ scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true)))
 // for sbt plugins sources resolving
 updateSbtClassifiers / dependencyResolution := IvyDependencyResolution((updateSbtClassifiers / ivyConfiguration).value)
 resolvers ++= Seq(
-  "WE Nexus" at "https://artifacts.wavesenterprise.com/repository/we-releases/we-core",
+  "WE Nexus" at "https://artifacts.wavesenterprise.com/repository/we-releases",
   Resolver.bintrayRepo("ethereum", "maven"),
   Resolver.bintrayRepo("dnvriend", "maven"),
   Resolver.sbtPluginRepo("releases")
@@ -164,70 +158,9 @@ Test / javaOptions ++= Seq(
 )
 Test / parallelExecution := true
 
-//val aopMerge: MergeStrategy = new MergeStrategy {
-//  val name = "aopMerge"
-//
-//  import scala.xml._
-//  import scala.xml.dtd._
-//
-//  def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
-//    val dt              = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
-//    val file            = MergeStrategy.createMergeTarget(tempDir, path)
-//    val xmls: Seq[Elem] = files.map(XML.loadFile)
-//    val aspectsChildren: Seq[Node] =
-//      xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
-//    val weaverChildren: Seq[Node] =
-//      xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
-//    val options: String = xmls
-//      .map(x => (x \\ "aspectj" \ "weaver" \ "@options").text)
-//      .mkString(" ")
-//      .trim
-//    val weaverAttr =
-//      if (options.isEmpty) Null
-//      else new UnprefixedAttribute("options", options, Null)
-//    val aspects =
-//      new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
-//    val weaver =
-//      new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
-//    val aspectj =
-//      new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
-//    XML.save(file.toString, aspectj, "UTF-8", xmlDecl = false, dt)
-//    IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
-//    Right(Seq(file -> path))
-//  }
-//}
-
 lazy val excludedCryptoProJars =
   taskKey[Keys.Classpath]("CryptoPro libs excluded from assembly task")
 excludedCryptoProJars in ThisBuild := (unmanagedJars in (crypto, Compile)).value
-
-//inTask(assembly)(
-//  Seq(
-//    test := {},
-//    assemblyJarName := coreJarName.value,
-//    assemblyExcludedJars := excludedCryptoProJars.value,
-//    assemblyMergeStrategy := {
-//      case PathList("META-INF", "io.netty.versions.properties") =>
-//        MergeStrategy.concat
-////      case PathList("META-INF", "aop.xml") => aopMerge
-//      case PathList("com", "google", "thirdparty", xs @ _*) =>
-//        MergeStrategy.first
-//      case PathList("com", "kenai", xs @ _*)             => MergeStrategy.first
-//      case PathList("javax", "ws", xs @ _*)              => MergeStrategy.first
-//      case PathList("jersey", "repackaged", xs @ _*)     => MergeStrategy.first
-//      case PathList("jnr", xs @ _*)                      => MergeStrategy.first
-//      case PathList("org", "aopalliance", xs @ _*)       => MergeStrategy.first
-//      case PathList("org", "jvnet", xs @ _*)             => MergeStrategy.first
-//      case PathList("com", "sun", "activation", xs @ _*) => MergeStrategy.last
-//      case PathList("javax", "activation", xs @ _*)      => MergeStrategy.last
-//      case PathList("jakarta", "activation", xs @ _*)    => MergeStrategy.last
-//      case path if path.endsWith("module-info.class")    => MergeStrategy.discard
-//      case "META-INF/maven/com.kohlschutter.junixsocket/junixsocket-native-common/pom.properties" =>
-//        MergeStrategy.first
-//      case PathList("com", "google", "protobuf", xs @ _*) => MergeStrategy.first
-//      case other                                          => (assemblyMergeStrategy in assembly).value(other)
-//    }
-//  ))
 
 inConfig(Compile)(
   Seq(
@@ -246,13 +179,6 @@ inConfig(Test)(
       sys.props("sbt-testing") = "true"
     })
   ))
-
-// The bash scripts classpath only needs the jar
-//scriptClasspath := Seq((assemblyJarName in assembly).value)
-
-//commands += Command.command("packageAll") { state =>
-//  "clean" :: "assembly" :: state
-//}
 
 // https://stackoverflow.com/a/48592704/4050580
 def allProjects: List[ProjectReference] =
@@ -286,7 +212,6 @@ lazy val lang =
       moduleName := "we-lang",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
-//      test in assembly := {},
       addCompilerPlugin(Dependencies.kindProjector),
       libraryDependencies ++=
         Dependencies.catsCore ++
@@ -302,7 +227,7 @@ lazy val lang =
       publishTo := weReleasesRepo,
       publishArtifact in (Compile, packageSrc) := true,
       publishArtifact in (Compile, packageBin) := true,
-      publishArtifact in (Compile, packageDoc) := false,
+      publishArtifact in (Compile, packageDoc) := false
     )
     .jsSettings(
       scalaJSLinkerConfig ~= {
@@ -317,11 +242,6 @@ lazy val lang =
       description := "The RIDE smart contract language compiler",
       homepage := Some(url("https://docs.wavesplatform.com/en/technical-details/waves-contracts-language-description/maven-compiler-package.html")),
       licenses := Seq(("MIT", url("https://github.com/wavesplatform/Waves/blob/master/LICENSE"))),
-      organization := "com.wavesplatform",
-      organizationName := "Waves Platform",
-      organizationHomepage := Some(url("https://wavesplatform.com")),
-      scmInfo := Some(ScmInfo(url("https://github.com/wavesplatform/Waves"), "git@github.com:wavesplatform/Waves.git", None)),
-      developers := List(Developer("petermz", "Peter Zhelezniakov", "peterz@rambler.ru", url("https://wavesplatform.com"))),
       libraryDependencies ++= Seq(
         "org.scala-js"                      %% "scalajs-stubs" % "1.0.0-RC1" % "provided",
         "com.github.spullara.mustache.java" % "compiler"       % "0.9.5"
@@ -346,7 +266,7 @@ lazy val utils = (project in file("utils"))
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val models = (project in file("models"))
@@ -358,7 +278,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesplatform" / "models",
+    Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.catsCore,
@@ -371,7 +291,7 @@ lazy val models = (project in file("models"))
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := false,
-    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val crypto: Project = project
@@ -379,6 +299,7 @@ lazy val crypto: Project = project
   .aggregate(utils)
   .settings(
     moduleName := "we-crypto",
+    version := "1.0.0",
     libraryDependencies ++= Seq(
       Dependencies.scorex,
       Dependencies.catsCore,
@@ -390,7 +311,7 @@ lazy val crypto: Project = project
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := false,
-    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
@@ -403,7 +324,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val transactionProtobuf = (project in file("transaction-protobuf"))
@@ -416,7 +337,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
     publishTo := weReleasesRepo,
     publishArtifact in (Compile, packageSrc) := true,
     publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val typeScriptZipTask = taskKey[File]("archive-typescript")
@@ -507,7 +428,7 @@ addCommandAlias(
   "; cleanAll; checkJCSP; transactionProtobuf/compile; compile; test:compile"
 )
 
-val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases/we-core")
+val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
 
 lazy val core = project
   .in(file("."))
@@ -578,22 +499,6 @@ def printMessageTask(msg: String) = Def.task {
 
 /* ********************************************************* */
 
-//lazy val buildAllDir =
-//  settingKey[File]("Directory for artifacts, generated with 'buildAll' task")
-//buildAllDir := (baseDirectory in (core, Compile)).value / "artifacts"
-//
-//lazy val moveCoreJar = Def.task[Unit] {
-//  val coreJar = (target in (core, Compile)).value / coreJarName.value
-//  IO.copyFile(coreJar, buildAllDir.value / coreJarName.value)
-//}
-//
-//lazy val recreateBuildAllDir = Def.task[Unit] {
-//  IO.delete(buildAllDir.value)
-//  IO.createDirectory(buildAllDir.value)
-//}
-
-/* ********************************************************* */
-
 lazy val cleanProtobufManagedDir = Def.task[Unit] {
   IO.delete((sourceDirectory in transactionProtobuf).value / "main" / "protobuf" / "managed")
 }
@@ -630,32 +535,3 @@ cleanAll := Def
     clean in utils
   )
   .value
-
-//lazy val buildAll = taskKey[Unit]("Build core (jar)")
-
-//buildAll := Def
-//  .sequential(
-//    printMessageTask("Check JCSP installation"),
-//    checkJCSP,
-//    printMessageTask("Recreate /artifacts dir"),
-//    recreateBuildAllDir,
-////    printMessageTask("Assembly core (jar)"),
-////    assembly,
-//    printMessageTask("Move core jar to /artifacts"),
-//    moveCoreJar
-//  )
-//  .value
-
-/* ********************************************************* */
-
-//lazy val release = taskKey[Unit]("Prepares artifacts for release. Since 1.1.1, it assembles and obfuscates generator jar")
-
-//release := Def
-//  .sequential(
-//    printMessageTask("Recreating /artifacts dir"),
-//    recreateBuildAllDir,
-//    printMessageTask("Assembling jar"),
-//    assembly,
-//    printMessageTask("Done")
-//  )
-//  .value

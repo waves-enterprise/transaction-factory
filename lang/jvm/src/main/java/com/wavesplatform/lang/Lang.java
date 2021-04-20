@@ -1,7 +1,7 @@
-package com.wavesplatform.lang;
+package com.wavesenterprise.lang;
 
-import com.wavesplatform.lang.v1.Serde;
-import com.wavesplatform.lang.v1.compiler.Terms;
+import com.wavesenterprise.lang.v1.Serde;
+import com.wavesenterprise.lang.v1.compiler.Terms;
 
 /**
  * This class provides static methods to interact with the RIDE compiler.
