@@ -49,6 +49,9 @@ stages:
   tags:
     - wavesenterprise
   variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    NODE_HOST: docker
     SBT_THREAD_NUMBER: 5
   before_script:
     - *jcsp-install-script
