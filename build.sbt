@@ -247,6 +247,7 @@ lazy val langJS = lang.js
 lazy val langJVM = lang.jvm
   .dependsOn(crypto)
   .dependsOn(utils)
+  .aggregate(crypto, utils)
   .settings(
     moduleName := "we-lang",
     publishTo := weReleasesRepo,
@@ -260,6 +261,7 @@ lazy val langJVM = lang.jvm
 lazy val utils = (project in file("utils"))
   .settings(
     moduleName := "we-utils",
+    version := "1.0.0",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.serialization,
@@ -283,6 +285,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
+    version := "1.0.0",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -324,8 +327,10 @@ lazy val crypto: Project = project
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .dependsOn(transactionProtobuf)
+  .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
+    version := "1.0.0",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -339,6 +344,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
     moduleName := "we-transaction-protobuf",
+    version := "1.0.0",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -351,7 +357,7 @@ lazy val typeScriptZipTask = taskKey[File]("archive-typescript")
 
 lazy val typeScriptZipSetting: Def.Setting[Task[File]] = typeScriptZipTask := {
   val tsDirectory: File = new sbt.File("./transactions-factory")
-  val zipName           = s"we-transaction_typescript_${version.value}.zip"
+  val zipName           = s"we-transaction_typescript_${(version in transactionProtobuf).value}.zip"
   IO.delete(tsDirectory * "we-transaction_typescript_*.zip" get)
 
   val filesToZip: Set[(File, String)] = Set(
