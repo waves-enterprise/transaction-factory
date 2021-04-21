@@ -10,7 +10,6 @@ variables:
 stages:
   - compile
   - test
-#  - assembly
   - publish
 
 ### Anchors
@@ -85,29 +84,22 @@ compile:
 test-core:
   <<: *create-environment
   stage: test
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    NODE_HOST: docker
+    SBT_THREAD_NUMBER: 5
   script:
     - *unpack-build-products
+    - rm -rf transactions-factory 2>/dev/null || true
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
     - sbt -mem 2048 test lang/test
   artifacts:
     reports:
       junit:
         - target/test-reports/*.xml
         - lang/jvm/target/test-reports/*.xml
-
-### Artifact assembly jobs
-#assembly-core-jar:
-#  <<: *create-environment
-#  stage: assembly
-#  needs:
-#    - compile
-#    - test-core
-#  script:
-#    - *unpack-build-products
-#    - sbt -mem 2048 assembly
-#  artifacts:
-#    paths:
-#      - target/we-core*.jar
-#    expire_in: 1 day
 
 publish-nexus-artifacts:
   <<: *create-environment

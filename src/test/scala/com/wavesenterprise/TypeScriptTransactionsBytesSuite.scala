@@ -37,7 +37,7 @@ class TypeScriptTransactionsBytesSuite extends FreeSpec with Matchers with Contr
   var apiUrl: String                     = _
 
   private def startTsServerInDocker(): Unit = {
-    image = dockerClient.build(Paths.get(sys.props("user.dir")).getParent.resolve("transactions-factory"), "ts-tx-test-server")
+    image = dockerClient.build(Paths.get(sys.props("user.dir")).resolve("transactions-factory"), "ts-tx-test-server")
     val portBindings = Map(tsServerPort -> List(PortBinding.randomPort(nodeHost)).asJava).asJava
     val hostConfig   = HostConfig.builder().portBindings(portBindings).build()
     val containerConfig = ContainerConfig
