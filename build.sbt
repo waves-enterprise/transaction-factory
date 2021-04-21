@@ -212,7 +212,7 @@ lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
     .settings(
-      version := "1.0.0",
+      version := "1.0.0-RC1",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       addCompilerPlugin(Dependencies.kindProjector),
@@ -263,7 +263,7 @@ lazy val langJVM = lang.jvm
 lazy val utils = (project in file("utils"))
   .settings(
     moduleName := "we-utils",
-    version := "1.0.0",
+    version := "1.0.0-RC1",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.serialization,
@@ -287,7 +287,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0",
+    version := "1.0.0-RC1",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -309,7 +309,7 @@ lazy val crypto: Project = project
   .aggregate(utils)
   .settings(
     moduleName := "we-crypto",
-    version := "1.0.0",
+    version := "1.0.0-RC1",
     libraryDependencies ++= Seq(
       Dependencies.scorex,
       Dependencies.catsCore,
@@ -330,7 +330,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := "1.0.0",
+    version := "1.0.0-RC1",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -344,7 +344,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
     moduleName := "we-transaction-protobuf",
-    version := "1.0.0",
+    version := "1.0.0-RC1",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
