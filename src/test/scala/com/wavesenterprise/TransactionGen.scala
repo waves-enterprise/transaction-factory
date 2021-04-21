@@ -359,7 +359,9 @@ trait TransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suite =>
       burn                                                 <- createBurn(sender, issue.assetId(), burnQuantity, fee, timestamp)
     } yield (issue, reissue, burn)
 
-  val burnGen: Gen[BurnTransaction] = issueReissueBurnGen.map(_._3)
+  val issueGen: Gen[IssueTransaction]     = issueReissueBurnGen.map(_._1)
+  val reissueGen: Gen[ReissueTransaction] = issueReissueBurnGen.map(_._2)
+  val burnGen: Gen[BurnTransaction]       = issueReissueBurnGen.map(_._3)
 
   def sponsorFeeCancelSponsorFeeGen(
       sender: PrivateKeyAccount,

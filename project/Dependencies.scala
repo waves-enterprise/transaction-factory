@@ -47,6 +47,12 @@ object Dependencies {
   lazy val scalatest  = Seq("org.scalatest"  %% "scalatest"  % "3.0.8")
   lazy val scalacheck = Seq("org.scalacheck" %% "scalacheck" % "1.14.1")
 
+  lazy val asyncHttpClient = Seq("org.asynchttpclient" % "async-http-client" % "2.10.5")
+
+  lazy val docker = Seq(("com.spotify" % "docker-client" % "8.16.0").exclude("com.google.guava", "guava"))
+
+  lazy val netty = Seq("io.netty" % s"netty-common" % "4.1.45.Final")
+
   lazy val catsCore   = Seq("org.typelevel" %% "cats-core" % "2.0.0")
   lazy val catsEffect = Seq("org.typelevel" %% "cats-effect" % "2.0.0")
   lazy val catsMtl    = Seq("org.typelevel" %% "cats-mtl-core" % "0.7.0")

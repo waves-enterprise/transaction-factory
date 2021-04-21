@@ -444,7 +444,14 @@ lazy val core = project
   .settings(
     moduleName := "we-core",
     addCompilerPlugin(Dependencies.kindProjector),
-    libraryDependencies ++= Dependencies.commonsLang
+    libraryDependencies ++= Seq(
+      Dependencies.scalatest,
+      Dependencies.scalacheck,
+      Dependencies.commonsLang,
+      Dependencies.docker,
+      Dependencies.asyncHttpClient,
+      Dependencies.netty
+    ).flatten
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
