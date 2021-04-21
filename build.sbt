@@ -166,6 +166,7 @@ inConfig(Compile)(
   Seq(
     publishArtifact in packageDoc := false,
     publishArtifact in packageSrc := true,
+    publishArtifact in packageBin := true,
     sourceGenerators += coreVersionSource
   ))
 
@@ -177,7 +178,10 @@ inConfig(Test)(
     testOptions += Tests.Argument("-oIDOF", "-u", "target/test-reports"),
     testOptions += Tests.Setup({ _ =>
       sys.props("sbt-testing") = "true"
-    })
+    }),
+    publishArtifact in packageDoc := false,
+    publishArtifact in packageSrc := false,
+    publishArtifact in packageBin := false
   ))
 
 // https://stackoverflow.com/a/48592704/4050580
@@ -222,7 +226,7 @@ lazy val lang =
           Dependencies.scodec.value ++
           Dependencies.fastparse.value,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins"),
-      resolvers += Resolver.sbtPluginRepo("releases")
+      resolvers += Resolver.sbtPluginRepo("releases"),
     )
     .jsSettings(
       scalaJSLinkerConfig ~= {
@@ -251,11 +255,9 @@ lazy val langJVM = lang.jvm
   .settings(
     moduleName := "we-lang",
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val utils = (project in file("utils"))
@@ -271,8 +273,8 @@ lazy val utils = (project in file("utils"))
       Dependencies.scorex
     ).flatten,
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := true,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
   )
 
@@ -297,8 +299,8 @@ lazy val models = (project in file("models"))
       Dependencies.commonsNet
     ).flatten,
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := false,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
   )
 
@@ -317,11 +319,9 @@ lazy val crypto: Project = project
       Dependencies.serialization
     ).flatten,
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := false,
-    publishArtifact in (Compile, packageDoc) := false,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := false
   )
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
@@ -334,8 +334,8 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := true,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
   )
 
@@ -348,8 +348,8 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := true,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
   )
 
@@ -461,13 +461,7 @@ lazy val core = project
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := weReleasesRepo,
-    publishArtifact in (Compile, packageSrc) := true,
-    publishArtifact in (Compile, packageBin) := true,
-    publishArtifact in (Compile, packageDoc) := false,
-    publishArtifact in (Test, packageSrc) := false,
-    publishArtifact in (Test, packageBin) := false,
-    publishArtifact in (Test, packageDoc) := false
+    publishTo := weReleasesRepo
   )
 
 lazy val javaHomeProguardOption = Def.task[String] {
