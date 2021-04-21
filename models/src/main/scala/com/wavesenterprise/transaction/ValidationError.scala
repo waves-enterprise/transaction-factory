@@ -148,8 +148,8 @@ object ValidationError {
     val participantNotRegisteredClassName: String = """(\w*)[$]?$""".r.findAllIn(ParticipantNotRegistered.getClass.getSimpleName).group(1).toLowerCase
   }
 
-  case object SnapshotPeriodIsInProgress extends ValidationError {
-    override def toString: String = s"Snapshot period is in progress. Unable to put new tx into UTX"
+  case class ReachedSnapshotHeightError(snapshotHeight: Int) extends ValidationError {
+    override def toString: String = s"Snapshot height '$snapshotHeight' is reached. Unable to process transactions"
   }
 
   def fromCryptoError(e: CryptoError): ValidationError = {
