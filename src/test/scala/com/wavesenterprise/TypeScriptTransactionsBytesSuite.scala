@@ -166,13 +166,11 @@ class TypeScriptTransactionsBytesSuite extends FreeSpec with Matchers with Contr
       forAll(setAssetScriptTransactionGen) { case (_, tx) => assertSameBytes(tx) }
     }
 
-    // wait for fix from full-stack team
-    "DataTransaction" ignore {
+    "DataTransaction" in {
       forAll(dataTransactionV1Gen)(assertSameBytes)
     }
 
-    // wait for fix from full-stack team
-    "DataTransactionV2" ignore {
+    "DataTransactionV2" in {
       forAll(dataTransactionV2Gen)(assertSameBytes)
     }
 
