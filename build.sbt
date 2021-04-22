@@ -49,7 +49,7 @@ val coreVersionSource = Def.task {
   // In case of not updating the version cores build from headless sources will fail to connect to newer versions
   val FallbackVersion = (1, 0, 0)
 
-  val coreVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesenterprise" / "Version.scala"
+  val coreVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesenterprise" / "CoreVersion.scala"
   val versionExtractor      = """(\d+)\.(\d+)\.(\d+).*""".r
   val (major, minor, patch) = version.value match {
     case versionExtractor(ma, mi, pa) => (ma.toInt, mi.toInt, pa.toInt)
