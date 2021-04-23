@@ -42,6 +42,14 @@ credentials += {
   }
 }
 
+excludeDependencies ++= Seq(
+  // workaround for https://github.com/sbt/sbt/issues/3618
+  // include "jakarta.ws.rs" % "jakarta.ws.rs-api" instead
+  ExclusionRule("javax.ws.rs", "javax.ws.rs-api")
+)
+
+libraryDependencies += "jakarta.ws.rs" % "jakarta.ws.rs-api" % "2.1.5"
+
 val coreVersionSource = Def.task {
   // WARNING!!!
   // Please, update the fallback version every major and minor releases.
