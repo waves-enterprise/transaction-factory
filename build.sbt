@@ -68,7 +68,7 @@ val coreVersionSource = Def.task {
     coreVersionFile,
     s"""package com.wavesenterprise
        |
-       |object Version {
+       |object CoreVersion {
        |  val VersionString = "${version.value}"
        |  val VersionTuple = ($major, $minor, $patch)
        |}
@@ -234,7 +234,7 @@ lazy val lang =
           Dependencies.scodec.value ++
           Dependencies.fastparse.value,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins"),
-      resolvers += Resolver.sbtPluginRepo("releases"),
+      resolvers += Resolver.sbtPluginRepo("releases")
     )
     .jsSettings(
       scalaJSLinkerConfig ~= {
