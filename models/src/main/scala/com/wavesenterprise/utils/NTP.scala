@@ -25,9 +25,9 @@ object NtpMode {
 }
 
 case class NTP(servers: Seq[String],
-          mode: NtpMode = NtpMode.Normal,
-          requestTimeout: FiniteDuration = 10.seconds,
-          expirationTimeout: FiniteDuration = 60.seconds)(implicit val scheduler: Scheduler)
+               mode: NtpMode = NtpMode.Normal,
+               requestTimeout: FiniteDuration = 10.seconds,
+               expirationTimeout: FiniteDuration = 60.seconds)(implicit val scheduler: Scheduler)
     extends Time
     with ScorexLogging
     with AutoCloseable {
