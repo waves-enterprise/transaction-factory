@@ -11,7 +11,7 @@ import com.wavesenterprise.lang.v1.compiler.CompilerV1
 import com.wavesenterprise.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.wavesenterprise.lang.v1.testing.ScriptGen
 import com.wavesenterprise.privacy.PolicyDataHash
-import com.wavesenterprise.settings.TestFeeSettings
+import com.wavesenterprise.settings.TestFees
 import com.wavesenterprise.state._
 import com.wavesenterprise.transaction._
 import com.wavesenterprise.transaction.acl.{PermitTransactionV1, PermitTransactionV2}
@@ -103,8 +103,8 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   val maxOrderTimeGen: Gen[Long] = Gen.choose(10000L, Order.MaxLiveTime).map(_ + ntpTime.correctedTime())
 
   val timestampGen: Gen[Long]       = Gen.choose(1, Long.MaxValue - 100)
-  protected val lowerBound: Long      = Long.MaxValue / 4
-  protected val upperBound: Long      = (Long.MaxValue / 4) * 3
+  protected val lowerBound: Long    = Long.MaxValue / 4
+  protected val upperBound: Long    = (Long.MaxValue / 4) * 3
   val narrowTimestampGen: Gen[Long] = Gen.choose(lowerBound, upperBound)
 
   val westAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
@@ -270,7 +270,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       recipients <- Gen.listOfN(transferCount, transferGen)
     } yield (assetId, sender, recipients, timestamp, feeAssetId, feeAmount, attachment)
 
-  val MinIssueFee: Long = TestFeeSettings.defaultFees.forTxType(IssueTransactionV2.typeId)
+  val MinIssueFee: Long = TestFees.defaultFees.forTxType(IssueTransactionV2.typeId)
 
   val createAliasV2Gen: Gen[CreateAliasTransaction] = for {
     timestamp: Long           <- positiveLongGen
@@ -369,15 +369,15 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     } yield {
       IssueTransactionV2
         .selfSigned(chainId = currentChainId,
-          sender,
-          assetName,
-          description,
-          fixedQuantity.getOrElse(quantity),
-          decimals,
-          reissuable = false,
-          MinIssueFee,
-          timestamp,
-          None)
+                    sender,
+                    assetName,
+                    description,
+                    fixedQuantity.getOrElse(quantity),
+                    decimals,
+                    reissuable = false,
+                    MinIssueFee,
+                    timestamp,
+                    None)
         .explicitGet()
     }
 
@@ -668,7 +668,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       recipients  <- severalGenerators(accountGen, 1, recipientsMaxSize)
       owners      <- severalAddressGenerator(1, ownersMaxSize)
       txTimestamp <- ntpTimestampGen
-      fee = TestFeeSettings.defaultFees.forTxType(CreatePolicyTransaction.typeId)
+      fee = TestFees.defaultFees.forTxType(CreatePolicyTransaction.typeId)
       createPolicyTx <- CreatePolicyTransactionV1
         .selfSigned(
           sender,
@@ -693,7 +693,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       owners      <- severalAddressGenerator(1, ownersMaxSize)
       feeAssetId  <- Gen.option(bytes32gen)
       txTimestamp <- ntpTimestampGen
-      fee = TestFeeSettings.defaultFees.forTxType(CreatePolicyTransaction.typeId)
+      fee = TestFees.defaultFees.forTxType(CreatePolicyTransaction.typeId)
       createPolicyTx <- CreatePolicyTransactionV2
         .selfSigned(
           sender,
@@ -721,7 +721,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       owners      <- severalAddressGenerator(1, ownersMaxSize)
       feeAssetId  <- Gen.option(bytes32gen)
       txTimestamp <- ntpTimestampGen
-      fee = TestFeeSettings.defaultFees.forTxType(CreatePolicyTransaction.typeId)
+      fee = TestFees.defaultFees.forTxType(CreatePolicyTransaction.typeId)
       atomicBadge <- atomicBadgeGen
       createPolicyTx <- CreatePolicyTransactionV3
         .selfSigned(
@@ -740,12 +740,12 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   }
 
   protected def internalUpdatePolicyTransactionV1Gen(policyIdGen: Gen[Array[Byte]],
-                                                   ownersToAdd: Gen[List[Address]],
-                                                   ownersToRemove: Gen[List[Address]],
-                                                   recipientsToAdd: Gen[List[Address]],
-                                                   recipientsToRemove: Gen[List[Address]],
-                                                   opTypeGen: Gen[OpType],
-                                                   policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV1] = {
+                                                     ownersToAdd: Gen[List[Address]],
+                                                     ownersToRemove: Gen[List[Address]],
+                                                     recipientsToAdd: Gen[List[Address]],
+                                                     recipientsToRemove: Gen[List[Address]],
+                                                     opTypeGen: Gen[OpType],
+                                                     policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV1] = {
     for {
       policyId <- policyIdGen
       opType   <- opTypeGen
@@ -758,7 +758,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
         case Remove => ownersToRemove
       }
       txTimestamp <- ntpTimestampGen
-      fee = TestFeeSettings.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
+      fee = TestFees.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
       updatePolicyTx <- UpdatePolicyTransactionV1
         .selfSigned(
           policyOwner,
@@ -774,12 +774,12 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   }
 
   protected def internalUpdatePolicyTransactionV2Gen(policyIdGen: Gen[Array[Byte]],
-                                                   ownersToAdd: Gen[List[Address]],
-                                                   ownersToRemove: Gen[List[Address]],
-                                                   recipientsGen: Gen[List[Address]],
-                                                   opTypeGen: Gen[OpType],
-                                                   feeAssetIdGen: Gen[Option[Array[Byte]]],
-                                                   policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV2] = {
+                                                     ownersToAdd: Gen[List[Address]],
+                                                     ownersToRemove: Gen[List[Address]],
+                                                     recipientsGen: Gen[List[Address]],
+                                                     opTypeGen: Gen[OpType],
+                                                     feeAssetIdGen: Gen[Option[Array[Byte]]],
+                                                     policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV2] = {
     for {
       policyId   <- policyIdGen
       recipients <- recipientsGen
@@ -790,7 +790,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       }
       txTimestamp <- ntpTimestampGen
       feeAssetId  <- feeAssetIdGen
-      fee = TestFeeSettings.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
+      fee = TestFees.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
       updatePolicyTx <- UpdatePolicyTransactionV2
         .selfSigned(
           policyOwner,
@@ -807,13 +807,13 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   }
 
   protected def internalUpdatePolicyTransactionV3Gen(atomicBadgeGen: Gen[Option[AtomicBadge]],
-                                                   policyIdGen: Gen[Array[Byte]],
-                                                   ownersToAdd: Gen[List[Address]],
-                                                   ownersToRemove: Gen[List[Address]],
-                                                   recipientsGen: Gen[List[Address]],
-                                                   opTypeGen: Gen[OpType],
-                                                   feeAssetIdGen: Gen[Option[Array[Byte]]],
-                                                   policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV3] = {
+                                                     policyIdGen: Gen[Array[Byte]],
+                                                     ownersToAdd: Gen[List[Address]],
+                                                     ownersToRemove: Gen[List[Address]],
+                                                     recipientsGen: Gen[List[Address]],
+                                                     opTypeGen: Gen[OpType],
+                                                     feeAssetIdGen: Gen[Option[Array[Byte]]],
+                                                     policyOwner: PrivateKeyAccount): Gen[UpdatePolicyTransactionV3] = {
     for {
       policyId   <- policyIdGen
       recipients <- recipientsGen
@@ -824,7 +824,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       }
       txTimestamp <- ntpTimestampGen
       feeAssetId  <- feeAssetIdGen
-      fee = TestFeeSettings.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
+      fee = TestFees.defaultFees.forTxType(UpdatePolicyTransactionV1.typeId)
       atomicBadge <- atomicBadgeGen
       updatePolicyTx <- UpdatePolicyTransactionV3
         .selfSigned(
@@ -902,7 +902,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       policyId         <- policyIdGen
       (data, dataHash) <- policyDataHashGen
       txTimestamp      <- ntpTimestampGen
-      fee = TestFeeSettings.defaultFees.forTxType(PolicyDataHashTransactionV1.typeId)
+      fee = TestFees.defaultFees.forTxType(PolicyDataHashTransactionV1.typeId)
       policyDataHashTx <- PolicyDataHashTransactionV1
         .selfSigned(sender, dataHash, ByteStr(policyId), txTimestamp, fee)
         .fold(_ => Gen.fail, Gen.const)
@@ -917,7 +917,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       (data, dataHash) <- policyDataHashGen
       txTimestamp      <- ntpTimestampGen
       feeAssetId       <- feeAssetIdGen
-      fee = TestFeeSettings.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
+      fee = TestFees.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
       policyDataHashTx <- PolicyDataHashTransactionV2
         .selfSigned(sender, dataHash, ByteStr(policyId), txTimestamp, fee, feeAssetId.map(ByteStr(_)))
         .fold(_ => Gen.fail, Gen.const)
@@ -934,7 +934,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       txTimestamp      <- ntpTimestampGen
       feeAssetId       <- feeAssetIdGen
       atomicBadge      <- atomicBadgeGen
-      fee = TestFeeSettings.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
+      fee = TestFees.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
       policyDataHashTx <- PolicyDataHashTransactionV3
         .selfSigned(sender, dataHash, ByteStr(policyId), txTimestamp, fee, feeAssetId.map(ByteStr(_)), atomicBadge)
         .fold(_ => Gen.fail, Gen.const)

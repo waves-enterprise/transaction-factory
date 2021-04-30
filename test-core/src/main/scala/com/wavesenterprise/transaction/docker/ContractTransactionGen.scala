@@ -2,7 +2,7 @@ package com.wavesenterprise.transaction.docker
 
 import com.wavesenterprise.account.PrivateKeyAccount
 import com.wavesenterprise.crypto
-import com.wavesenterprise.settings.TestFeeSettings.{defaultFees => fees}
+import com.wavesenterprise.settings.TestFees.{defaultFees => fees}
 import com.wavesenterprise.state._
 import com.wavesenterprise.transaction._
 import com.wavesenterprise.utils.EitherUtils.EitherExt

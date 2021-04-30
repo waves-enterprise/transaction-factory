@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.settings.TestFeeSettings
+import com.wavesenterprise.settings.TestFees
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
@@ -11,7 +11,7 @@ import play.api.libs.json.Json
 
 class CreatePolicyTransactionV3Specification extends FunSpecLike with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen with Inside {
 
-  private val createPolicyFee = TestFeeSettings.defaultFees.forTxType(CreatePolicyTransaction.typeId)
+  private val createPolicyFee = TestFees.defaultFees.forTxType(CreatePolicyTransaction.typeId)
 
   it("CreatePolicy Transaction encoding round trip") {
     forAll(createPolicyTransactionV3Gen()) {

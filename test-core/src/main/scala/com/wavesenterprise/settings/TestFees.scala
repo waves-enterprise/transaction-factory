@@ -32,6 +32,11 @@ import com.wavesenterprise.transaction.smart.SetScriptTransaction
 import com.wavesenterprise.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.wavesenterprise.utils.NumberUtils.DoubleExt
 
+case class TestFees(base: Map[Byte, WestAmount], additional: Map[Byte, WestAmount]) {
+  def forTxType(typeId: Byte): Long           = base(typeId).units
+  def forTxTypeAdditional(typeId: Byte): Long = additional(typeId).units
+}
+
 object TestFees {
   val fees: Map[Byte, WestAmount] = Map(
     GenesisTransaction.typeId          -> 0.west,
@@ -66,4 +71,6 @@ object TestFees {
     MassTransferTransaction.typeId -> 0.01.west,
     DataTransaction.typeId         -> 0.01.west
   ).mapValues(WestAmount(_))
+
+  val defaultFees: TestFees = TestFees(fees, additionalFees)
 }

@@ -2,7 +2,7 @@ package com.wavesenterprise.transaction
 
 import com.wavesenterprise.crypto.SignatureLength
 import com.wavesenterprise.privacy.PolicyDataHash
-import com.wavesenterprise.settings.TestFeeSettings
+import com.wavesenterprise.settings.TestFees
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
@@ -17,7 +17,7 @@ class PolicyDataHashV2Specification extends FunSpecLike with ScalaCheckPropertyC
 
   private val defaultPolicyId: ByteStr       = ByteStr(Base58.decode("thfgsdfewe").get)
   private val policyDataHash: PolicyDataHash = PolicyDataHash.fromDataBytes(byteArrayGen(66000).sample.get)
-  private val policyDataHashFee              = TestFeeSettings.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
+  private val policyDataHashFee              = TestFees.defaultFees.forTxType(PolicyDataHashTransactionV2.typeId)
 
   it("PolicyDataHash Transaction encoding round trip") {
     forAll(policyDataHashTransactionV2Gen()) {
