@@ -85,7 +85,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   val policyDataHashGen: Gen[(Array[Byte], PolicyDataHash)] =
     byteArrayGen(PolicyDataHash.DataHashLength).map(bytes => (bytes, PolicyDataHash.fromDataBytes(bytes)))
 
-  private def severalGenerators[T](generator: Gen[T], min: Int, max: Int): Gen[List[T]] = {
+  protected def severalGenerators[T](generator: Gen[T], min: Int, max: Int): Gen[List[T]] = {
     for {
       addressesCnt <- Gen.choose(min, max)
       elements     <- Gen.listOfN(addressesCnt, generator)
@@ -103,8 +103,8 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   val maxOrderTimeGen: Gen[Long] = Gen.choose(10000L, Order.MaxLiveTime).map(_ + ntpTime.correctedTime())
 
   val timestampGen: Gen[Long]       = Gen.choose(1, Long.MaxValue - 100)
-  private val lowerBound: Long      = Long.MaxValue / 4
-  private val upperBound: Long      = (Long.MaxValue / 4) * 3
+  protected val lowerBound: Long      = Long.MaxValue / 4
+  protected val upperBound: Long      = (Long.MaxValue / 4) * 3
   val narrowTimestampGen: Gen[Long] = Gen.choose(lowerBound, upperBound)
 
   val westAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
@@ -170,7 +170,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       .create(currentChainId, sender, script, name, description, fee, timestamp, proofs)
       .explicitGet()
 
-  private val leaseParamGen = for {
+  protected val leaseParamGen = for {
     sender    <- accountGen
     amount    <- positiveLongGen
     fee       <- smallFeeGen
@@ -259,7 +259,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
                                                                                                      recipientGen)
     } yield MassTransferTransactionV2.selfSigned(sender, assetId, recipients, timestamp, feeAmount, attachment, feeAssetId).explicitGet()
 
-  private def massTransferGen(minTransfersCount: Int, maxTransfersCount: Int, recipientGen: Gen[AddressOrAlias]) =
+  protected def massTransferGen(minTransfersCount: Int, maxTransfersCount: Int, recipientGen: Gen[AddressOrAlias]) =
     for {
       (assetId, sender, _, _, timestamp, feeAssetId, feeAmount, attachment) <- transferParamGen
       transferCount                                                         <- Gen.choose(minTransfersCount, maxTransfersCount)
@@ -339,7 +339,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     Gen.const(BurnTransactionV2.selfSigned(currentChainId, burner, assetId, amount, fee, timestamp).explicitGet())
   }
 
-  private val reissuanceGen: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
+  protected val reissuanceGen: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
 
   def issueReissueBurnGeneratorP(issueQuantity: Long,
                                  reissueQuantity: Long,
@@ -413,7 +413,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     r                          <- exchangeV2GeneratorP(sender1, sender2, assetPair.amountAsset, assetPair.priceAsset)
   } yield r
 
-  private type OrderConstructor = (PrivateKeyAccount, PublicKeyAccount, AssetPair, Long, Long, Long, Long, Long) => Order
+  protected type OrderConstructor = (PrivateKeyAccount, PublicKeyAccount, AssetPair, Long, Long, Long, Long, Long) => Order
 
   def exchangeV2GeneratorP(buyer: PrivateKeyAccount,
                            seller: PrivateKeyAccount,
@@ -525,7 +525,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     } yield DataTransactionV2.selfSigned(sender, sender, uniq, timestamp, 15000000, feeAssetId.map(ByteStr(_))).explicitGet())
       .label("DataTransactionV2")
 
-  private def dataGen(maxEntryCount: Int, useForScript: Boolean) =
+  protected def dataGen(maxEntryCount: Int, useForScript: Boolean) =
     for {
       sender    <- accountGen
       timestamp <- timestampGen
@@ -717,7 +717,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     } yield CreatePolicyTransactionV3WithRecipientsPrivKey(CreatePolicyTransactionV3TestWrap(createPolicyTx, sender), recipients)
   }
 
-  private def internalUpdatePolicyTransactionV1Gen(policyIdGen: Gen[Array[Byte]],
+  protected def internalUpdatePolicyTransactionV1Gen(policyIdGen: Gen[Array[Byte]],
                                                    ownersToAdd: Gen[List[Address]],
                                                    ownersToRemove: Gen[List[Address]],
                                                    recipientsToAdd: Gen[List[Address]],
@@ -751,7 +751,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     } yield updatePolicyTx
   }
 
-  private def internalUpdatePolicyTransactionV2Gen(policyIdGen: Gen[Array[Byte]],
+  protected def internalUpdatePolicyTransactionV2Gen(policyIdGen: Gen[Array[Byte]],
                                                    ownersToAdd: Gen[List[Address]],
                                                    ownersToRemove: Gen[List[Address]],
                                                    recipientsGen: Gen[List[Address]],
@@ -784,7 +784,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     } yield updatePolicyTx
   }
 
-  private def internalUpdatePolicyTransactionV3Gen(atomicBadgeGen: Gen[Option[AtomicBadge]],
+  protected def internalUpdatePolicyTransactionV3Gen(atomicBadgeGen: Gen[Option[AtomicBadge]],
                                                    policyIdGen: Gen[Array[Byte]],
                                                    ownersToAdd: Gen[List[Address]],
                                                    ownersToRemove: Gen[List[Address]],
