@@ -4,7 +4,7 @@ import cats.syntax.semigroup._
 import com.wavesenterprise.account.PublicKeyAccount._
 import com.wavesenterprise.account._
 import com.wavesenterprise.acl.OpType.{Add, Remove}
-import com.wavesenterprise.acl.{OpType, PermissionOp, PermissionsGen}
+import com.wavesenterprise.acl.{OpType, PermissionOp, PermissionsGen, Role}
 import com.wavesenterprise.lang.GostGlobal
 import com.wavesenterprise.lang.ScriptVersion.Versions.V1
 import com.wavesenterprise.lang.v1.compiler.CompilerV1
@@ -603,6 +603,10 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       timestamp <- timestampGen
       tx        <- GenesisPermitTransaction.create(target, role, timestamp).fold(_ => Gen.fail, Gen.const)
     } yield tx
+
+  def genesisPermitTxGen(target: Address, role: Role, timestamp: Long): Gen[GenesisPermitTransaction] = {
+    GenesisPermitTransaction.create(target, role, timestamp).fold(_ => Gen.fail, Gen.const)
+  }
 
   def registerNodeTransactionGen(opTypeGen: Gen[OpType] = PermissionsGen.permissionOpTypeGen): Gen[RegisterNodeTransactionV1] = {
     registerNodeTransactionGen(accountGen, accountGen, opTypeGen)
