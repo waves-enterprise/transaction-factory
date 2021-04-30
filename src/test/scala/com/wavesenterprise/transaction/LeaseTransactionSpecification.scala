@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.account.{Address, PublicKeyAccount}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.EitherUtils.EitherExt
@@ -9,7 +9,7 @@ import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 
-class LeaseTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen with WithSenderAndRecipient {
+class LeaseTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen with WithSenderAndRecipient {
 
   property("Lease transaction serialization roundtrip") {
     forAll(leaseGen) { tx: LeaseTransaction =>

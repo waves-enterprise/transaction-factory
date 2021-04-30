@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.account.PublicKeyAccount
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.EitherUtils.EitherExt
@@ -13,7 +13,7 @@ class LeaseCancelTransactionSpecification
     extends PropSpec
     with ScalaCheckPropertyChecks
     with Matchers
-    with TransactionGen
+    with CoreTransactionGen
     with WithSenderAndRecipient {
 
   property("Lease cancel serialization roundtrip") {

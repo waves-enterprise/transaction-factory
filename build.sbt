@@ -332,6 +332,20 @@ lazy val crypto: Project = project
     publishArtifact in (Compile, packageDoc) := false
   )
 
+lazy val testCore: Project = (project in file("test-core"))
+  .dependsOn(models)
+  .aggregate(models)
+  .settings(
+    moduleName := "we-test-core",
+    version := "1.0.0-RC1",
+    libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
+    scalacOptions += "-Yresolve-term-conflict:object",
+    publishTo := weReleasesRepo,
+    publishConfiguration := publishConfiguration.value.withOverwrite(true),
+    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := false
+  )
+
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .dependsOn(transactionProtobuf)
@@ -454,6 +468,7 @@ val weReleasesRepo = Some("Sonatype Nexus Repository Manager" at "https://artifa
 lazy val core = project
   .in(file("."))
   .dependsOn(models)
+  .dependsOn(testCore % "test->test")
   .aggregate(models)
   .settings(
     moduleName := "we-core",

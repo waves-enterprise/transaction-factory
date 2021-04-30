@@ -5,12 +5,12 @@ import com.wavesenterprise.settings.TestFeeSettings
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.{TransactionGen, crypto}
+import com.wavesenterprise.{CoreTransactionGen, crypto}
 import org.scalatest.{FunSpecLike, Inside, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 
-class UpdatePolicyTransactionV1Specification extends FunSpecLike with ScalaCheckPropertyChecks with Matchers with TransactionGen with Inside {
+class UpdatePolicyTransactionV1Specification extends FunSpecLike with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen with Inside {
 
   private val defaultPolicyId: ByteStr = ByteStr(Base58.decode("thfgsdfewe").get)
   private val updatePolicyFee          = TestFeeSettings.defaultFees.forTxType(CreatePolicyTransactionV1.typeId)

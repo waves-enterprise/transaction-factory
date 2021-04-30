@@ -6,7 +6,7 @@ import org.scalacheck.Gen
 
 object PermissionsGen {
 
-  private val time = new NTP(Seq("pool.ntp.org"))(monix.execution.Scheduler.global)
+  private val time = NTP(Seq("pool.ntp.org"))(monix.execution.Scheduler.global)
 
   val roleGen: Gen[Role] = Gen.oneOf(Miner, Issuer, Dexer, Permissioner, Blacklister, ContractDeveloper, ConnectionManager)
 

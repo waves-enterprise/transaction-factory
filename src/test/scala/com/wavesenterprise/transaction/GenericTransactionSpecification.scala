@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -10,7 +10,7 @@ abstract class GenericTransactionSpecification[T <: com.wavesenterprise.transact
     extends PropSpec
     with ScalaCheckPropertyChecks
     with Matchers
-    with TransactionGen
+    with CoreTransactionGen
     with WithSenderAndRecipient {
 
   def transactionParser: com.wavesenterprise.transaction.TransactionParserFor[T]

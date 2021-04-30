@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.account.{Alias, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.EitherUtils.EitherExt
@@ -12,7 +12,7 @@ class CreateAliasTransactionV2Specification
     extends PropSpec
     with ScalaCheckPropertyChecks
     with Matchers
-    with TransactionGen
+    with CoreTransactionGen
     with WithSenderAndRecipient {
 
   property("CreateAliasTransaction serialization roundtrip") {

@@ -7,7 +7,7 @@ import com.wavesenterprise.transaction.assets.{IssueTransactionV2, SponsorFeeTra
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import com.wavesenterprise.utils.NumberUtils.DoubleExt
 import com.wavesenterprise.utils.{Base58, Base64}
-import com.wavesenterprise.{TransactionGen, crypto}
+import com.wavesenterprise.{CoreTransactionGen, crypto}
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
@@ -16,7 +16,7 @@ class SponsorFeeTransactionV1Specification
     extends PropSpec
     with ScalaCheckPropertyChecks
     with Matchers
-    with TransactionGen
+    with CoreTransactionGen
     with WithSenderAndRecipient {
 
   val One = 100000000L

@@ -109,6 +109,6 @@ publish-nexus-artifacts:
     - test-core
   script:
     - *unpack-build-products
-    - sbt -mem 2048 ";core/publish;protobufArchives/publish"
+    - sbt -mem 2048 ";core/publish;testCore/publish;protobufArchives/publish"
   only:
     - tags

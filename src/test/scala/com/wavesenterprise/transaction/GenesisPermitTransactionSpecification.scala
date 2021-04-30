@@ -1,10 +1,10 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
-class GenesisPermitTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class GenesisPermitTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
   property("Genesis Permit Transaction encoding round trip") {
     forAll(genesisPermitTxGen) { permTx =>
       val encoded = permTx.bytes()

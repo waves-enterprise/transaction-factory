@@ -7,7 +7,7 @@ import com.wavesenterprise.transaction.ValidationError.OrderValidationError
 import com.wavesenterprise.transaction.assets.exchange.{Order, _}
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.{NTPTime, NoShrink, TransactionGen}
+import com.wavesenterprise.{CoreTransactionGen, NTPTime, NoShrink}
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -19,7 +19,7 @@ class ExchangeTransactionSpecification
     extends PropSpec
     with ScalaCheckPropertyChecks
     with Matchers
-    with TransactionGen
+    with CoreTransactionGen
     with WithSenderAndRecipient
     with NTPTime
     with NoShrink {

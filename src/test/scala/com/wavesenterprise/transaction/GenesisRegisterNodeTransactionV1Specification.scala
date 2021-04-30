@@ -1,10 +1,10 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
-class GenesisRegisterNodeTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class GenesisRegisterNodeTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
   property("Genesis RegisterNode Transaction encoding round trip") {
     forAll(genesisRegisterNodeTxGen()) { regTx =>
       val encoded = regTx.bytes()

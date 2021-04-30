@@ -3,11 +3,11 @@ package com.wavesenterprise.transaction
 import com.wavesenterprise.transaction.acl.{PermitTransaction, PermitTransactionV1}
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.{TransactionGen, crypto}
+import com.wavesenterprise.{CoreTransactionGen, crypto}
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class PermitTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class PermitTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
   property("Permit Transaction encoding round trip") {
     forAll(permitTransactionV1Gen()) { permTx =>
       val encoded = permTx.bytes()

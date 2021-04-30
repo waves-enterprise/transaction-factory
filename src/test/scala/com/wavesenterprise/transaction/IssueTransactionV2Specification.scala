@@ -1,8 +1,8 @@
 package com.wavesenterprise.transaction
 
-import java.nio.charset.StandardCharsets.UTF_8
+import com.wavesenterprise.CoreTransactionGen
 
-import com.wavesenterprise.TransactionGen
+import java.nio.charset.StandardCharsets.UTF_8
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import com.wavesenterprise.account.PublicKeyAccount
 import com.wavesenterprise.state._
@@ -11,7 +11,12 @@ import org.scalatest.{Matchers, PropSpec}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 
-class IssueTransactionV2Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen with WithSenderAndRecipient {
+class IssueTransactionV2Specification
+    extends PropSpec
+    with ScalaCheckPropertyChecks
+    with Matchers
+    with CoreTransactionGen
+    with WithSenderAndRecipient {
 
   property("SmartIssueTransaction serialization roundtrip") {
     forAll(smartIssueTransactionGen()) { tx: IssueTransactionV2 =>

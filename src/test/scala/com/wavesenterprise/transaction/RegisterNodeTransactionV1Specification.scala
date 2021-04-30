@@ -6,13 +6,13 @@ import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.transaction.validation.RegisterNodeValidation
 import com.wavesenterprise.utils.Base58
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.{TransactionGen, crypto}
+import com.wavesenterprise.{CoreTransactionGen, crypto}
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 
-class RegisterNodeTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class RegisterNodeTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
   val regNodeTxFee: Long = TestFeeSettings.defaultFees.forTxType(RegisterNodeTransactionV1.typeId)
 
   property("RegisterNode Transaction encoding round trip") {

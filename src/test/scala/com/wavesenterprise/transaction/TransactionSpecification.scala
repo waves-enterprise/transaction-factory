@@ -1,12 +1,12 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.wavesenterprise.transaction.transfer._
 
-class TransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class TransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
 
   property("transaction fields should be constructed in a right way") {
     forAll(bytes32gen, bytes32gen, timestampGen, positiveLongGen, positiveLongGen) {

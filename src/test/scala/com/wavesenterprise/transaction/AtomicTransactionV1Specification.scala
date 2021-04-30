@@ -1,20 +1,20 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.account.PrivateKeyAccount
 import com.wavesenterprise.state.diffs.ProduceError.produce
-import com.wavesenterprise.transaction.docker.{
-  ContractTransactionGen,
-  ExecutableTransaction,
-  ExecutedContractTransaction,
-  ExecutedContractTransactionV1
-}
+import com.wavesenterprise.transaction.docker.{ContractTransactionGen, ExecutedContractTransaction}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.{TransactionGen, crypto}
+import com.wavesenterprise.{CoreTransactionGen, crypto}
 import org.scalatest.{Matchers, PropSpec}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import tools.GenHelper.ExtendedGen
 
-class AtomicTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen with ContractTransactionGen {
+class AtomicTransactionV1Specification
+    extends PropSpec
+    with CommonAtomicTransactionSpec
+    with ScalaCheckPropertyChecks
+    with Matchers
+    with CoreTransactionGen
+    with ContractTransactionGen {
 
   private val signer = accountGen.generateSample()
   private val badge  = AtomicBadge(Some(signer.toAddress))
@@ -72,23 +72,4 @@ class AtomicTransactionV1Specification extends PropSpec with ScalaCheckPropertyC
       AtomicTransactionV1.selfSigned(signer, None, innerTxs, ts) should (produce("trusted address") and produce("does not match the atomic sender"))
     }
   }
-
-  private def enrichAtomicTx[T <: AtomicInnerTransaction](senderAcc: PrivateKeyAccount,
-                                                          minerAcc: PrivateKeyAccount,
-                                                          innerTxs: List[T],
-                                                          tx: AtomicTransaction,
-                                                          timestamp: Long) = {
-    val innerTxsWithExecuted = innerTxs.map {
-      case executableTx: ExecutableTransaction =>
-        ExecutedContractTransactionV1.selfSigned(senderAcc, executableTx, List.empty, timestamp).explicitGet()
-      case tx => tx
-    }
-
-    val unsignedMinedTx = tx match {
-      case v1: AtomicTransactionV1 => v1.copy(miner = Some(minerAcc), transactions = innerTxsWithExecuted)
-    }
-
-    AtomicUtils.addMinerProof(unsignedMinedTx, minerAcc).explicitGet()
-  }
-
 }

@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.account.PublicKeyAccount
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.transaction.assets.{BurnTransaction, BurnTransactionV2}
@@ -9,7 +9,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 
-class BurnTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen with WithSenderAndRecipient {
+class BurnTransactionSpecification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen with WithSenderAndRecipient {
 
   property("Burn serialization roundtrip") {
     forAll(burnGen) { issue: BurnTransaction =>

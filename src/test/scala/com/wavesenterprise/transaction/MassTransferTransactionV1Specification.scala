@@ -1,6 +1,6 @@
 package com.wavesenterprise.transaction
 
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.transaction.ValidationError.GenericError
 import com.wavesenterprise.transaction.transfer.{ParsedTransfer, _}
 import com.wavesenterprise.transaction.validation.TransferValidation
@@ -10,7 +10,7 @@ import org.scalacheck.Arbitrary
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class MassTransferTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen {
+class MassTransferTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with CoreTransactionGen {
 
   property("serialization roundtrip") {
     forAll(massTransferV1Gen()) { tx: MassTransferTransactionV1 =>

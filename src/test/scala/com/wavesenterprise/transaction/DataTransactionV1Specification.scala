@@ -1,7 +1,7 @@
 package com.wavesenterprise.transaction
 
 import com.google.common.primitives.Shorts
-import com.wavesenterprise.TransactionGen
+import com.wavesenterprise.CoreTransactionGen
 import com.wavesenterprise.account.PublicKeyAccount
 import com.wavesenterprise.state._
 import com.wavesenterprise.utils.Base64
@@ -11,7 +11,12 @@ import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 
-class DataTransactionV1Specification extends PropSpec with ScalaCheckPropertyChecks with Matchers with TransactionGen with WithSenderAndRecipient {
+class DataTransactionV1Specification
+    extends PropSpec
+    with ScalaCheckPropertyChecks
+    with Matchers
+    with CoreTransactionGen
+    with WithSenderAndRecipient {
 
   import DataTransactionEntryOps._
 

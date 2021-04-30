@@ -33,7 +33,7 @@ import org.scalatest.Suite
 import java.nio.charset.StandardCharsets.UTF_8
 import scala.util.Random
 
-trait TransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suite =>
+trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suite =>
 
   def currentChainId: Byte = AddressScheme.getAddressSchema.chainId
 
