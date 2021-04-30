@@ -363,6 +363,24 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
   val reissueGen: Gen[ReissueTransaction] = issueReissueBurnGen.map(_._2)
   val burnGen: Gen[BurnTransaction]       = issueReissueBurnGen.map(_._3)
 
+  def issueGen(sender: PrivateKeyAccount, fixedQuantity: Option[Long] = None): Gen[IssueTransaction] =
+    for {
+      (_, assetName, description, quantity, decimals, _, _, timestamp) <- issueParamGen
+    } yield {
+      IssueTransactionV2
+        .selfSigned(chainId = currentChainId,
+          sender,
+          assetName,
+          description,
+          fixedQuantity.getOrElse(quantity),
+          decimals,
+          reissuable = false,
+          MinIssueFee,
+          timestamp,
+          None)
+        .explicitGet()
+    }
+
   def sponsorFeeCancelSponsorFeeGen(
       sender: PrivateKeyAccount,
       ts: Option[Long] = None): Gen[(IssueTransaction, SponsorFeeTransactionV1, SponsorFeeTransactionV1, SponsorFeeTransactionV1)] =
