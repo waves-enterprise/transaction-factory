@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
 
-package object crypto {
+package crypto {
   object CryptoInitializer {
     private[crypto] val cryptoSettingsPromise: Promise[CryptoSettings] = Promise()
 
@@ -29,7 +29,9 @@ package object crypto {
       }
     }
   }
+}
 
+package object crypto {
   lazy val cryptoSettings: CryptoSettings = readEnvForCryptoSettings()
     .getOrElse(Await.result(CryptoInitializer.cryptoSettingsPromise.future, 7.seconds))
 
