@@ -1,7 +1,7 @@
 package com.wavesenterprise.grpc
 
 import com.wavesenterprise.wavesenterprise.writeTextFile
-import sbt.Keys.{sourceDirectory, sourceGenerators}
+import sbt.Keys.{sourceDirectory, sourceGenerators, version}
 import sbt._
 
 import java.io.File
@@ -13,9 +13,7 @@ object GrpcApiVersionGenerator extends AutoPlugin {
 
   lazy val codeGenerator = Def.task {
     val path = (sourceDirectory in Compile).value / "protobuf" / "managed"
-    // TODO: use version of grpcProtobuf module in 1.7
-    // generate(path, version.value)
-    generate(path, "1.1")
+    generate(path, version.value)
   }
 
   private def generate(outputDir: File, version: String): Seq[File] = {
