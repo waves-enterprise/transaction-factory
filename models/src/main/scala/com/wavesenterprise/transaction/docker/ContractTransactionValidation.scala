@@ -3,6 +3,7 @@ package com.wavesenterprise.transaction.docker
 import cats.implicits._
 import com.google.common.io.ByteStreams.newDataOutput
 import com.wavesenterprise.crypto
+import com.wavesenterprise.docker.validator.{ValidationPolicy, ValidationPolicyDescriptor}
 import com.wavesenterprise.state.{ByteStr, DataEntry}
 import com.wavesenterprise.transaction.ValidationError.GenericError
 import com.wavesenterprise.transaction.{Transaction, ValidationError}
@@ -12,11 +13,10 @@ import com.wavesenterprise.transaction.{Transaction, ValidationError}
   */
 trait ContractTransactionValidation {
 
-  val ImageMinLength: Int                = 1 // in symbols
-  val ImageMaxLength: Int                = 200 // in symbols
-  val ContractNameMaxLength              = 200 // in symbols
-  val MaxExecutedTransactionBytes: Int   = 300 * 1024 // 300KB
-  val RequiredValidationProofsCount: Int = 2
+  val ImageMinLength: Int              = 1          // in symbols
+  val ImageMaxLength: Int              = 200        // in symbols
+  val ContractNameMaxLength            = 200        // in symbols
+  val MaxExecutedTransactionBytes: Int = 300 * 1024 // 300KB
 
   private val Sha256HexLength = 64
   private val Sha256HexDigits = (('0' to '9') ++ ('a' to 'f') ++ ('A' to 'F')).toSet
@@ -60,6 +60,21 @@ trait ContractTransactionValidation {
       _ <- Either.cond(results.map(_.key).distinct.length == results.size, (), GenericError("Results with duplicate keys were found"))
       _ <- results.traverse(ContractTransactionEntryOps.validate)
     } yield ()
+  }
+
+  def validateValidationPolicy(policy: ValidationPolicy): Either[GenericError, Unit] = {
+    import ValidationPolicyDescriptor.{Majority, MajorityWithOneOf}
+
+    policy match {
+      case ValidationPolicy.Any | ValidationPolicy.Majority =>
+        Right(())
+      case ValidationPolicy.MajorityWithOneOf(addresses) =>
+        Either.cond(
+          addresses.nonEmpty,
+          (),
+          GenericError(s"Empty policy addresses. Use '${Majority.name}' instead of '${MajorityWithOneOf.name}'.")
+        )
+    }
   }
 
   def validateSize(tx: ExecutableTransaction): Either[ValidationError, Unit] = validateSize(tx, ExecutableTransaction.MaxBytes)

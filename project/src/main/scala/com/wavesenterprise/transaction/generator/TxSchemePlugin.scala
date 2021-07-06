@@ -3,7 +3,8 @@ package com.wavesenterprise.transaction.generator
 import java.io.File
 import com.wavesenterprise.transaction.TxScheme
 import com.wavesenterprise.transaction.generator.scala.{AtomicInnerTxAdapterGenerator, TxScalaGenerator}
-import sbt.Keys.{baseDirectory, sourceGenerators, sourceManaged}
+import com.wavesenterprise.wavesenterprise.writeTextFile
+import sbt.Keys.{sourceGenerators, sourceManaged}
 import sbt._
 
 object TxSchemePlugin extends AutoPlugin {

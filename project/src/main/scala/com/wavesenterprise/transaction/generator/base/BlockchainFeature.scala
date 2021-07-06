@@ -19,6 +19,7 @@ object BlockchainFeature extends Enum[BlockchainFeature] {
   case object MassTransfer                             extends BlockchainFeature
   case object DataTransaction                          extends BlockchainFeature
   case object AtomicTransactionSupport                 extends BlockchainFeature
+  case object ContractValidationsSupport               extends BlockchainFeature
   case class EvalFeature(override val seqCode: String) extends BlockchainFeature
 
   override def values: immutable.IndexedSeq[BlockchainFeature] = findValues

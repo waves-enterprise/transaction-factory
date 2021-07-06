@@ -5,6 +5,8 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.duration.{Duration => PbDuration}
 import com.wavesenterprise.account.{Address, AddressOrAlias, Alias, PublicKeyAccount}
 import com.wavesenterprise.acl.{OpType, PermissionOp, Role}
+import com.wavesenterprise.docker.ContractApiVersion
+import com.wavesenterprise.docker.validator.ValidationPolicy
 import com.wavesenterprise.state._
 import com.wavesenterprise.transaction.ValidationError.GenericError
 import com.wavesenterprise.transaction._
@@ -12,8 +14,10 @@ import com.wavesenterprise.transaction.acl.PermitTransaction
 import com.wavesenterprise.transaction.assets._
 import com.wavesenterprise.transaction.docker._
 import com.wavesenterprise.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.wavesenterprise.transaction.protobuf.ValidationPolicy.Type
 import com.wavesenterprise.transaction.protobuf.{
   AtomicBadge => PbAtomicBadge,
+  ContractApiVersion => PbContractApiVersion,
   DataEntry => PbDataEntry,
   ExecutableTransaction => PbExecutableTransaction,
   OpType => PbOpType,
@@ -21,6 +25,7 @@ import com.wavesenterprise.transaction.protobuf.{
   Role => PbRole,
   Transaction => PbTransaction,
   Transfer => PbTransfer,
+  ValidationPolicy => PbValidationPolicy,
   ValidationProof => PbValidationProof
 }
 import com.wavesenterprise.transaction.smart.SetScriptTransaction
@@ -213,4 +218,42 @@ object ProtoAdapter {
   def byteArrayToByteString(value: Array[Byte]): ByteString = {
     ByteString.copyFrom(value)
   }
+
+  def toProto(value: ValidationPolicy): PbValidationPolicy = {
+    val `type` = value match {
+      case ValidationPolicy.Any =>
+        PbValidationPolicy.Type.Any(PbValidationPolicy.Any())
+      case ValidationPolicy.Majority =>
+        PbValidationPolicy.Type.Majority(PbValidationPolicy.Majority())
+      case ValidationPolicy.MajorityWithOneOf(addresses) =>
+        val addressesBytes = addresses.map(address => byteArrayToByteString(address.bytes.arr))
+        val pbAddresses    = PbValidationPolicy.MajorityWithOneOf(addressesBytes)
+        PbValidationPolicy.Type.MajorityWithOneOf(pbAddresses)
+    }
+
+    PbValidationPolicy(`type`)
+  }
+
+  def fromProto(value: PbValidationPolicy): Either[ValidationError, ValidationPolicy] =
+    value.`type` match {
+      case Type.Empty =>
+        Left(GenericError(s"Empty validation policy value"))
+      case Type.Any(_) =>
+        Right(ValidationPolicy.Any)
+      case Type.Majority(_) =>
+        Right(ValidationPolicy.Majority)
+      case Type.MajorityWithOneOf(addressesValue) =>
+        addressesValue.addresses.toList
+          .map(addressFromProto)
+          .sequence
+          .map(ValidationPolicy.MajorityWithOneOf)
+    }
+
+  def toProto(value: ContractApiVersion): PbContractApiVersion =
+    PbContractApiVersion(value.majorVersion, value.minorVersion)
+
+  def fromProto(value: PbContractApiVersion): Either[ValidationError, ContractApiVersion] =
+    (Either.cond(value.majorVersion.isValidShort && value.majorVersion >= 0, value.majorVersion.toShort, GenericError(s"Invalid major version")),
+     Either.cond(value.minorVersion.isValidShort && value.minorVersion >= 0, value.minorVersion.toShort, GenericError(s"Invalid minor version")))
+      .mapN(ContractApiVersion(_, _))
 }

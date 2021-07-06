@@ -151,6 +151,14 @@ object BinarySerializer {
     AtomicBadge(readableField) -> end
   }
 
+  def writeAddresses(addresses: Seq[Address], output: ByteArrayDataOutput): Unit =
+    BinarySerializer.writeShortIterable(addresses, addressWriter, output)
+
+  def parseAddresses(bytes: Array[Byte], offset: Offset = 0): (List[Address], Offset) = {
+    val (readableField, end) = BinarySerializer.parseShortList(bytes, addressReader, offset)
+    readableField -> end
+  }
+
   def writeTransferBatch(batch: Seq[ParsedTransfer], output: ByteArrayDataOutput): Unit = {
     output.writeShort(batch.size)
     batch.foreach { transfer =>

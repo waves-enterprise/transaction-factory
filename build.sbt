@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtGit.GitKeys.gitUncommittedChanges
 import com.typesafe.sbt.git.JGit
+import com.wavesenterprise.grpc.GrpcApiVersionGenerator
 import com.wavesenterprise.transaction.generator.{TxSchemePlugin, TxSchemeProtoPlugin, TxSchemeTypeScriptPlugin}
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode
 import sbt.Keys.{credentials, sourceGenerators, _}
@@ -348,6 +349,7 @@ lazy val testCore: Project = (project in file("test-core"))
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
+  .enablePlugins(GrpcApiVersionGenerator)
   .dependsOn(transactionProtobuf)
   .aggregate(transactionProtobuf)
   .settings(
@@ -535,9 +537,14 @@ def printMessageTask(msg: String) = Def.task {
 
 /* ********************************************************* */
 
-lazy val cleanProtobufManagedDir = Def.task[Unit] {
-  IO.delete((sourceDirectory in transactionProtobuf).value / "main" / "protobuf" / "managed")
-}
+lazy val cleanProtobufManagedDirs = Def.sequential(
+  Def.task[Unit] {
+    IO.delete((sourceDirectory in transactionProtobuf).value / "main" / "protobuf" / "managed")
+  },
+  Def.task[Unit] {
+    IO.delete((sourceDirectory in grpcProtobuf).value / "main" / "protobuf" / "managed")
+  }
+)
 
 lazy val cleanTypeScript = Def.task[Unit] {
   IO.delete((baseDirectory in transactionTypeScript).value / "node_modules")
@@ -557,7 +564,7 @@ cleanAll := Def
     clean in grpcProtobuf,
     printMessageTask("Clean transactionProtobuf"),
     clean in transactionProtobuf,
-    cleanProtobufManagedDir,
+    cleanProtobufManagedDirs,
     printMessageTask("Clean transactionTypeScript"),
     clean in transactionTypeScript,
     cleanTypeScript,

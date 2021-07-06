@@ -68,5 +68,20 @@ Instructions for most of the programming languages can be found here: https://gr
 ## Handling errors
 
 Error codes and messages are returned in Response's Metadata using specific keys:
-* `Error-Code` – contains internal error code
-* `Error-Message` – contains details about the error
+* `error-code` – contains internal error code
+* `error-message` – contains details about the error
+
+## Contract API version
+
+Since Node version `v1.6.2` a new field `apiVersion` has been introduced along with `CreateContractTransactionV4` and `UpdateContractTransactionV4`.
+It declares the Contract gRPC API version that is required to be supported by a mining node in order to run that contract.
+
+
+The `managed/api_version.proto` file contains the actual version for Contract gRPC API.
+Contracts whose required `apiVersion` is greater than that of the miner node will be ignored by that node during mining.
+
+Contract API versions:
+* `1.0`: default API version for nodes `v1.6.0` and older;
+* `1.1`: API version for node `v1.6.2`.
+
+To access API version field from source code please follow the instruction: https://developers.google.com/protocol-buffers/docs/proto#customoptions

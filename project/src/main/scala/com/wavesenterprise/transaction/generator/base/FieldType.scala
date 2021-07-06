@@ -470,7 +470,10 @@ object FieldType extends Enum[FieldType] {
         scalaImports = Set("com.wavesenterprise.serialization.BinarySerializer") ++
           underlay.scalaImports ++
           underlayTypeImportsForProto(underlay),
-        protoImports = Set("google/protobuf/wrappers.proto") ++ underlay.protoImports,
+        protoImports = underlay.protoImports ++ (underlay.protoType match {
+          case "int32" | "int64" | "bool" | "string" | "bytes" => Set("google/protobuf/wrappers.proto")
+          case _                                               => Set.empty
+        }),
         typeScriptType = underlay.typeScriptType
       )
       with WrapperType
@@ -1001,6 +1004,67 @@ object FieldType extends Enum[FieldType] {
 
     override val binaryReader: BinaryReader = { c =>
       s"val (${c.field}, ${c.field}End) = BinarySerializer.parseAtomicBadge(${c.bytes}, ${c.offset})"
+    }
+
+    override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
+      s"ProtoAdapter.fromProto(${c.field})"
+    }
+
+    override val vanillaToProtoAdapter: Option[ProtoAdapter] = Some { c =>
+      s"ProtoAdapter.toProto(${c.field})"
+    }
+  }
+
+  case object VALIDATION_POLICY
+      extends FieldType(
+        scalaType = "ValidationPolicy",
+        protoType = "ValidationPolicy",
+        isMessageProtoType = true,
+        scalaImports = Set(
+          "com.wavesenterprise.docker.validator.ValidationPolicy",
+          ProtoAdapterImport
+        ),
+        protoImports = Set("validation_policy.proto")
+      )
+      with BinarySerializableType
+      with ProtoCompatibleType {
+
+    override val binaryWriter: BinaryWriter = { c =>
+      s"${c.output}.write(${c.field}.bytes)"
+    }
+
+    override val binaryReader: BinaryReader = { c =>
+      s"val (${c.field}, ${c.field}End) = ValidationPolicy.fromBytesUnsafe(bytes, ${c.offset})"
+    }
+
+    override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
+      s"ProtoAdapter.fromProto(${c.field})"
+    }
+
+    override val vanillaToProtoAdapter: Option[ProtoAdapter] = Some { c =>
+      s"ProtoAdapter.toProto(${c.field})"
+    }
+  }
+
+  case object CONTRACT_API_VERSION extends FieldType(
+    scalaType = "ContractApiVersion",
+    protoType = "ContractApiVersion",
+    isMessageProtoType = true,
+    scalaImports = Set(
+      "com.wavesenterprise.docker.ContractApiVersion",
+      ProtoAdapterImport
+    ),
+    protoImports = Set("contract_api_version.proto")
+  )
+    with BinarySerializableType
+    with ProtoCompatibleType {
+
+    override val binaryWriter: BinaryWriter = { c =>
+      s"${c.output}.write(${c.field}.bytes)"
+    }
+
+    override val binaryReader: BinaryReader = { c =>
+      s"val (${c.field}, ${c.field}End) = ContractApiVersion.fromBytesUnsafe(bytes, ${c.offset})"
     }
 
     override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>

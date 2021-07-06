@@ -70,8 +70,6 @@ object AtomicInnerTxAdapterGenerator {
         writer.addLines(s"case PbInnerTransaction.Transaction.${scheme.entryName}(value) =>")
           .addLinesIndented(s"${scheme.entryName}.fromProto(protoTx.version, value)")
       }
-      .addLines("case PbInnerTransaction.Transaction.GenesisPermitTransaction(_) | PbInnerTransaction.Transaction.GenesisRegisterNodeTransaction(_) | PbInnerTransaction.Transaction.GenesisTransaction(_) =>")
-      .addLinesIndented(s"""Left(ValidationError.GenericError(s"Genesis inner transaction"))""")
       .addLines("case PbInnerTransaction.Transaction.Empty =>")
       .addLinesIndented(s"""Left(ValidationError.GenericError(s"Empty inner transaction"))""")
       .outdent

@@ -13,6 +13,7 @@ artifacts
 
 # auto-generated proto files
 transaction-protobuf/src/main/protobuf/managed
+grpc-protobuf/src/main/protobuf/managed
 
 # npm generated files
 transactions-factory/node_modules
