@@ -221,7 +221,7 @@ lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
     .settings(
-      version := "1.0.0-RC2",
+      version := "1.0.0-RC3",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       addCompilerPlugin(Dependencies.kindProjector),
@@ -272,7 +272,7 @@ lazy val langJVM = lang.jvm
 lazy val utils = (project in file("utils"))
   .settings(
     moduleName := "we-utils",
-    version := "1.0.0-RC1",
+    version := "1.0.0-RC2",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.serialization,
@@ -296,7 +296,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-RC7",
+    version := "1.0.0-RC8",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -318,7 +318,7 @@ lazy val crypto: Project = project
   .aggregate(utils)
   .settings(
     moduleName := "we-crypto",
-    version := "1.0.0-RC2",
+    version := "1.0.0-RC3",
     libraryDependencies ++= Seq(
       Dependencies.scorex,
       Dependencies.catsCore,
@@ -338,7 +338,7 @@ lazy val testCore: Project = (project in file("test-core"))
   .aggregate(models)
   .settings(
     moduleName := "we-test-core",
-    version := "1.0.0-RC7",
+    version := "1.0.0-RC8",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
     publishTo := weReleasesRepo,

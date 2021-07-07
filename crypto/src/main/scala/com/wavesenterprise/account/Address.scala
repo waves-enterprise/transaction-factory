@@ -1,13 +1,12 @@
 package com.wavesenterprise.account
 
 import cats.implicits._
-import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
-import com.wavesenterprise.crypto.internals.{CryptoAlgorithms, CryptoError, InvalidAddress, KeyPair}
 import com.wavesenterprise.crypto.PublicKey
+import com.wavesenterprise.crypto.internals.{CryptoAlgorithms, CryptoError, InvalidAddress, KeyPair}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.utils.{Base58, ScorexLogging}
+import com.wavesenterprise.utils.{Base58, Caches, ScorexLogging}
 import play.api.libs.json._
 import pureconfig.ConfigReader
 import pureconfig.error.CannotConvert
@@ -23,14 +22,6 @@ sealed trait Address extends AddressOrAlias {
 }
 
 object Address extends ScorexLogging {
-  def cache[K <: AnyRef, V <: AnyRef](maximumSize: Int, loader: K => V): LoadingCache[K, V] =
-    CacheBuilder
-      .newBuilder()
-      .maximumSize(maximumSize)
-      .build(new CacheLoader[K, V] {
-        override def load(key: K) = loader(key)
-      })
-
   val Prefix: String = "address:"
 
   val AddressVersion: Byte = 1
@@ -45,7 +36,7 @@ object Address extends ScorexLogging {
 
   private class AddressImpl(val bytes: ByteStr) extends Address
 
-  private val addressCache = cache[(CryptoAlgorithms[_ <: KeyPair], Byte, ByteStr), Address](
+  private val addressCache = Caches.cache[(CryptoAlgorithms[_ <: KeyPair], Byte, ByteStr), Address](
     AddressCacheSize,
     key => {
       val (cryptoAlgorithms, chainId, publicKey) = key

@@ -3,7 +3,12 @@ package com.wavesenterprise.transaction
 import com.google.common.base.Throwables
 import com.wavesenterprise.account.{Address, Alias, PublicKeyAccount}
 import com.wavesenterprise.acl.{NonEmptyRole, Role}
-import com.wavesenterprise.crypto.internals.{CryptoError, GenericError => CryptoGenericError, InvalidAddress => CryptoInvalidAddress}
+import com.wavesenterprise.crypto.internals.{
+  CryptoError,
+  GenericError => CryptoGenericError,
+  InvalidAddress => CryptoInvalidAddress,
+  InvalidPublicKey => CryptoInvalidPublicKey
+}
 import com.wavesenterprise.docker.ContractInfo
 import com.wavesenterprise.lang.ExprEvaluator.Log
 import com.wavesenterprise.privacy.PolicyDataHash
@@ -166,8 +171,9 @@ object ValidationError {
 
   def fromCryptoError(e: CryptoError): ValidationError = {
     e match {
-      case CryptoInvalidAddress(message) => InvalidAddress(message)
-      case CryptoGenericError(message)   => GenericError(message)
+      case CryptoInvalidAddress(message)   => InvalidAddress(message)
+      case CryptoInvalidPublicKey(message) => InvalidPublicKey(message)
+      case CryptoGenericError(message)     => GenericError(message)
     }
   }
 }
