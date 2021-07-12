@@ -2,18 +2,18 @@ package com.wavesenterprise.transaction.generator.scala
 
 import com.wavesenterprise.transaction.TxScheme
 import com.wavesenterprise.transaction.generator.base.CodeWriter
+import src.main.scala.com.wavesenterprise.transaction.generator.base.Adapter
 
 /**
   * Creates a proto adapter object that transforms transactions inside the container.
   */
-object AtomicInnerTxAdapterGenerator {
+object AtomicInnerTxAdapterGenerator extends Adapter {
 
-  val PackageName = "com.wavesenterprise.serialization"
-  val ObjectName = "AtomicInnerTxAdapter"
+  val packageName = "com.wavesenterprise.serialization"
+  val objectName = "AtomicInnerTxAdapter"
 
-  def buildWriter(schemes: Seq[TxScheme], skipContainers: Boolean = false): CodeWriter = {
-    val filteredSchemes = schemes
-      .filter(scheme => !scheme.isContainer || !skipContainers)
+  def buildWriter(schemes: Seq[TxScheme]): CodeWriter = {
+    val filteredSchemes = schemes.filter(scheme => !scheme.isContainer)
 
     val imports = Seq(
       "com.wavesenterprise.transaction.AtomicInnerTransaction",
@@ -23,13 +23,13 @@ object AtomicInnerTxAdapterGenerator {
       .map(scheme => scheme.packageName + s".${scheme.entryName}")
 
     CodeWriter()
-      .addLines(s"package $PackageName")
+      .addLines(s"package $packageName")
       .newLine
       .fold(imports) {
         case (writer, imp) => writer.addLines("import " + imp)
       }
       .newLine
-      .addLines(s"object $ObjectName {")
+      .addLines(s"object $objectName {")
       .indent
       .newLine
       .call(buildToProto(filteredSchemes))
@@ -48,8 +48,7 @@ object AtomicInnerTxAdapterGenerator {
         case (writer, scheme) =>
           import scheme.{entryName, lowerCamelCaseEntryName}
 
-          writer.addLines(s"case $lowerCamelCaseEntryName: $entryName =>")
-            .addLinesIndented(s"PbInnerTransaction.Transaction.$entryName($lowerCamelCaseEntryName.toInnerProto)")
+          writer.addLines(s"case $lowerCamelCaseEntryName: $entryName => PbInnerTransaction.Transaction.$entryName($lowerCamelCaseEntryName.toInnerProto)")
       }
       .addLines("}")
       .newLine
@@ -67,11 +66,9 @@ object AtomicInnerTxAdapterGenerator {
       .indent
       .fold(schemes) {
         case (writer, scheme) =>
-        writer.addLines(s"case PbInnerTransaction.Transaction.${scheme.entryName}(value) =>")
-          .addLinesIndented(s"${scheme.entryName}.fromProto(protoTx.version, value)")
+          writer.addLines(s"case PbInnerTransaction.Transaction.${scheme.entryName}(value) => ${scheme.entryName}.fromProto(protoTx.version, value)")
       }
-      .addLines("case PbInnerTransaction.Transaction.Empty =>")
-      .addLinesIndented(s"""Left(ValidationError.GenericError(s"Empty inner transaction"))""")
+      .addLines("""case PbInnerTransaction.Transaction.Empty => Left(ValidationError.GenericError(s"Empty inner transaction"))""")
       .outdent
       .addLines("}")
       .newLine

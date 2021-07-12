@@ -946,7 +946,7 @@ object FieldType extends Enum[FieldType] {
         scalaImports = Set(
           "com.wavesenterprise.serialization.BinarySerializer",
           "com.wavesenterprise.transaction.TransactionParsers",
-          s"com.wavesenterprise.serialization.${AtomicInnerTxAdapterGenerator.ObjectName}",
+          s"com.wavesenterprise.serialization.${AtomicInnerTxAdapterGenerator.objectName}",
           "com.wavesenterprise.transaction.docker.ExecutedContractTransaction"
         ),
         protoImports = Set("managed/atomic_inner_transaction.proto"),
@@ -978,11 +978,11 @@ object FieldType extends Enum[FieldType] {
     }
 
     override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
-      s"${AtomicInnerTxAdapterGenerator.ObjectName}.fromProto(${c.field})"
+      s"${AtomicInnerTxAdapterGenerator.objectName}.fromProto(${c.field})"
     }
 
     override val vanillaToProtoAdapter: Option[ProtoAdapter] = Some { c =>
-      s"${AtomicInnerTxAdapterGenerator.ObjectName}.toProto(${c.field})"
+      s"${AtomicInnerTxAdapterGenerator.objectName}.toProto(${c.field})"
     }
   }
 
