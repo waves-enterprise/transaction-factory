@@ -85,7 +85,7 @@ object Permissions {
 
   def empty: Permissions = apply(Seq.empty)
 
-  protected def apply(permissionOps: SortedSet[PermissionOp]): Permissions = {
+  def apply(permissionOps: SortedSet[PermissionOp]): Permissions = {
     new Permissions(permissionOps)
   }
 

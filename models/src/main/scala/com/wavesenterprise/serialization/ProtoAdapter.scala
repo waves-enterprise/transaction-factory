@@ -5,26 +5,26 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.duration.{Duration => PbDuration}
 import com.wavesenterprise.account.{Address, AddressOrAlias, Alias, PublicKeyAccount}
 import com.wavesenterprise.acl.{OpType, PermissionOp, Role}
+import com.wavesenterprise.docker.ContractApiVersion
+import com.wavesenterprise.docker.validator.ValidationPolicy
 import com.wavesenterprise.state._
 import com.wavesenterprise.transaction.ValidationError.GenericError
 import com.wavesenterprise.transaction._
-import com.wavesenterprise.transaction.acl.PermitTransaction
-import com.wavesenterprise.transaction.assets._
 import com.wavesenterprise.transaction.docker._
-import com.wavesenterprise.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.wavesenterprise.transaction.protobuf.ValidationPolicy.Type
 import com.wavesenterprise.transaction.protobuf.{
   AtomicBadge => PbAtomicBadge,
+  ContractApiVersion => PbContractApiVersion,
   DataEntry => PbDataEntry,
   ExecutableTransaction => PbExecutableTransaction,
   OpType => PbOpType,
   PermissionOp => PbPeprmissionOp,
   Role => PbRole,
-  Transaction => PbTransaction,
   Transfer => PbTransfer,
+  ValidationPolicy => PbValidationPolicy,
   ValidationProof => PbValidationProof
 }
-import com.wavesenterprise.transaction.smart.SetScriptTransaction
-import com.wavesenterprise.transaction.transfer.{MassTransferTransaction, ParsedTransfer, TransferTransaction}
+import com.wavesenterprise.transaction.transfer.ParsedTransfer
 
 import scala.concurrent.duration.Duration
 
@@ -69,36 +69,6 @@ object ProtoAdapter {
       case PbExecutableTransaction.Transaction.CallContractTransaction(value)   => CallContractTransaction.fromProto(protoTx.version, value)
       case PbExecutableTransaction.Transaction.UpdateContractTransaction(value) => UpdateContractTransaction.fromProto(protoTx.version, value)
       case PbExecutableTransaction.Transaction.Empty                            => Left(GenericError("Empty executable transaction"))
-    }
-  }
-
-  def fromProto(protoTx: PbTransaction): Either[ValidationError, ProtoSerializableTransaction] = {
-    protoTx.transaction match {
-      case PbTransaction.Transaction.AtomicTransaction(tx)           => AtomicTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.BurnTransaction(tx)             => BurnTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.CallContractTransaction(tx)     => CallContractTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.CreateAliasTransaction(tx)      => CreateAliasTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.CreateContractTransaction(tx)   => CreateContractTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.CreatePolicyTransaction(tx)     => CreatePolicyTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.DataTransaction(tx)             => DataTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.DisableContractTransaction(tx)  => DisableContractTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.ExecutedContractTransaction(tx) => ExecutedContractTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.IssueTransaction(tx)            => IssueTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.LeaseCancelTransaction(tx)      => LeaseCancelTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.LeaseTransaction(tx)            => LeaseTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.MassTransferTransaction(tx)     => MassTransferTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.PermitTransaction(tx)           => PermitTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.PolicyDataHashTransaction(tx)   => PolicyDataHashTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.RegisterNodeTransaction(tx)     => RegisterNodeTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.ReissueTransaction(tx)          => ReissueTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.SetAssetScriptTransaction(tx)   => SetAssetScriptTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.SetScriptTransaction(tx)        => SetScriptTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.SponsorFeeTransaction(tx)       => SponsorFeeTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.TransferTransaction(tx)         => TransferTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.UpdateContractTransaction(tx)   => UpdateContractTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.UpdatePolicyTransaction(tx)     => UpdatePolicyTransaction.fromProto(protoTx.version, tx)
-      case PbTransaction.Transaction.Empty                           => Left(GenericError("Empty transaction"))
-      case _                                                         => Left(GenericError("Proto-unsupported transaction"))
     }
   }
 
@@ -213,4 +183,42 @@ object ProtoAdapter {
   def byteArrayToByteString(value: Array[Byte]): ByteString = {
     ByteString.copyFrom(value)
   }
+
+  def toProto(value: ValidationPolicy): PbValidationPolicy = {
+    val `type` = value match {
+      case ValidationPolicy.Any =>
+        PbValidationPolicy.Type.Any(PbValidationPolicy.Any())
+      case ValidationPolicy.Majority =>
+        PbValidationPolicy.Type.Majority(PbValidationPolicy.Majority())
+      case ValidationPolicy.MajorityWithOneOf(addresses) =>
+        val addressesBytes = addresses.map(address => byteArrayToByteString(address.bytes.arr))
+        val pbAddresses    = PbValidationPolicy.MajorityWithOneOf(addressesBytes)
+        PbValidationPolicy.Type.MajorityWithOneOf(pbAddresses)
+    }
+
+    PbValidationPolicy(`type`)
+  }
+
+  def fromProto(value: PbValidationPolicy): Either[ValidationError, ValidationPolicy] =
+    value.`type` match {
+      case Type.Empty =>
+        Left(GenericError(s"Empty validation policy value"))
+      case Type.Any(_) =>
+        Right(ValidationPolicy.Any)
+      case Type.Majority(_) =>
+        Right(ValidationPolicy.Majority)
+      case Type.MajorityWithOneOf(addressesValue) =>
+        addressesValue.addresses.toList
+          .map(addressFromProto)
+          .sequence
+          .map(ValidationPolicy.MajorityWithOneOf)
+    }
+
+  def toProto(value: ContractApiVersion): PbContractApiVersion =
+    PbContractApiVersion(value.majorVersion, value.minorVersion)
+
+  def fromProto(value: PbContractApiVersion): Either[ValidationError, ContractApiVersion] =
+    (Either.cond(value.majorVersion.isValidShort && value.majorVersion >= 0, value.majorVersion.toShort, GenericError(s"Invalid major version")),
+     Either.cond(value.minorVersion.isValidShort && value.minorVersion >= 0, value.minorVersion.toShort, GenericError(s"Invalid minor version")))
+      .mapN(ContractApiVersion(_, _))
 }

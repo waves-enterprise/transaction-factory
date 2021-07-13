@@ -4,6 +4,7 @@ import java.io.File
 
 import com.wavesenterprise.transaction.TxScheme
 import com.wavesenterprise.transaction.generator.proto.{AggregatedTxsProtoGenerator, TxProtoGenerator}
+import com.wavesenterprise.wavesenterprise.writeTextFile
 import sbt.Keys.{sourceDirectory, sourceGenerators}
 import sbt._
 

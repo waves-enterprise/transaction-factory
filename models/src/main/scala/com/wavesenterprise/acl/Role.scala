@@ -28,6 +28,7 @@ object Role extends Enum[Role] {
   case object ContractDeveloper extends Role(7, "contract_developer")
   case object ConnectionManager extends Role(8, "connection_manager") with NonEmptyRole
   case object Sender            extends Role(9, "sender")
+  case object ContractValidator extends Role(10, "contract_validator")
 
   def fromByte(byte: Byte): Either[GenericError, Role] = {
     byte match {
@@ -40,6 +41,7 @@ object Role extends Enum[Role] {
       case ContractDeveloper.byte => Right(ContractDeveloper)
       case ConnectionManager.byte => Right(ConnectionManager)
       case Sender.byte            => Right(Sender)
+      case ContractValidator.byte => Right(ContractValidator)
       case unknownByte            => Left(ValidationError.GenericError(s"Permission.fromByte failure: unknown role byte '$unknownByte'"))
     }
   }
@@ -55,6 +57,7 @@ object Role extends Enum[Role] {
       case ContractDeveloper.prefixS => Right(ContractDeveloper)
       case ConnectionManager.prefixS => Right(ConnectionManager)
       case Sender.prefixS            => Right(Sender)
+      case ContractValidator.prefixS => Right(ContractValidator)
       case unknownStr                => Left(ValidationError.GenericError(s"Permission.fromStr failure: unknown role name '$unknownStr"))
     }
   }

@@ -2,9 +2,13 @@ package com.wavesenterprise.transaction.generator
 
 import java.io.File
 import com.wavesenterprise.transaction.TxScheme
+import com.wavesenterprise.transaction.generator.base.CodeWriter
 import com.wavesenterprise.transaction.generator.scala.{AtomicInnerTxAdapterGenerator, TxScalaGenerator}
-import sbt.Keys.{baseDirectory, sourceGenerators, sourceManaged}
+import com.wavesenterprise.wavesenterprise.writeTextFile
+import sbt.Keys.{sourceGenerators, sourceManaged}
 import sbt._
+import src.main.scala.com.wavesenterprise.transaction.generator.base.Adapter
+import src.main.scala.com.wavesenterprise.transaction.generator.scala.TxAdapterGenerator
 
 object TxSchemePlugin extends AutoPlugin {
 
@@ -18,8 +22,10 @@ object TxSchemePlugin extends AutoPlugin {
   }
 
   private def generate(outputDir: File): Seq[File] =
-    generateInnerTxAdapter(outputDir) +:
-      generateTransactions(outputDir)
+    Seq(
+      generateAdapter(outputDir, TxAdapterGenerator),
+      generateAdapter(outputDir, AtomicInnerTxAdapterGenerator)
+    ) ++ generateTransactions(outputDir)
 
   private def generateTransactions(outputDir: File): Seq[File] = {
     TxScheme.values.map { scheme =>
@@ -31,11 +37,11 @@ object TxSchemePlugin extends AutoPlugin {
     }
   }
 
-  private def generateInnerTxAdapter(outputDir: File): File = {
-    val packageDir = new File(outputDir, AtomicInnerTxAdapterGenerator.PackageName.replace('.', '/'))
+  private def generateAdapter(outputDir: File, adapter: Adapter): File = {
+    val packageDir = new File(outputDir, adapter.packageName.replace('.', '/'))
     packageDir.mkdirs()
-    val file = new File(packageDir, s"${AtomicInnerTxAdapterGenerator.ObjectName}.scala")
-    val code = AtomicInnerTxAdapterGenerator.buildWriter(TxScheme.values, skipContainers = true).build()
+    val file = new File(packageDir, s"${adapter.objectName}.scala")
+    val code = adapter.buildWriter(TxScheme.values).build()
     writeTextFile(file, code)
     file
   }

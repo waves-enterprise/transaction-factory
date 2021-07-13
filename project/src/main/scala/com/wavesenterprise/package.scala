@@ -1,8 +1,8 @@
-package com.wavesenterprise.transaction
+package com.wavesenterprise
 
 import java.io.{File, PrintWriter}
 
-package object generator {
+package object wavesenterprise {
 
   def writeTextFile(path: File, content: String): File = {
     val writer = new PrintWriter(path)

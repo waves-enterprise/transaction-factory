@@ -1,12 +1,11 @@
 package com.wavesenterprise.account
 
+import cats.implicits.{catsSyntaxEither, catsSyntaxEitherObject}
 import com.wavesenterprise.crypto
 import com.wavesenterprise.crypto.PublicKey
-import com.wavesenterprise.crypto.internals.{CryptoError, InvalidAddress}
+import com.wavesenterprise.crypto.internals.{CryptoError, InvalidPublicKey}
 import com.wavesenterprise.utils.Base58
 import play.api.libs.json.{JsString, Writes}
-
-import scala.util.Try
 
 trait PublicKeyAccount {
   def publicKey: PublicKey
@@ -28,6 +27,9 @@ object PublicKeyAccount {
 
   def apply(publicKey: PublicKey): PublicKeyAccount = PublicKeyAccountImpl(publicKey)
 
+  /**
+    * Warning: could be unsafe for Gost crypto, expect exceptions from PublicKey.apply
+    */
   def apply(publicKey: Array[Byte]): PublicKeyAccount =
     PublicKeyAccount(PublicKey(publicKey))
 
@@ -46,8 +48,12 @@ object PublicKeyAccount {
       _ <- Either.cond(bytes.length == crypto.KeyLength,
                        (),
                        s"Bad public key bytes length: expected: '${crypto.KeyLength}', found: '${bytes.length}'")
-      account <- Try(PublicKeyAccount(bytes)).toEither.left.map(ex => s"Unable to create public key: ${ex.getMessage}")
-    } yield account).left.map(InvalidAddress)
+      account <- Either
+        .catchNonFatal(PublicKeyAccount(bytes))
+        .leftMap { ex =>
+          s"Unable to create public key: ${ex.getMessage}"
+        }
+    } yield account).leftMap(InvalidPublicKey)
   }
 
   def fromBase58String(s: String): Either[CryptoError, PublicKeyAccount] = {
@@ -55,9 +61,11 @@ object PublicKeyAccount {
       _ <- Either.cond(s.length <= crypto.KeyStringLength,
                        (),
                        s"Bad public key string length: expected: '${crypto.KeyStringLength}', found: '${s.length}'")
-      bytes   <- Base58.decode(s).toEither.left.map(ex => s"Unable to decode base58: ${ex.getMessage}")
-      account <- fromBytes(bytes).left.map(_.message)
-    } yield account).left.map(err => InvalidAddress(s"Can't create public key from string '$s': $err"))
+      bytes   <- Base58.decode(s).toEither.leftMap(ex => s"Unable to decode base58: ${ex.getMessage}")
+      account <- fromBytes(bytes).leftMap(_.message)
+    } yield account).leftMap { err =>
+      InvalidPublicKey(s"Can't create public key from string '$s': $err")
+    }
   }
 
   implicit val Writes: Writes[PublicKeyAccount] = acc => JsString(acc.publicKeyBase58)

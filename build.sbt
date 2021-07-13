@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtGit.GitKeys.gitUncommittedChanges
 import com.typesafe.sbt.git.JGit
+import com.wavesenterprise.grpc.GrpcApiVersionGenerator
 import com.wavesenterprise.transaction.generator.{TxSchemePlugin, TxSchemeProtoPlugin, TxSchemeTypeScriptPlugin}
 import org.eclipse.jgit.submodule.SubmoduleWalk.IgnoreSubmoduleMode
 import sbt.Keys.{credentials, sourceGenerators, _}
@@ -220,7 +221,7 @@ lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
     .settings(
-      version := "1.0.0-RC2",
+      version := "1.0.0-RC3",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       addCompilerPlugin(Dependencies.kindProjector),
@@ -271,7 +272,7 @@ lazy val langJVM = lang.jvm
 lazy val utils = (project in file("utils"))
   .settings(
     moduleName := "we-utils",
-    version := "1.0.0-RC1",
+    version := "1.0.0-RC2",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.serialization,
@@ -295,7 +296,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-RC6",
+    version := "1.0.0-RC8",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -317,7 +318,7 @@ lazy val crypto: Project = project
   .aggregate(utils)
   .settings(
     moduleName := "we-crypto",
-    version := "1.0.0-RC2",
+    version := "1.0.0-RC3",
     libraryDependencies ++= Seq(
       Dependencies.scorex,
       Dependencies.catsCore,
@@ -337,7 +338,7 @@ lazy val testCore: Project = (project in file("test-core"))
   .aggregate(models)
   .settings(
     moduleName := "we-test-core",
-    version := "1.0.0-RC6",
+    version := "1.0.0-RC8",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
     publishTo := weReleasesRepo,
@@ -348,11 +349,12 @@ lazy val testCore: Project = (project in file("test-core"))
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
+  .enablePlugins(GrpcApiVersionGenerator)
   .dependsOn(transactionProtobuf)
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := "1.0.0-RC3",
+    version := "1.1",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -366,7 +368,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
     moduleName := "we-transaction-protobuf",
-    version := "1.0.0-RC1",
+    version := "1.0.0-RC2",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -535,9 +537,14 @@ def printMessageTask(msg: String) = Def.task {
 
 /* ********************************************************* */
 
-lazy val cleanProtobufManagedDir = Def.task[Unit] {
-  IO.delete((sourceDirectory in transactionProtobuf).value / "main" / "protobuf" / "managed")
-}
+lazy val cleanProtobufManagedDirs = Def.sequential(
+  Def.task[Unit] {
+    IO.delete((sourceDirectory in transactionProtobuf).value / "main" / "protobuf" / "managed")
+  },
+  Def.task[Unit] {
+    IO.delete((sourceDirectory in grpcProtobuf).value / "main" / "protobuf" / "managed")
+  }
+)
 
 lazy val cleanTypeScript = Def.task[Unit] {
   IO.delete((baseDirectory in transactionTypeScript).value / "node_modules")
@@ -557,7 +564,7 @@ cleanAll := Def
     clean in grpcProtobuf,
     printMessageTask("Clean transactionProtobuf"),
     clean in transactionProtobuf,
-    cleanProtobufManagedDir,
+    cleanProtobufManagedDirs,
     printMessageTask("Clean transactionTypeScript"),
     clean in transactionTypeScript,
     cleanTypeScript,

@@ -4,6 +4,7 @@ import java.io.File
 
 import com.wavesenterprise.transaction.TxScheme
 import com.wavesenterprise.transaction.generator.typescript.{TestsTypeScriptGenerator, TxTypeScriptGenerator}
+import com.wavesenterprise.wavesenterprise.writeTextFile
 import sbt.Keys.{baseDirectory, sourceGenerators}
 import sbt._
 import src.main.scala.com.wavesenterprise.transaction.generator.typescript.ConstantsTypeScriptGenerator

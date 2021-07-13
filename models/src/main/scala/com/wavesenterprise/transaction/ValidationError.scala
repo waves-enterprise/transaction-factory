@@ -2,8 +2,13 @@ package com.wavesenterprise.transaction
 
 import com.google.common.base.Throwables
 import com.wavesenterprise.account.{Address, Alias, PublicKeyAccount}
-import com.wavesenterprise.acl.NonEmptyRole
-import com.wavesenterprise.crypto.internals.{CryptoError, GenericError => CryptoGenericError, InvalidAddress => CryptoInvalidAddress}
+import com.wavesenterprise.acl.{NonEmptyRole, Role}
+import com.wavesenterprise.crypto.internals.{
+  CryptoError,
+  GenericError => CryptoGenericError,
+  InvalidAddress => CryptoInvalidAddress,
+  InvalidPublicKey => CryptoInvalidPublicKey
+}
 import com.wavesenterprise.docker.ContractInfo
 import com.wavesenterprise.lang.ExprEvaluator.Log
 import com.wavesenterprise.privacy.PolicyDataHash
@@ -20,6 +25,7 @@ object ValidationError {
 
   case class InvalidPolicyDataHash(reason: String)             extends ValidationError
   case class InvalidAddress(reason: String)                    extends ValidationError
+  case class InvalidPublicKey(reason: String)                  extends ValidationError
   case class NegativeAmount(amount: Long, of: String)          extends ValidationError
   case class NegativeMinFee(minFee: Long, of: String)          extends ValidationError
   case class InsufficientFee(msg: String = "insufficient fee") extends ValidationError
@@ -35,15 +41,14 @@ object ValidationError {
     override def toString: String =
       s"BlockFromFuture(rejected block timestamp is '$rejectedBlockTs', but current timestamp is '$currentTimestamp')"
   }
-  case class ScriptParseError(message: String)               extends ValidationError
-  case class AlreadyInProcessing(txId: ByteStr)              extends ValidationError
-  case class AlreadyInTheState(txId: ByteStr, txHeight: Int) extends ValidationError
-  case class AccountBalanceError(errs: Map[Address, String]) extends ValidationError
-  case class AliasDoesNotExist(a: Alias)                     extends ValidationError
-  case class AliasIsDisabled(a: Alias)                       extends ValidationError
-  case class OrderValidationError(order: Order, err: String) extends ValidationError
-  case class Mistiming(err: String)                          extends ValidationError
-
+  case class ScriptParseError(message: String)                         extends ValidationError
+  case class AlreadyInProcessing(txId: ByteStr)                        extends ValidationError
+  case class AlreadyInTheState(txId: ByteStr, txHeight: Int)           extends ValidationError
+  case class AccountBalanceError(errs: Map[Address, String])           extends ValidationError
+  case class AliasDoesNotExist(a: Alias)                               extends ValidationError
+  case class AliasIsDisabled(a: Alias)                                 extends ValidationError
+  case class OrderValidationError(order: Order, err: String)           extends ValidationError
+  case class Mistiming(err: String)                                    extends ValidationError
   case class ActivationError(err: String)                              extends ValidationError
   case class UnsupportedVersion(version: Int)                          extends ValidationError
   case class GenericError(err: String)                                 extends ValidationError
@@ -53,6 +58,9 @@ object ValidationError {
   case class ParticipantNotRegistered(address: Address)                extends ValidationError
   case class PolicyDataTooBig(policySize: Long, maxSize: Long)         extends ValidationError
   case class AddressIsLastOfRole(address: Address, role: NonEmptyRole) extends ValidationError
+  case class InvalidAssetId(err: String)                               extends ValidationError
+  case class UnsupportedContractApiVersion(err: String)                extends ValidationError
+  case class InvalidContractApiVersion(err: String)                    extends ValidationError
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))
@@ -127,21 +135,30 @@ object ValidationError {
     override def toString: String = "Expected a non-empty senderPublicKey field, because author was not the same as sender"
   }
 
-  case class InvalidValidationProofsCount(actual: Int, expected: Int, resultsHash: ByteStr) extends ContractError {
-    override def toString: String = s"Invalid validation proofs count for results hash '$resultsHash'. Actual '$actual', expected '$expected'."
+  case class InvalidValidationProofs(actualCount: Int,
+                                     expectedCount: Int,
+                                     resultsHash: ByteStr,
+                                     containsRequiredAddresses: Boolean = true,
+                                     requiredAddresses: Set[Address] = Set.empty)
+      extends ContractError {
+
+    override def toString: String =
+      s"Invalid validation proofs for results hash '$resultsHash'. Actual '$actualCount', expected '$expectedCount'." +
+        (if (containsRequiredAddresses) "" else s" Proofs does not contain any required addresses: '${requiredAddresses.mkString("', '")}'")
   }
 
   case class InvalidValidatorSignature(publicKeyAccount: PublicKeyAccount, signature: ByteStr) extends ContractError {
     override def toString: String = s"Invalid validator '$publicKeyAccount' signature '$signature'"
   }
 
-  case class InvalidValidator(publicKeyAccount: PublicKeyAccount) extends ContractError {
-    override def toString: String =
-      s"Blockchain does not contain validator '$publicKeyAccount' with miner role"
-  }
-
   case class InvalidResultsHash(actual: ByteStr, expected: ByteStr) extends ContractError {
     override def toString: String = s"Invalid results hash. Actual '$actual', expected '$expected'."
+  }
+
+  case class NotEnoughValidators(requiredAddresses: Set[Address] = Set.empty) extends ContractError {
+    override def toString: String =
+      s"Not enough network participants with '${Role.ContractValidator.prefixS}' role." +
+        (if (requiredAddresses.nonEmpty) s" At least one of the validators '${requiredAddresses.mkString("', '")}' is required." else "")
   }
 
   object ParticipantNotRegistered {
@@ -154,8 +171,9 @@ object ValidationError {
 
   def fromCryptoError(e: CryptoError): ValidationError = {
     e match {
-      case CryptoInvalidAddress(message) => InvalidAddress(message)
-      case CryptoGenericError(message)   => GenericError(message)
+      case CryptoInvalidAddress(message)   => InvalidAddress(message)
+      case CryptoInvalidPublicKey(message) => InvalidPublicKey(message)
+      case CryptoGenericError(message)     => GenericError(message)
     }
   }
 }
