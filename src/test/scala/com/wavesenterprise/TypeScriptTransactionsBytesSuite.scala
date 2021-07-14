@@ -238,6 +238,10 @@ class TypeScriptTransactionsBytesSuite extends FreeSpec with Matchers with Contr
       forAll(createContractV3ParamGen())(assertSameBytes)
     }
 
+    "CreateContractTransactionV4" in {
+      forAll(createContractV4ParamGen())(assertSameBytes)
+    }
+
     "CallContractTransaction" in {
       forAll(callContractV1ParamGen)(assertSameBytes)
     }
@@ -276,6 +280,10 @@ class TypeScriptTransactionsBytesSuite extends FreeSpec with Matchers with Contr
 
     "UpdateContractTransactionV3" in {
       forAll(updateContractV3ParamGen())(assertSameBytes)
+    }
+
+    "UpdateContractTransactionV4" in {
+      forAll(updateContractV4ParamGen())(assertSameBytes)
     }
 
     "SetScriptTransaction" in {

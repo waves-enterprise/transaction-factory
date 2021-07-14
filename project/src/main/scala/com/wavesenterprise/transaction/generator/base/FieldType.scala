@@ -1024,7 +1024,8 @@ object FieldType extends Enum[FieldType] {
           "com.wavesenterprise.docker.validator.ValidationPolicy",
           ProtoAdapterImport
         ),
-        protoImports = Set("validation_policy.proto")
+        protoImports = Set("validation_policy.proto"),
+        typeScriptType = Some("ValidationPolicy")
       )
       with BinarySerializableType
       with ProtoCompatibleType {
@@ -1054,7 +1055,8 @@ object FieldType extends Enum[FieldType] {
       "com.wavesenterprise.docker.ContractApiVersion",
       ProtoAdapterImport
     ),
-    protoImports = Set("contract_api_version.proto")
+    protoImports = Set("contract_api_version.proto"),
+    typeScriptType = Some("ContractApiVersion")
   )
     with BinarySerializableType
     with ProtoCompatibleType {
