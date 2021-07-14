@@ -52,7 +52,9 @@ object TestsTypeScriptGenerator extends TypeScriptGenerator {
       "contractName"        -> """"SomeName"""",
       "params"              -> """[{"type":"integer", "key": "height", "value": 100}]""",
       "contractId"          -> """"DP5MggKC8GJuLZshCVNSYwBtE6WTRtMM1YPPdcmwbuNg"""",
-      "contractVersion"     -> "2"
+      "contractVersion"     -> "2",
+      "validationPolicy"    -> "0",
+      "apiVersion"          -> """"1.1""""
     )
 
   override protected def buildWriter(schemes: Seq[TxScheme]): CodeWriter =
