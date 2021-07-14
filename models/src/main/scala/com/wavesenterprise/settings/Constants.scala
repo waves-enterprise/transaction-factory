@@ -7,6 +7,5 @@ import com.wavesenterprise.utils.ScorexLogging
   */
 object Constants extends ScorexLogging {
   val UnitsInWest  = 100000000L
-  val TotalWest    = 100000000L
   val WestDecimals = 8
 }
