@@ -69,6 +69,7 @@ message ExecutionSuccessRequest {
 message ExecutionErrorRequest {
   string tx_id = 1;
   string message = 2;
+  int32 code = 3;
 }
 
 message CommitExecutionResponse {
