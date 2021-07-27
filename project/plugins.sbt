@@ -19,3 +19,5 @@ Seq(
   "com.codacy"              % "sbt-codacy-coverage"      % "3.0.3",
   "com.lightbend.akka.grpc" % "sbt-akka-grpc"            % "0.8.4"
 ).map(addSbtPlugin)
+
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.10.0-RC1")
