@@ -338,7 +338,7 @@ lazy val testCore: Project = (project in file("test-core"))
   .aggregate(models)
   .settings(
     moduleName := "we-test-core",
-    version := "1.0.0-RC10",
+    version := "1.0.0-RC11",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
     publishTo := weReleasesRepo,
