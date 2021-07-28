@@ -176,12 +176,14 @@ trait CaseClassesGenerator extends ScalaGenerator {
     }
   }
 
+  private val senderAddressFieldScheme = FieldScheme(name = "sender.toAddress", specialProtoName = Some("senderAddress"), tpe = FieldType.ADDRESS)
+
   private def buildToInnerProto(scheme: TxScheme, currentVersionFields: Seq[FieldScheme]): CodeWriter.EndoFunctor = { writer =>
     writer
       .addLines(s"override def toInnerProto: Pb${scheme.entryName} = {")
       .indent
       .addLines(s"Pb${scheme.entryName}(")
-      .foldWithDelimiterIndented(currentVersionFields, ",") {
+      .foldWithDelimiterIndented(currentVersionFields :+ senderAddressFieldScheme, ",") {
         case (writer, field) =>
           field.tpe match {
             case tpe: ProtoCompatibleType =>
