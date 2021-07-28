@@ -26,7 +26,7 @@ case class ContractApiVersion(majorVersion: Short, minorVersion: Short) {
 }
 
 object ContractApiVersion extends {
-  private val StringPattern: Regex = """^(\d+)\.(\d+)""".r
+  private val StringPattern: Regex = """^(\d+)\.(\d+).*""".r
 
   val `1.0`: ContractApiVersion   = ContractApiVersion(1, 0)
   val Initial: ContractApiVersion = `1.0`
