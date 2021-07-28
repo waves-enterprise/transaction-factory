@@ -296,7 +296,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-RC10",
+    version := "1.0.0-RC11",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
