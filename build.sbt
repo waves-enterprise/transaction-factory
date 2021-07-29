@@ -296,7 +296,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-RC10",
+    version := "1.0.0-WE-7277-RC1",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -338,7 +338,7 @@ lazy val testCore: Project = (project in file("test-core"))
   .aggregate(models)
   .settings(
     moduleName := "we-test-core",
-    version := "1.0.0-RC10",
+    version := "1.0.0-WE-7277-RC1",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
     publishTo := weReleasesRepo,
@@ -354,7 +354,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := "1.2-RC1",
+    version := "1.2-WE-7277-RC1",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
