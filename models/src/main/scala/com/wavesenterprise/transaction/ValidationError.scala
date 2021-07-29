@@ -155,6 +155,10 @@ object ValidationError {
     override def toString: String = s"Invalid results hash. Actual '$actual', expected '$expected'."
   }
 
+  case class ContractExecutionError(contractId: ByteStr, message: String) extends ContractError {
+    override def toString: String = s"Contract '$contractId' execution error: $message"
+  }
+
   case class NotEnoughValidators(requiredAddresses: Set[Address] = Set.empty) extends ContractError {
     override def toString: String =
       s"Not enough network participants with '${Role.ContractValidator.prefixS}' role." +
