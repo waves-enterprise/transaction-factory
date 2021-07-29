@@ -26,9 +26,8 @@ message PolicyItemDataResponse {
 message PolicyItemInfoResponse {
   string sender_address = 1;
   bytes policy_id = 2;
-  int32 type = 3;
-  PolicyItemFileInfo info = 4;
-  bytes data_hash = 5;
+  PolicyItemFileInfo info = 3;
+  bytes data_hash = 4;
 }
 
 message PolicyItemFileInfo {
