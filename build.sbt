@@ -296,7 +296,7 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-WE-7277-M1",
+    version := "1.0.0-WE-7296-M5",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -354,7 +354,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := "1.2-WE-7277-M1",
+    version := "1.0.0-WE-7296-M5",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
@@ -368,7 +368,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
     moduleName := "we-transaction-protobuf",
-    version := "1.0.0-RC2",
+    version := "1.0.0-WE-7296-M4",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := weReleasesRepo,
