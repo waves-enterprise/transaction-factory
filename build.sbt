@@ -264,7 +264,7 @@ lazy val langJVM = lang.jvm
   .aggregate(crypto, utils)
   .settings(
     moduleName := "we-lang",
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -282,7 +282,7 @@ lazy val utils = (project in file("utils"))
       Dependencies.catsCore,
       Dependencies.scorex
     ).flatten,
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -308,7 +308,7 @@ lazy val models = (project in file("models"))
       Dependencies.serialization,
       Dependencies.commonsNet
     ).flatten,
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -328,7 +328,7 @@ lazy val crypto: Project = project
       Dependencies.bouncyCastle,
       Dependencies.serialization
     ).flatten,
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -342,7 +342,7 @@ lazy val testCore: Project = (project in file("test-core"))
     version := "1.0.0-RC11",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -358,7 +358,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
     version := "1.2-RC1",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -372,7 +372,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
     version := "1.0.0-RC2",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
     publishArtifact in (Compile, packageDoc) := false
@@ -437,7 +437,7 @@ lazy val protobufArchives = (project in file("we-transaction-protobuf"))
   .settings(
     name := "we-transaction-protobuf-archive",
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
@@ -451,7 +451,7 @@ lazy val typescriptArchives = (project in file("we-transaction-typescript"))
   .settings(
     name := "we-transaction-typescript-archive",
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := weReleasesRepo.value,
+    publishTo := wePublishingRepo.value,
     publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
@@ -466,7 +466,7 @@ addCommandAlias(
   "; cleanAll; checkJCSP; transactionProtobuf/compile; compile; test:compile"
 )
 
-val weReleasesRepo: Def.Initialize[Some[Resolver]] = version { v: String =>
+val wePublishingRepo: Def.Initialize[Some[Resolver]] = version { v: String =>
   if (v endsWith "-SNAPSHOT") {
     Some("Sonatype Nexus Snapshots Repository Manager" at "https://artifacts.wavesenterprise.com/repository/maven-snapshots")
   } else {
@@ -493,7 +493,7 @@ lazy val core = project
   )
   .settings(
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := weReleasesRepo.value
+    publishTo := wePublishingRepo.value
   )
 
 lazy val javaHomeProguardOption = Def.task[String] {
