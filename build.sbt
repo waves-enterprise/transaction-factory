@@ -222,7 +222,6 @@ lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
     .settings(
-      version := "1.0.0-RC3",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       addCompilerPlugin(Dependencies.kindProjector),
@@ -273,7 +272,6 @@ lazy val langJVM = lang.jvm
 lazy val utils = (project in file("utils"))
   .settings(
     moduleName := "we-utils",
-    version := "1.0.0-RC2",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
       Dependencies.serialization,
@@ -297,7 +295,6 @@ lazy val models = (project in file("models"))
   .aggregate(crypto, langJVM, grpcProtobuf, transactionProtobuf)
   .settings(
     moduleName := "we-models",
-    version := "1.0.0-RC11",
     Compile / unmanagedSourceDirectories += sourceManaged.value / "main" / "com" / "wavesenterprise" / "models",
     libraryDependencies ++= Seq(
       Dependencies.pureConfig,
@@ -319,7 +316,6 @@ lazy val crypto: Project = project
   .aggregate(utils)
   .settings(
     moduleName := "we-crypto",
-    version := "1.0.0-RC3",
     libraryDependencies ++= Seq(
       Dependencies.scorex,
       Dependencies.catsCore,
@@ -339,7 +335,6 @@ lazy val testCore: Project = (project in file("test-core"))
   .aggregate(models)
   .settings(
     moduleName := "we-test-core",
-    version := "1.0.0-RC11",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
     publishTo := wePublishingRepo.value,
@@ -348,6 +343,8 @@ lazy val testCore: Project = (project in file("test-core"))
     publishArtifact in (Compile, packageDoc) := false
   )
 
+val grpcProtobufVersion = "1.2"
+
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .enablePlugins(GrpcApiVersionGenerator)
@@ -355,7 +352,10 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := "1.2-RC1",
+    version := isSnapshotVersion {
+      case true => s"$grpcProtobufVersion-SNAPSHOT"
+      case _    => grpcProtobufVersion
+    }.value,
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := wePublishingRepo.value,
@@ -369,7 +369,6 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
   .settings(
     moduleName := "we-transaction-protobuf",
-    version := "1.0.0-RC2",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := wePublishingRepo.value,
@@ -466,12 +465,13 @@ addCommandAlias(
   "; cleanAll; checkJCSP; transactionProtobuf/compile; compile; test:compile"
 )
 
-val wePublishingRepo: Def.Initialize[Some[Resolver]] = version { v: String =>
-  if (v endsWith "-SNAPSHOT") {
+lazy val isSnapshotVersion: Def.Initialize[Boolean] = version(_ endsWith "-SNAPSHOT")
+
+lazy val wePublishingRepo: Def.Initialize[Some[Resolver]] = isSnapshotVersion {
+  case true =>
     Some("Sonatype Nexus Snapshots Repository Manager" at "https://artifacts.wavesenterprise.com/repository/maven-snapshots")
-  } else {
+  case _ =>
     Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
-  }
 }
 
 lazy val core = project
