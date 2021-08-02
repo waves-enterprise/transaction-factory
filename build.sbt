@@ -98,7 +98,8 @@ version in ThisBuild := {
     val commitHashLength            = 7
     val tagVersionWithoutCommitHash = described.take(described.length - commitHashLength - 2)
     val tagVersionWithCommitsAhead  = tagVersionWithoutCommitHash.take(tagVersionWithoutCommitHash.lastIndexOf('-'))
-    s"$tagVersionWithCommitsAhead-SNAPSHOT"
+    val branchName                  = git.gitCurrentBranch.value
+    s"$tagVersionWithCommitsAhead-$branchName-SNAPSHOT"
   }
   releaseVersion
     .orElse(describedExtended)
@@ -352,10 +353,15 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .aggregate(transactionProtobuf)
   .settings(
     moduleName := "we-grpc-protobuf",
-    version := isSnapshotVersion {
-      case true => s"$grpcProtobufVersion-SNAPSHOT"
-      case _    => grpcProtobufVersion
-    }.value,
+    version := {
+      val suffix     = git.makeUncommittedSignifierSuffix(git.gitUncommittedChanges.value, Some("DIRTY"))
+      val branchName = git.gitCurrentBranch.value
+      if (isSnapshotVersion.value) {
+        s"$grpcProtobufVersion-$branchName-SNAPSHOT"
+      } else {
+        grpcProtobufVersion + suffix
+      }
+    },
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
     publishTo := wePublishingRepo.value,
