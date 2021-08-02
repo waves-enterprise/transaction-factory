@@ -96,9 +96,8 @@ version in ThisBuild := {
   )
   lazy val describedExtended = git.gitDescribedVersion.value.map { described =>
     val commitHashLength            = 7
-    val commitsCountLength          = 2
-    val tagVersionWithoutCommitHash = described.take(described.length - commitHashLength - commitsCountLength)
-    val tagVersionWithCommitsAhead  = tagVersionWithoutCommitHash.dropRight(2)
+    val tagVersionWithoutCommitHash = described.take(described.length - commitHashLength - 2)
+    val tagVersionWithCommitsAhead  = tagVersionWithoutCommitHash.take(tagVersionWithoutCommitHash.lastIndexOf('-'))
     s"$tagVersionWithCommitsAhead-SNAPSHOT"
   }
   releaseVersion
