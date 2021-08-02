@@ -98,7 +98,8 @@ version in ThisBuild := {
     val commitHashLength            = 7
     val tagVersionWithoutCommitHash = described.take(described.length - commitHashLength - 2)
     val tagVersionWithCommitsAhead  = tagVersionWithoutCommitHash.take(tagVersionWithoutCommitHash.lastIndexOf('-'))
-    val branchName                  = git.gitCurrentBranch.value
+    import scala.sys.process._
+    val branchName = sys.env.getOrElse("CI_COMMIT_REF_NAME", "git rev-parse --abbrev-ref HEAD".!!.trim)
     s"$tagVersionWithCommitsAhead-$branchName-SNAPSHOT"
   }
   releaseVersion
