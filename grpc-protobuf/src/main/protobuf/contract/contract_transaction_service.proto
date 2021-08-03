@@ -6,7 +6,6 @@ option java_package = "com.wavesenterprise.protobuf.service.contract";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
-import "managed/transaction.proto";
 import "util/util_transaction_service.proto";
 
 service TransactionService {

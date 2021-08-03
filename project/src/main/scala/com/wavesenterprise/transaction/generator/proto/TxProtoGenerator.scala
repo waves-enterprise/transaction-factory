@@ -34,6 +34,7 @@ object TxProtoGenerator extends ProtoGenerator {
         case ((writer, i), field) =>
           writer.addLines(s"${field.tpe.protoType} ${field.protoSnakeCaseName} = $i;") -> (i + 1)
       }
+      .addLinesIndented(s"bytes sender_address = ${dataFields.length + 1};")
       .addLines("}")
       .combine(super.buildWriter(scheme))
   }
