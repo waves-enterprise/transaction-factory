@@ -1,0 +1,64 @@
+syntax = "proto3";
+package wavesenterprise.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.wavesenterprise.protobuf.service.privacy";
+option csharp_namespace = "WavesEnterprise";
+option go_package = "wavesenterprise.com/weproto";
+
+import "atomic_badge.proto";
+import "google/protobuf/wrappers.proto";
+import "managed/policy_data_hash_transaction.proto";
+
+service PrivacyPublicService {
+  rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
+  rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
+  rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
+  rpc SendData (SendDataRequest) returns (SendDataResponse);
+}
+
+message PolicyItemRequest {
+  bytes policy_id = 1;
+  bytes data_hash = 2;
+}
+
+message PolicyItemDataResponse {
+  bytes data = 1;
+}
+
+message PolicyItemInfoResponse {
+  string sender_address = 1;
+  bytes policy_id = 2;
+  PolicyItemFileInfo info = 3;
+  bytes data_hash = 4;
+}
+
+message SendDataRequest {
+  bytes sender_public_key = 1;
+  bytes policy_id = 2;
+  bytes data_hash = 3;
+  bytes data = 4;
+  PolicyItemFileInfo info = 5;
+  int64 fee = 6;
+  google.protobuf.BytesValue fee_asset_id = 7;
+  AtomicBadge atomic_badge = 8;
+  google.protobuf.StringValue password = 9;
+  bool broadcast_tx = 10;
+}
+
+message PolicyItemFileInfo {
+  string filename = 1;
+  int32 size = 2;
+  int64 timestamp = 3;
+  string author = 4;
+  string comment = 5;
+}
+
+message PolicyItemDataExistsResponse {
+  bool exists = 1;
+}
+
+message SendDataResponse {
+    int32 tx_version = 1;
+    PolicyDataHashTransaction tx = 2;
+}
