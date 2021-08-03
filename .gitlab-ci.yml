@@ -112,3 +112,4 @@ publish-nexus-artifacts:
     - sbt -mem 2048 ";core/publish;testCore/publish;protobufArchives/publish"
   only:
     - tags
+    - branches
