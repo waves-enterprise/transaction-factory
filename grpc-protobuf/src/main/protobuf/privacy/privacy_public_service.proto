@@ -34,7 +34,7 @@ message PolicyItemInfoResponse {
 }
 
 message SendDataRequest {
-  bytes sender_public_key = 1;
+  string sender_address = 1;
   bytes policy_id = 2;
   bytes data_hash = 3;
   bytes data = 4;
@@ -59,6 +59,6 @@ message PolicyItemDataExistsResponse {
 }
 
 message SendDataResponse {
-    int32 tx_version = 1;
-    PolicyDataHashTransaction tx = 2;
+  int32 tx_version = 1;
+  PolicyDataHashTransaction tx = 2;
 }
