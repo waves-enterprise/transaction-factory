@@ -7,6 +7,7 @@ import ru.CryptoPro.JCP.JCP
 import ru.CryptoPro.JCP.params.{CryptDhAllowedSpec, CryptParamsSpec}
 import ru.CryptoPro.JCSP.JCSP
 import ru.CryptoPro.reprov.RevCheck
+import ru.CryptoPro.ssl.Provider
 
 import java.nio.ByteBuffer
 import java.security.{PublicKey => _, _}
@@ -19,6 +20,8 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   Security.addProvider(new JCSP())
   Security.addProvider(new RevCheck())
   Security.addProvider(new CryptoProvider())
+  val provider = new Provider()
+  Security.addProvider(provider)
 
   private[gost] lazy val CryptoAlgorithm = CryptoProvider.GOST_CIPHER_NAME
   private val ProviderName               = JCSP.PROVIDER_NAME
