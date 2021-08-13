@@ -67,3 +67,8 @@ src/test/resources/licensees/*.pub
 
 # State migration app
 !state-migration/migration.jar
+
+# vscode
+.vscode
+project/metals.sbt
+project/project
