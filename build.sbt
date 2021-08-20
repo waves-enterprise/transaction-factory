@@ -345,7 +345,7 @@ lazy val testCore: Project = (project in file("test-core"))
     publishArtifact in (Compile, packageDoc) := false
   )
 
-val grpcProtobufVersion = "1.3"
+val grpcProtobufVersion = "1.4"
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
