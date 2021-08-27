@@ -3,6 +3,7 @@ package com.wavesenterprise.javadsl.crypto;
 import com.wavesenterprise.account.PrivateKeyAccount;
 import com.wavesenterprise.account.PublicKeyAccount;
 import com.wavesenterprise.crypto.internals.*;
+import com.wavesenterprise.javadsl.crypto.internals.KeyStore;
 import com.wavesenterprise.crypto.package$;
 import com.wavesenterprise.settings.CryptoSettings;
 import scala.Option;
@@ -43,7 +44,7 @@ public class CryptoState {
     }
 
     public static KeyStore<KeyPair> keyStore(Optional<File> file, char[] password) {
-        return package$.MODULE$.keyStore(file.map(Option::apply).orElseGet(Option::empty), password);
+        return new KeyStore<>(package$.MODULE$.keyStore(file.map(Option::apply).orElseGet(Option::empty), password));
     }
 
     public static KeyPair generateKeyPair() {
