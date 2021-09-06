@@ -42,8 +42,7 @@ object AtomicUtils {
 
     container match {
       case txV1: AtomicTransactionV1 =>
-        val senderProof        = txV1.proofs.proofs.head
-        val proofsWithoutMiner = txV1.proofs.copy(proofs = List(senderProof))
+        val proofsWithoutMiner = txV1.proofs.copy(proofs = txV1.proofs.proofs.init)
 
         txV1.copy(
           transactions = newInnerTransactions,
