@@ -15,7 +15,7 @@ object ValidationPolicyDescriptor extends ByteEnum[ValidationPolicyDescriptor] {
   case object Majority          extends ValidationPolicyDescriptor(1, "majority")
   case object MajorityWithOneOf extends ValidationPolicyDescriptor(2, "majority_with_one_of")
 
-  override def values: immutable.IndexedSeq[ValidationPolicyDescriptor] = findValues
+  override val values: immutable.IndexedSeq[ValidationPolicyDescriptor] = findValues
 }
 
 sealed trait ValidationPolicy {
