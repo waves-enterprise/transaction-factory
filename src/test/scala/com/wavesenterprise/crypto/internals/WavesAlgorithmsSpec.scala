@@ -1,7 +1,6 @@
 package com.wavesenterprise.crypto.internals
 
 import java.nio.file.Files
-
 import com.wavesenterprise.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.crypto
 import com.wavesenterprise.crypto.WavesKeyStore
@@ -108,6 +107,30 @@ class WavesAlgorithmsSpec extends PropSpec with ScalaCheckPropertyChecks with Ma
           .explicitGet()
 
         decryptedData should contain theSameElementsAs data
+    }
+  }
+
+  property("Batch encryption and decryption") {
+    val genSomeBytes = for {
+      length    <- Gen.choose(1024 * 32, 1 * 1024 * 1024)
+      dataBytes <- Gen.containerOfN[Array, Byte](length, Arbitrary.arbitrary[Byte])
+    } yield dataBytes
+
+    forAll(genSomeBytes) {data =>
+      val sender = WavesAlgorithms.generateKeyPair()
+      val recipient  = WavesAlgorithms.generateKeyPair()
+
+      val encrypt = WavesAlgorithms.buildEncryptionFunction(sender.getPrivate, recipient.getPublic)
+
+      val chunkedData = data.grouped(1024)
+      for {
+        chunk <- chunkedData
+      } {
+        val encryptedChunk = encrypt(chunk).explicitGet()
+        val decrypt = WavesAlgorithms.buildDecryptionFunction(encryptedChunk.wrappedStructure, recipient.getPrivate, sender.getPublic)
+
+        chunk shouldBe decrypt(encryptedChunk.encryptedData).explicitGet()
+      }
     }
   }
 
