@@ -12,8 +12,8 @@ import cats.syntax.either._
 import org.slf4j.{Logger, LoggerFactory}
 
 trait CryptoAlgorithms[KP <: KeyPair] {
-  type KeyPair0 = KP
-  type PublicKey0 = KeyPair0#PublicKey0
+  type KeyPair0    = KP
+  type PublicKey0  = KeyPair0#PublicKey0
   type PrivateKey0 = KeyPair0#PrivateKey0
 
   val DigestSize: Int
@@ -66,7 +66,7 @@ case class EncryptedForSingle(encryptedData: Array[Byte], wrappedStructure: Arra
 
   override def toString: String = {
     val encryptedDataRepr = s"[${encryptedData.length} bytes]"
-    val wrappedKeyRepr = Base58.encode(wrappedStructure)
+    val wrappedKeyRepr    = Base58.encode(wrappedStructure)
     s"EncryptedForSingle(encryptedData = $encryptedDataRepr, wrappedStructure = $wrappedKeyRepr)"
   }
 }
@@ -110,13 +110,13 @@ case class EncryptedForMany(encryptedData: Array[Byte], recipientPubKeyToWrapped
 }
 
 object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
-  override val DigestSize: Int = 32
-  override val SignatureLength: Int = 64
-  override val KeyLength: Int = 32
-  override val SessionKeyLength: Int = 32
+  override val DigestSize: Int        = 32
+  override val SignatureLength: Int   = 64
+  override val KeyLength: Int         = 32
+  override val SessionKeyLength: Int  = 32
   override val WrappedStructureLength = 48
-  private val secureRandom = createSecureRandomInstance()
-  private val aesEncryption = new AesEncryption
+  private val secureRandom            = createSecureRandomInstance()
+  private val aesEncryption           = new AesEncryption
 
   override def generateKeyPair(): WavesKeyPair = {
     val (_, pair) = generateKeyPairWithSeed()
@@ -151,11 +151,11 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
     */
   def encrypt(data: Array[Byte], senderPrivateKey: WavesPrivateKey, recipientPublicKey: WavesPublicKey): Either[CryptoError, EncryptedForSingle] =
     Try {
-      val symmetricKey = aesEncryption.generateEncryptionKey()
+      val symmetricKey        = aesEncryption.generateEncryptionKey()
       val secret: Array[Byte] = sharedSecret(senderPrivateKey, recipientPublicKey)
 
       val encryptedData = aesEncryption.encrypt(symmetricKey, data)
-      val encryptedKey = aesEncryption.encrypt(secret, symmetricKey)
+      val encryptedKey  = aesEncryption.encrypt(secret, symmetricKey)
       EncryptedForSingle(encryptedData, encryptedKey)
     }.toEither
       .leftMap { ex =>
@@ -163,9 +163,10 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         GenericError("Error in encrypt")
       }
 
-  def buildEncryptionFunction(senderPrivateKey: WavesPrivateKey, recipientPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, EncryptedForSingle] = {
+  def buildEncryptionFunction(senderPrivateKey: WavesPrivateKey,
+                              recipientPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, EncryptedForSingle] = {
     val preComp = Try {
-      val symmetricKey = aesEncryption.generateEncryptionKey()
+      val symmetricKey        = aesEncryption.generateEncryptionKey()
       val secret: Array[Byte] = sharedSecret(senderPrivateKey, recipientPublicKey)
 
       (symmetricKey, secret)
@@ -176,7 +177,7 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         (symmetricKey, secret) <- preComp
         result = {
           val encryptedData = aesEncryption.encrypt(symmetricKey, data)
-          val encryptedKey = aesEncryption.encrypt(secret, symmetricKey)
+          val encryptedKey  = aesEncryption.encrypt(secret, symmetricKey)
           EncryptedForSingle(encryptedData, encryptedKey)
         }
       } yield result).toEither
@@ -192,11 +193,11 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
   def encryptForMany(data: Array[Byte],
                      senderKey: WavesPrivateKey,
                      recipientPublicKeys: Seq[WavesPublicKey]): Either[CryptoError, EncryptedForMany] = {
-    val symmetricKey = aesEncryption.generateEncryptionKey()
+    val symmetricKey  = aesEncryption.generateEncryptionKey()
     val encryptedData = aesEncryption.encrypt(symmetricKey, data)
     val recipientPubKeyToEncryptedKey = recipientPublicKeys.map { recipientPublicKey =>
       val secret: Array[Byte] = sharedSecret(senderKey, recipientPublicKey)
-      val encryptedKey = aesEncryption.encrypt(secret, symmetricKey)
+      val encryptedKey        = aesEncryption.encrypt(secret, symmetricKey)
       (recipientPublicKey: PublicKey) -> encryptedKey
     }.toMap
 
@@ -214,7 +215,7 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
           GenericError(s"Failed to make Diffie-Hellman shared secret")
         }
       symmetricKey <- aesEncryption.decrypt(secret, wrappedKey)
-      data <- aesEncryption.decrypt(symmetricKey, encryptedData)
+      data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
     } yield data
   }
 
@@ -228,13 +229,14 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         GenericError(s"Failed to make Diffie-Hellman shared secret")
       }
 
-    (encryptedData: Array[Byte]) => {
-      for {
-        secret <- secretEither
-        symmetricKey <- aesEncryption.decrypt(secret, encryptedKey)
-        data <- aesEncryption.decrypt(symmetricKey, encryptedData)
-      } yield data
-    }
+    (encryptedData: Array[Byte]) =>
+      {
+        for {
+          secret       <- secretEither
+          symmetricKey <- aesEncryption.decrypt(secret, encryptedKey)
+          data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
+        } yield data
+      }
   }
 
   private def generateKeyPair(seed: Array[Byte]): WavesKeyPair = {
@@ -250,7 +252,7 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       if (retries > MaxRetries) {
         throw new IllegalStateException(s"Impossible situation! Failed to generate non-weak Curve25519 session key, number of retries: $retries")
       }
-      val seed = secureRandom.generateSeed(KeyLength)
+      val seed             = secureRandom.generateSeed(KeyLength)
       val generatedKeyPair = generateKeyPair(seed)
       if (isWeakPublicKey(generatedKeyPair.getPublic.getEncoded)) {
         generateAndRetryOnWeak(retries + 1)
