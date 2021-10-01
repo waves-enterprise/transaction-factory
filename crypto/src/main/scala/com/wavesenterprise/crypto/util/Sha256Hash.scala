@@ -6,8 +6,9 @@ class Sha256Hash private(digest: MessageDigest) extends Hash {
 
   override def reset(): Unit = digest.reset()
 
-  override def update(data: Array[Byte]): Unit = {
+  override def update(data: Array[Byte]): Sha256Hash = {
     digest.update(data)
+    this
   }
 
   override def result(): Array[Byte] = {

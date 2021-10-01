@@ -2,7 +2,7 @@ package com.wavesenterprise.crypto.util
 
 trait Hash {
 
-  def update(data: Array[Byte]): Unit
+  def update(data: Array[Byte]): Hash
 
   def result(): Array[Byte]
 
