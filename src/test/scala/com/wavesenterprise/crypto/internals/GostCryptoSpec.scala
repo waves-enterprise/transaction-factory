@@ -9,7 +9,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class GostCryptoSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks with NoShrink {
+class GostCryptoSpec extends FreeSpec with Matchers with NoShrink {
   val gostCrypto = new GostAlgorithms
 
   val oneKilobyteInBytes: Int = 1024

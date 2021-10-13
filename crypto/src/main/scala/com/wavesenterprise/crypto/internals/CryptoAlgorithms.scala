@@ -2,7 +2,6 @@ package com.wavesenterprise.crypto.internals
 
 import java.security.SecureRandom
 import java.util
-
 import scorex.util.encode.Base58
 import scorex.crypto.hash.{Blake2b256, Keccak256}
 import scorex.crypto.signatures.{Curve25519, PrivateKey => PrivateKeyS, PublicKey => PublicKeyS, Signature => SignatureS}
@@ -30,6 +29,7 @@ trait CryptoAlgorithms[KP <: KeyPair] {
   def generateSessionKey(): KeyPair0
 
   def publicKeyFromBytes(bytes: Array[Byte]): PublicKey0
+
   def sessionKeyFromBytes(bytes: Array[Byte]): PublicKey0
 
   def fastHash(input: Array[Byte]): Array[Byte]
@@ -146,8 +146,8 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
 
   /**
     * Encryption/Decryption is done via AES using Diffie-Hellman common secret.
-    *   A generated random symmetric key is used for encryption,
-    *   then it is encrypted on Diffie-Hellman secret of two participants.
+    * A generated random symmetric key is used for encryption,
+    * then it is encrypted on Diffie-Hellman secret of two participants.
     */
   def encrypt(data: Array[Byte], senderPrivateKey: WavesPrivateKey, recipientPublicKey: WavesPublicKey): Either[CryptoError, EncryptedForSingle] =
     Try {
@@ -162,6 +162,33 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         log.error("Error in encrypt", ex)
         GenericError("Error in encrypt")
       }
+
+  def buildEncryptionFunction(senderPrivateKey: WavesPrivateKey,
+                              recipientPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, EncryptedForSingle] = {
+    val preComp = Try {
+      val symmetricKey        = aesEncryption.generateEncryptionKey()
+      val secret: Array[Byte] = sharedSecret(senderPrivateKey, recipientPublicKey)
+
+      (symmetricKey, secret)
+    }
+
+    val function = (data: Array[Byte]) => {
+      (for {
+        (symmetricKey, secret) <- preComp
+        result = {
+          val encryptedData = aesEncryption.encrypt(symmetricKey, data)
+          val encryptedKey  = aesEncryption.encrypt(secret, symmetricKey)
+          EncryptedForSingle(encryptedData, encryptedKey)
+        }
+      } yield result).toEither
+        .leftMap { ex =>
+          log.error("Error in encrypt", ex)
+          GenericError("Error in encrypt")
+        }
+    }
+
+    function
+  }
 
   def encryptForMany(data: Array[Byte],
                      senderKey: WavesPrivateKey,
@@ -190,6 +217,26 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       symmetricKey <- aesEncryption.decrypt(secret, wrappedKey)
       data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
     } yield data
+  }
+
+  def buildDecryptionFunction(encryptedKey: Array[Byte],
+                              recipientPrivateKey: WavesPrivateKey,
+                              senderPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, Array[Byte]] = {
+
+    val secretEither = Try(sharedSecret(recipientPrivateKey, senderPublicKey)).toEither
+      .leftMap { ex =>
+        log.error("Error in decrypt", ex)
+        GenericError(s"Failed to make Diffie-Hellman shared secret")
+      }
+
+    (encryptedData: Array[Byte]) =>
+      {
+        for {
+          secret       <- secretEither
+          symmetricKey <- aesEncryption.decrypt(secret, encryptedKey)
+          data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
+        } yield data
+      }
   }
 
   private def generateKeyPair(seed: Array[Byte]): WavesKeyPair = {
