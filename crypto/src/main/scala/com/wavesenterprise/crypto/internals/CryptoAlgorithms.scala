@@ -163,31 +163,20 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         GenericError("Error in encrypt")
       }
 
-  def buildEncryptionFunction(senderPrivateKey: WavesPrivateKey,
-                              recipientPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, EncryptedForSingle] = {
-    val preComp = Try {
-      val symmetricKey        = aesEncryption.generateEncryptionKey()
-      val secret: Array[Byte] = sharedSecret(senderPrivateKey, recipientPublicKey)
-
-      (symmetricKey, secret)
-    }
-
-    val function = (data: Array[Byte]) => {
-      (for {
-        (symmetricKey, secret) <- preComp
-        result = {
-          val encryptedData = aesEncryption.encrypt(symmetricKey, data)
-          val encryptedKey  = aesEncryption.encrypt(secret, symmetricKey)
-          EncryptedForSingle(encryptedData, encryptedKey)
-        }
-      } yield result).toEither
-        .leftMap { ex =>
-          log.error("Error in encrypt", ex)
-          GenericError("Error in encrypt")
-        }
-    }
-
-    function
+  def buildEncryptor(senderPrivateKey: WavesPrivateKey,
+                     recipientPublicKey: WavesPublicKey,
+                     dataLength: Long): Either[CryptoError, (Array[Byte], AesStream.Encryptor)] = {
+    Try {
+      val symmetricKey                   = aesEncryption.generateEncryptionKey()
+      val secret: Array[Byte]            = sharedSecret(senderPrivateKey, recipientPublicKey)
+      val encryptedKey: Array[Byte]      = aesEncryption.encrypt(secret, symmetricKey)
+      val encryptor: AesStream.Encryptor = AesStream.Encryptor(symmetricKey, dataLength)
+      (encryptedKey, encryptor)
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error while building AES stream encryptor", ex)
+        GenericError("Error while building AES stream encryptor")
+      }
   }
 
   def encryptForMany(data: Array[Byte],
@@ -219,24 +208,18 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
     } yield data
   }
 
-  def buildDecryptionFunction(encryptedKey: Array[Byte],
-                              recipientPrivateKey: WavesPrivateKey,
-                              senderPublicKey: WavesPublicKey): Array[Byte] => Either[CryptoError, Array[Byte]] = {
+  def buildDecryptor(encryptedKey: Array[Byte],
+                     recipientPrivateKey: WavesPrivateKey,
+                     senderPublicKey: WavesPublicKey): Either[CryptoError, AesStream.Decryptor] = {
 
-    val secretEither = Try(sharedSecret(recipientPrivateKey, senderPublicKey)).toEither
-      .leftMap { ex =>
-        log.error("Error in decrypt", ex)
-        GenericError(s"Failed to make Diffie-Hellman shared secret")
-      }
-
-    (encryptedData: Array[Byte]) =>
-      {
-        for {
-          secret       <- secretEither
-          symmetricKey <- aesEncryption.decrypt(secret, encryptedKey)
-          data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
-        } yield data
-      }
+    for {
+      secret <- Try(sharedSecret(recipientPrivateKey, senderPublicKey)).toEither
+        .leftMap { ex =>
+          log.error("Error in decrypt", ex)
+          GenericError(s"Failed to make Diffie-Hellman shared secret")
+        }
+      symmetricKey <- aesEncryption.decrypt(secret, encryptedKey)
+    } yield AesStream.Decryptor(symmetricKey)
   }
 
   private def generateKeyPair(seed: Array[Byte]): WavesKeyPair = {
