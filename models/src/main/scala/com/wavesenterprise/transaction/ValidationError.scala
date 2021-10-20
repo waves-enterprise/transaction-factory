@@ -137,6 +137,7 @@ object ValidationError {
 
   case class InvalidValidationProofs(actualCount: Int,
                                      expectedCount: Int,
+                                     currentValidators: Set[Address],
                                      resultsHash: ByteStr,
                                      containsRequiredAddresses: Boolean = true,
                                      requiredAddresses: Set[Address] = Set.empty)
@@ -144,7 +145,8 @@ object ValidationError {
 
     override def toString: String =
       s"Invalid validation proofs for results hash '$resultsHash'. Actual '$actualCount', expected '$expectedCount'." +
-        (if (containsRequiredAddresses) "" else s" Proofs does not contain any required addresses: '${requiredAddresses.mkString("', '")}'")
+        s"Current validators set: '${currentValidators.mkString("', '")}'." +
+        (if (containsRequiredAddresses) "" else s" Proofs does not contain one of required addresses: '${requiredAddresses.mkString("', '")}'")
   }
 
   case class InvalidValidatorSignature(publicKeyAccount: PublicKeyAccount, signature: ByteStr) extends ContractError {
