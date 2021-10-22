@@ -24,7 +24,7 @@ service ContractService {
 
 message ConnectionRequest {
   string connection_id = 1;
-  int32 async_factor = 2;
+  reserved 2;
 }
 
 message ContractTransactionResponse {

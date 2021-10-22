@@ -33,6 +33,7 @@ object ValidationError {
   case object InvalidName                                      extends ValidationError
   case object OverflowError                                    extends ValidationError
   case object ConstraintsOverflowError                         extends ValidationError
+  case object MvccConflictError                                extends ValidationError
   case object ToSelf                                           extends ValidationError
   case object MissingSenderPrivateKey                          extends ValidationError
   case object UnsupportedTransactionType                       extends ValidationError
