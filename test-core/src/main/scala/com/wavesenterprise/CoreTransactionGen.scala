@@ -26,7 +26,7 @@ import com.wavesenterprise.transaction.validation.TransferValidation.MaxTransfer
 import com.wavesenterprise.transaction.validation.{DataValidation, IssueTransactionValidation, PolicyValidation, TransferValidation}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import com.wavesenterprise.utils.NumberUtils.DoubleExt
-import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, asciiPrintableStr, frequency, numChar}
+import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, frequency, numChar}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.Suite
 
@@ -498,26 +498,26 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     size <- Gen.choose[Byte](5, MaxKeySize)
   } yield Random.alphanumeric.take(size).mkString
 
-  def longEntryGen(keyGen: Gen[String] = dataKeyGen) =
+  def longEntryGen(keyGen: Gen[String] = dataAsciiKeyGen) =
     for {
       key   <- keyGen
       value <- Gen.choose[Long](Long.MinValue, Long.MaxValue)
     } yield IntegerDataEntry(key, value)
 
-  def booleanEntryGen(keyGen: Gen[String] = dataKeyGen) =
+  def booleanEntryGen(keyGen: Gen[String] = dataAsciiKeyGen) =
     for {
       key   <- keyGen
       value <- Gen.oneOf(true, false)
     } yield BooleanDataEntry(key, value)
 
-  def binaryEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def binaryEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiKeyGen) =
     for {
       key   <- keyGen
       size  <- Gen.choose(0, maxSize)
       value <- byteArrayGen(size)
     } yield BinaryDataEntry(key, ByteStr(value))
 
-  def stringEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def stringEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiKeyGen) =
     for {
       key   <- keyGen
       size  <- Gen.choose(0, maxSize)

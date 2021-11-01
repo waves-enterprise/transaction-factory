@@ -2,7 +2,7 @@ package com.wavesenterprise.crypto.util
 
 import java.security.MessageDigest
 
-class Sha256Hash private(digest: MessageDigest) extends Hash {
+class Sha256Hash private (digest: MessageDigest) extends Hash {
 
   override def reset(): Unit = digest.reset()
 
