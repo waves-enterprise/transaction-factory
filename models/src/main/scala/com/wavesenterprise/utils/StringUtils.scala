@@ -19,14 +19,12 @@ object StringUtils {
     val keyAndForbiddenSymbols: String => Option[String] =
       s => findNotValid(s).map(notValidChars => s"$s -> $notValidChars")
 
-
     def notValidOrRight(list: List[String]): Either[String, Unit] = {
       val findingErrors = list.map(keyAndForbiddenSymbols).flatten.mkString("; ")
       if (findingErrors.isBlank) Right(())
       else Left(findingErrors)
     }
-
-
+    
     def notValidOrRight(s: String): Either[String, Unit] = notValidOrRight(List(s))
   }
 
