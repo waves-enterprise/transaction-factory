@@ -26,7 +26,7 @@ import com.wavesenterprise.transaction.validation.TransferValidation.MaxTransfer
 import com.wavesenterprise.transaction.validation.{DataValidation, IssueTransactionValidation, PolicyValidation, TransferValidation}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import com.wavesenterprise.utils.NumberUtils.DoubleExt
-import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, frequency, numChar}
+import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, asciiPrintableStr, frequency, numChar}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.Suite
 
@@ -524,7 +524,7 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
       value <- Gen.listOfN(size, aliasAlphabetGen)
     } yield StringDataEntry(key, value.mkString)
 
-  def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiKeyGen) =
     Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
   val dataTransactionV1Gen: Gen[DataTransactionV1] = dataTransactionV1Gen(DataValidation.MaxEntryCount)

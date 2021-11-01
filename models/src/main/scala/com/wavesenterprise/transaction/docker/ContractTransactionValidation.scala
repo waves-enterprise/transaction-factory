@@ -5,7 +5,8 @@ import com.google.common.io.ByteStreams.newDataOutput
 import com.wavesenterprise.crypto
 import com.wavesenterprise.docker.validator.{ValidationPolicy, ValidationPolicyDescriptor}
 import com.wavesenterprise.state.{ByteStr, DataEntry}
-import com.wavesenterprise.transaction.ValidationError.GenericError
+import com.wavesenterprise.transaction.ValidationError.{GenericError, InvalidContractKeys}
+import com.wavesenterprise.utils.StringUtils.ValidateAsciiAndRussian.notValidOrRight
 import com.wavesenterprise.transaction.{Transaction, ValidationError}
 
 /**
@@ -48,6 +49,7 @@ trait ContractTransactionValidation {
 
   def validateParams(params: List[DataEntry[_]]): Either[ValidationError, Unit] = {
     for {
+      _ <- notValidOrRight(params.map(_.key)).leftMap(InvalidContractKeys(_))
       _ <- Either.cond(params.forall(_.key.nonEmpty), (), GenericError("Param with empty key was found"))
       _ <- Either.cond(params.map(_.key).distinct.length == params.size, (), GenericError("Params with duplicate keys were found"))
       _ <- params.map(ContractTransactionEntryOps.validate).find(_.isLeft).getOrElse(Right(()))
@@ -56,6 +58,7 @@ trait ContractTransactionValidation {
 
   def validateResults(results: List[DataEntry[_]]): Either[ValidationError, Unit] = {
     for {
+      _ <- notValidOrRight(results.map(_.key)).leftMap(InvalidContractKeys(_))
       _ <- Either.cond(results.forall(_.key.nonEmpty), (), GenericError("Result with empty key was found"))
       _ <- Either.cond(results.map(_.key).distinct.length == results.size, (), GenericError("Results with duplicate keys were found"))
       _ <- results.traverse(ContractTransactionEntryOps.validate)
