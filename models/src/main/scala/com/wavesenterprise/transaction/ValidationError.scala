@@ -118,6 +118,11 @@ object ValidationError {
     override def toString: String = s"Contract update transaction sender '${tx.sender}' is not equal to contract creator '$contractCreator'"
   }
 
+  case class InvalidContractKeys(keysAndForbiddenSymbols: String)           extends ContractError {
+    override def toString: String = s"Keys and invalid symbols in it: [${keysAndForbiddenSymbols}]\n" +
+                                    s"Allowed characters are ascii non-control and lower and uppercase russian letters"
+  }
+
   sealed trait PrivacyError extends ValidationError
 
   case class PolicyDoesNotExist(policyId: ByteStr) extends PrivacyError {
