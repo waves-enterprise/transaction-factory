@@ -74,6 +74,19 @@ class CreateContractTransactionV3Spec extends PropSpec with ScalaCheckPropertyCh
                                              atomicBadge,
                                              proofs)
         invalidImageHashTx shouldBe Left(ValidationError.GenericError(s"Image hash string $invalidImageHash is not valid SHA-256 hex string"))
+        val withNonAsciiKeysParams = List(IntegerDataEntry("key∂√1", 2), StringDataEntry("kååey1", "value"))
+        val withNonAsciiKeysEither =
+          CreateContractTransactionV3.create(sender,
+                                             image,
+                                             imageHash,
+                                             contractName,
+                                             withNonAsciiKeysParams,
+                                             fee,
+                                             timestamp,
+                                             feeAssetId,
+                                             atomicBadge,
+                                             proofs)
+        withNonAsciiKeysEither shouldBe Left(ValidationError.InvalidContractKeys("key∂√1 -> ∂√; kååey1 -> å"))
     }
   }
 
