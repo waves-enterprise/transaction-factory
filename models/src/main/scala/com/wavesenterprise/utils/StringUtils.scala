@@ -24,7 +24,7 @@ object StringUtils {
       if (findingErrors.isBlank) Right(())
       else Left(findingErrors)
     }
-    
+
     def notValidOrRight(s: String): Either[String, Unit] = notValidOrRight(List(s))
   }
 
