@@ -6,7 +6,7 @@ import com.wavesenterprise.crypto
 import com.wavesenterprise.docker.validator.{ValidationPolicy, ValidationPolicyDescriptor}
 import com.wavesenterprise.state.{ByteStr, DataEntry}
 import com.wavesenterprise.transaction.ValidationError.{GenericError, InvalidContractKeys}
-import com.wavesenterprise.utils.StringUtils.ValidateAsciiAndRussian.notValidOrRight
+import com.wavesenterprise.utils.StringUtilites.ValidateAsciiAndRussian.notValidOrRight
 import com.wavesenterprise.transaction.{Transaction, ValidationError}
 
 /**
