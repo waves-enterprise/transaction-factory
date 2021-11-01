@@ -4,7 +4,7 @@ import com.wavesenterprise.lang.v1.compiler.Terms.{FUNCTION_CALL, TRUE}
 import com.wavesenterprise.lang.v1.compiler.Types.BOOLEAN
 import com.wavesenterprise.lang.v1.evaluator.ctx.{EvaluationContext, UserFunction}
 import com.wavesenterprise.utils.SmartContractV1Utils.estimate
-import com.wavesenterprise.utils.StringUtils.ValidateAsciiAndRussian.notValidOrRight
+import com.wavesenterprise.utils.StringUtilites.ValidateAsciiAndRussian.notValidOrRight
 import org.scalatest.{FreeSpec, Matchers}
 
 class UtilsSpecification extends FreeSpec with Matchers {
