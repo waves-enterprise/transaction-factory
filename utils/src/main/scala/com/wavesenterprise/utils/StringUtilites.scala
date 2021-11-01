@@ -1,6 +1,6 @@
 package com.wavesenterprise.utils
 
-object StringUtils {
+object StringUtilites {
 
   object ValidateAsciiAndRussian {
     def findNotValid(s: String): Option[String] = {
