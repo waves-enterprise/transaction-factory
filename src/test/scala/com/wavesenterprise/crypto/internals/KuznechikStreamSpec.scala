@@ -1,6 +1,6 @@
 package com.wavesenterprise.crypto.internals
 
-import com.wavesenterprise.crypto.internals.gost.KuznechikStream
+import com.wavesenterprise.crypto.internals.gost.{KuznechikStream, KuznechikStreamV2}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.PropSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -31,8 +31,8 @@ class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
       val dataStream = new ByteArrayInputStream(data)
       val key = encryptionKeyGenerator.generateKey()
 
-      val encryptor = KuznechikStream.Encryptor.custom(key,internalChunkSize)
-      val decryptor = KuznechikStream.Decryptor.custom(key, internalChunkSize)
+      val encryptor = KuznechikStreamV2.Encryptor.custom(key, internalChunkSize)
+      val decryptor = KuznechikStreamV2.Decryptor.custom(key, internalChunkSize)
 
       val encryptedChunks = ArrayBuffer[Byte]()
 

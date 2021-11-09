@@ -164,13 +164,12 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       }
 
   def buildEncryptor(senderPrivateKey: WavesPrivateKey,
-                     recipientPublicKey: WavesPublicKey,
-                     dataLength: Long): Either[CryptoError, (Array[Byte], AesStream.Encryptor)] = {
+                     recipientPublicKey: WavesPublicKey): Either[CryptoError, (Array[Byte], AesStreamV2.Encryptor)] = {
     Try {
       val symmetricKey                   = aesEncryption.generateEncryptionKey()
       val secret: Array[Byte]            = sharedSecret(senderPrivateKey, recipientPublicKey)
       val encryptedKey: Array[Byte]      = aesEncryption.encrypt(secret, symmetricKey)
-      val encryptor: AesStream.Encryptor = AesStream.Encryptor(symmetricKey, dataLength)
+      val encryptor: AesStreamV2.Encryptor = AesStreamV2.Encryptor(symmetricKey)
       (encryptedKey, encryptor)
     }.toEither
       .leftMap { ex =>

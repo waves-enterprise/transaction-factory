@@ -28,7 +28,7 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       val sender    = WavesAlgorithms.generateKeyPair()
       val recipient = WavesAlgorithms.generateKeyPair()
 
-      val (encryptedKey, encryptor) = WavesAlgorithms.buildEncryptor(sender.getPrivate, recipient.getPublic, data.length).explicitGet()
+      val (encryptedKey, encryptor) = WavesAlgorithms.buildEncryptor(sender.getPrivate, recipient.getPublic).explicitGet()
       val dataStream                = new ByteArrayInputStream(data)
 
       val encryptedChunks = ArrayBuffer[Byte]()
@@ -61,7 +61,7 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       val sender    = WavesAlgorithms.generateKeyPair()
       val recipient = WavesAlgorithms.generateKeyPair()
 
-      val (encryptedKey, encryptor) = WavesAlgorithms.buildEncryptor(sender.getPrivate, recipient.getPublic, data.length).explicitGet()
+      val (encryptedKey, encryptor) = WavesAlgorithms.buildEncryptor(sender.getPrivate, recipient.getPublic).explicitGet()
       val encrypted                 = encryptor(data) ++ encryptor.doFinal()
       val changedByteIdx            = random.nextInt(encrypted.length)
 
