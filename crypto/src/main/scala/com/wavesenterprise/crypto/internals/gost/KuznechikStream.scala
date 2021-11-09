@@ -36,7 +36,6 @@ object KuznechikStream {
   def ensureCryptoInitialized(): Unit = {
     if (Option(Security.getProvider("JCSP")).isEmpty) {
       Security.addProvider(new JCSP())
-      Security.addProvider(new JCSP())
     }
   }
 
