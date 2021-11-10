@@ -15,6 +15,7 @@ import com.wavesenterprise.privacy.PolicyDataHash
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.transaction.assets.exchange.Order
 import com.wavesenterprise.transaction.docker.{ExecutableTransaction, UpdateContractTransaction}
+import com.wavesenterprise.utils.StringUtilites.ValidateAsciiAndRussian.{mapToString, stringToMap}
 
 import scala.util.Either
 
@@ -118,10 +119,15 @@ object ValidationError {
     override def toString: String = s"Contract update transaction sender '${tx.sender}' is not equal to contract creator '$contractCreator'"
   }
 
-  case class InvalidContractKeys(keysAndForbiddenSymbols: String) extends ContractError {
+  case class InvalidContractKeys(keysAndForbiddenSymbols: Map[String, String]) extends ContractError {
+    def this(s: String) = this(stringToMap(s))
     override def toString: String =
-      s"Keys and invalid symbols in it: [${keysAndForbiddenSymbols}]\n" +
+      s"Keys and invalid symbols in it: [${mapToString(keysAndForbiddenSymbols)}]\n" +
         s"Allowed characters are ascii non-control and lower and uppercase russian letters"
+  }
+
+  object InvalidContractKeys {
+    def apply(s: String) = new InvalidContractKeys(s)
   }
 
   sealed trait PrivacyError extends ValidationError

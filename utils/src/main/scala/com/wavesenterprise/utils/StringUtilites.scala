@@ -19,13 +19,35 @@ object StringUtilites {
     val keyAndForbiddenSymbols: String => Option[String] =
       s => findNotValid(s).map(notValidChars => s"$s -> $notValidChars")
 
+    val keyToForbiddenSymbols: String => Option[Map[String, String]] =
+      s => findNotValid(s).map(notValidChars => Map(s -> notValidChars))
+
     def notValidOrRight(list: List[String]): Either[String, Unit] = {
       val findingErrors = list.map(keyAndForbiddenSymbols).flatten.mkString("; ")
       if (findingErrors.isBlank) Right(())
       else Left(findingErrors)
     }
+    def notValidMapOrRight(list: List[String]): Either[Map[String, String], Unit] = {
+      val findingErrors = list
+        .map(keyToForbiddenSymbols)
+        .flatten
+        .foldRight(Map[String, String]()) { (m, acc) =>
+          acc ++ m
+        }
+      if (findingErrors.isEmpty) Right(())
+      else Left(findingErrors)
+    }
 
-    def notValidOrRight(s: String): Either[String, Unit] = notValidOrRight(List(s))
+    def notValidOrRight(s: String): Either[String, Unit]                 = notValidOrRight(List(s))
+    def notValidMapOrRight(s: String): Either[Map[String, String], Unit] = notValidMapOrRight(List(s))
+
+    val mapToString: Map[String, String] => String =
+      _.map(_.productIterator.mkString(" -> "))
+        .mkString("; ")
+
+    val stringToMap: String => Map[String, String] =
+      _.split("; ").map(_.split(" -> ")).map { case Array(k, v) => (k, v) }.toMap
+
   }
 
 }
