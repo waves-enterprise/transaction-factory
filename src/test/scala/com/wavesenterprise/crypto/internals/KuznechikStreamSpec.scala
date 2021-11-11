@@ -1,16 +1,19 @@
 package com.wavesenterprise.crypto.internals
 
+
 import com.wavesenterprise.crypto.internals.gost.KuznechikStream
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.{Matchers, PropSpec}
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.PropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import ru.CryptoPro.JCP.JCP
 
 import java.io.ByteArrayInputStream
+import javax.crypto.KeyGenerator
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers {
+class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
 
   val genSomeBytes: Gen[Array[Byte]] = for {
     length    <- Gen.choose(32 * 1024, 1 * 1024 * 1024)
@@ -20,17 +23,19 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
   val genChunkSize: () => Int = () => Gen.choose(512, 2048).sample.get
   val random                  = new Random()
 
+  KuznechikStream.ensureCryptoInitialized()
+  val encryptionKeyGenerator: KeyGenerator = KeyGenerator.getInstance(JCP.GOST_K_CIPHER_NAME)
+
   property("Encrypt and decrypt some data") {
 
     forAll(genSomeBytes) { data =>
       val chunkSize: Int = 128 * 1024
 
       val dataStream = new ByteArrayInputStream(data)
-      val key = new Array[Byte](16)
-      random.nextBytes(key)
+      val key        = encryptionKeyGenerator.generateKey()
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
 
       val encryptedChunks = ArrayBuffer[Byte]()
 
@@ -54,14 +59,13 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
     }
   }
 
-  property("Decryptor falls on changing encrypted data") {
+  property("Decryption fail on changing encrypted data") {
     forAll(genSomeBytes) { data =>
-      val key = new Array[Byte](16)
-      random.nextBytes(key)
+      val key = encryptionKeyGenerator.generateKey()
 
       val chunkSize      = 128 * 1024
-      val encryptor      = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor      = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor      = KuznechikStream.Encryptor.custom(key, chunkSize)
+      val decryptor      = KuznechikStream.Decryptor.custom(key, chunkSize)
       val encrypted      = encryptor(data) ++ encryptor.doFinal()
       val changedByteIdx = random.nextInt(encrypted.length)
 
@@ -72,19 +76,19 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
         finalDecrypted <- decryptor.doFinal()
       } yield decrypted ++ finalDecrypted
 
-      assertResult("Tag mismatch!")(result.left.get.message)
+      assertResult("Cipher was not initiated for encryption or decryption operation.")(result.left.get.message)
     }
+
   }
 
-  property("Decryptor falls on lost of data chunks") {
+  property("Decryption fail on lost of data chunks") {
     forAll(genSomeBytes) { data =>
-      val key = new Array[Byte](16)
-      random.nextBytes(key)
+      val key = encryptionKeyGenerator.generateKey()
 
-      val chunkSize = 1024
+      val chunkSize = 16 * 1024
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
 
       val encrypted         = encryptor(data) ++ encryptor.doFinal()
       val encryptedWithLost = encrypted.take(chunkSize)
@@ -98,15 +102,14 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
     }
   }
 
-  property("Decryptor falls on data chunks reordering") {
+  property("Decryption fail on data chunks reordering") {
     forAll(genSomeBytes) { data =>
-      val key = new Array[Byte](16)
-      random.nextBytes(key)
+      val key = encryptionKeyGenerator.generateKey()
 
       val chunkSize = 16 * 1024
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
 
       val encrypted          = encryptor(data) ++ encryptor.doFinal()
       val reorderedEncrypted = encrypted.slice(chunkSize, chunkSize * 2) ++ encrypted.take(chunkSize)
@@ -119,5 +122,4 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       assertResult("Invalid chunk index, chunk processing order must be the same as in encryption")(result.left.get.message)
     }
   }
-
 }
