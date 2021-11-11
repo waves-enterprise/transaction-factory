@@ -6,7 +6,6 @@ import javax.crypto.Cipher
 import javax.crypto.spec.{GCMParameterSpec, SecretKeySpec}
 import scala.collection.mutable.ArrayBuffer
 
-
 /**
   * AesStream allows to encrypt large amount of data using buffer of specific size (8mb by default)
   *
@@ -19,9 +18,9 @@ import scala.collection.mutable.ArrayBuffer
   */
 object AesStream {
   private val defaultChunkSize = 8 * 1024 * 1024 // 8mb
-  private val ivLength                      = 16
-  private val keySize                       = 16 // 256 bit
-  private val cypherName                    = "AES/GCM/NoPadding"
+  private val ivLength         = 16
+  private val keySize          = 16 // 256 bit
+  private val cypherName       = "AES/GCM/NoPadding"
 
   private val random = WavesAlgorithms.createSecureRandomInstance()
 
@@ -33,7 +32,7 @@ object AesStream {
     new SecretKeySpec(keyBytes, "AES")
   }
 
-  class Encryptor private(key: Array[Byte], dataLength: Long, val chunkSize: Int = defaultChunkSize) {
+  class Encryptor private (key: Array[Byte], dataLength: Long, val chunkSize: Int = defaultChunkSize) {
 
     private val plainTextChunkSize            = chunkSize - 16 // 16 bytes for auth tag
     private val chunkSizeWithoutIdxAndAuthTag = chunkSize - 4 - 16
@@ -124,7 +123,7 @@ object AesStream {
     }
   }
 
-  class Decryptor private(val key: Array[Byte], val chunkSize: Int = defaultChunkSize) {
+  class Decryptor private (val key: Array[Byte], val chunkSize: Int = defaultChunkSize) {
     private val buffer = ByteBuffer.allocate(chunkSize)
     private val cipher = Cipher.getInstance(cypherName)
 
@@ -227,5 +226,3 @@ object AesStream {
   }
 
 }
-
-

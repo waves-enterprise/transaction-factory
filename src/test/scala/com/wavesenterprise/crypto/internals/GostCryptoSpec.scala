@@ -7,7 +7,6 @@ import com.wavesenterprise.crypto.internals.gost.{GostAlgorithms, GostKeyPair, G
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class GostCryptoSpec extends FreeSpec with Matchers with NoShrink {
   val gostCrypto = new GostAlgorithms

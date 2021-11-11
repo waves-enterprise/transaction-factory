@@ -15,6 +15,10 @@ service PrivacyPublicService {
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
   rpc SendData (SendDataRequest) returns (SendDataResponse);
+  rpc Recipients (PolicyIdRequest) returns (AddressesResponse);
+  rpc Owners (PolicyIdRequest) returns (AddressesResponse);
+  rpc Hashes (PolicyIdRequest) returns (HashesResponse);
+  rpc ForceSync (PolicyIdRequest) returns (ForceSyncResponse);
 }
 
 message PolicyItemRequest {
@@ -61,4 +65,20 @@ message PolicyItemDataExistsResponse {
 message SendDataResponse {
   int32 tx_version = 1;
   PolicyDataHashTransaction tx = 2;
+}
+
+message PolicyIdRequest {
+  bytes policy_id = 1;
+}
+
+message AddressesResponse {
+  repeated string recipient_address = 1;
+}
+
+message HashesResponse {
+  repeated bytes hashes = 1;
+}
+
+message ForceSyncResponse {
+  int32 force_restarted = 1;
 }
