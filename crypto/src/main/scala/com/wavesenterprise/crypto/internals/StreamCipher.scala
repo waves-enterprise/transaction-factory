@@ -2,8 +2,23 @@ package com.wavesenterprise.crypto.internals
 
 import java.nio.ByteBuffer
 import javax.crypto.Cipher
-import scala.collection.mutable.ArrayBuffer
 
+import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
+import cats.syntax.either._
+
+/**
+  * AbstractEncryptor and AbstractDecryptor allows to encrypt and decrypt large amount of data using buffer of specific size
+  * (8mb by default)
+  *
+  * Structure of data chunk:
+  * 1. iv - initialization vector for cipher, 16 bytes
+  * 2. chunkStatus - byte which indicates is current chunk final(=0x01) or not(=0x00)
+  * 3. chunkIndex - index of the chunk to check if chunks was reordered by someone
+  * 4. encryptedData - encrypted data, n bytes
+  * 5. chunkCount - overall count of data chunks to check if some data was lost, 16 bytes, appended to the end of chunk
+  *
+  */
 object StreamCipher {
   val NonFinalChunkByte: Byte = 0x00
   val FinalChunkByte: Byte    = 0x01
@@ -36,7 +51,7 @@ object StreamCipher {
 
     protected def encrypt(plainText: Array[Byte]): Array[Byte]
 
-    def apply(data: Array[Byte]): Array[Byte] = { // Either[CryptoError, Array[Byte]]
+    def apply(data: Array[Byte]): Array[Byte] = {
       val result = ArrayBuffer[Byte]()
 
       var dataPosition = 0
@@ -57,7 +72,7 @@ object StreamCipher {
       result.toArray
     }
 
-    def doFinal(): Array[Byte] = { // Either[CryptoError, Array[Byte]]
+    def doFinal(): Array[Byte] = {
       val chunkCount = if (buffer.remaining() >= 4) chunkIndex else chunkIndex + 1
 
       val result = if (buffer.remaining() >= 4) {
@@ -104,7 +119,7 @@ object StreamCipher {
       last4PlainDataBytesOfPrevChunk.put(decrypted.takeRight(Math.min(4, plainTextLength)))
     }
 
-    def apply(data: Array[Byte]): Array[Byte] = {
+    def apply(data: Array[Byte]): Either[DecryptionError, Array[Byte]] = {
       def validateChunk(decrypted: Array[Byte]): Unit = {
         if (ByteBuffer.wrap(decrypted.slice(1, 5)).getInt() != chunkIndex) {
           throw new RuntimeException("Invalid chunk index, chunk processing order must be the same as in encryption")
@@ -114,30 +129,34 @@ object StreamCipher {
       val result       = ArrayBuffer[Byte]()
       var dataPosition = 0
 
-      while (dataPosition != data.length) {
-        if (!buffer.hasRemaining) {
-          nextChunk()
+      Try {
+        while (dataPosition != data.length) {
+          if (!buffer.hasRemaining) {
+            nextChunk()
+          }
+
+          val bytesProcessed = Math.min(data.length - dataPosition, buffer.remaining())
+          buffer.put(data.slice(dataPosition, dataPosition + bytesProcessed))
+          dataPosition += bytesProcessed
+
+          if (!buffer.hasRemaining) {
+            val decrypted = decrypt()
+            validateChunk(decrypted)
+
+            result ++= last4PlainDataBytesOfPrevChunk.array().take(last4PlainDataBytesOfPrevChunk.position()) ++
+              decrypted.drop(5).dropRight(4)
+
+            saveLast4PlainTextBytes(decrypted)
+          }
         }
 
-        val bytesProcessed = Math.min(data.length - dataPosition, buffer.remaining())
-        buffer.put(data.slice(dataPosition, dataPosition + bytesProcessed))
-        dataPosition += bytesProcessed
-
-        if (!buffer.hasRemaining) {
-          val decrypted = decrypt()
-          validateChunk(decrypted)
-
-          result ++= last4PlainDataBytesOfPrevChunk.array().take(last4PlainDataBytesOfPrevChunk.position()) ++
-            decrypted.drop(5).dropRight(4)
-
-          saveLast4PlainTextBytes(decrypted)
-        }
-      }
-
-      result.toArray
+        result.toArray
+      }.toEither.leftMap(ex => {
+        DecryptionError(ex.getMessage, ex)
+      })
     }
 
-    def doFinal(): Array[Byte] = {
+    def doFinal(): Either[CryptoError, Array[Byte]] = {
 
       def validate(bytes: Array[Byte]): Unit = {
         def expectedChunkCount() = {
@@ -157,15 +176,21 @@ object StreamCipher {
         }
       }
 
-      if (buffer.position() != 0 && buffer.hasRemaining) {
-        val decryptedData = decrypt()
-        validate(decryptedData)
-        (last4PlainDataBytesOfPrevChunk.array() ++ decryptedData.drop(5)).dropRight(4)
-      } else {
-        val result = Array[Byte]()
-        validate(result)
-        result
-      }
+      Try{
+        if (buffer.position() != 0 && buffer.hasRemaining) {
+          val decryptedData = decrypt()
+          validate(decryptedData)
+          (last4PlainDataBytesOfPrevChunk.array().take(last4PlainDataBytesOfPrevChunk.position()) ++
+            decryptedData.drop(5)).dropRight(4)
+        } else {
+          val result = Array[Byte]()
+          validate(result)
+          result
+        }
+      }.toEither.leftMap(ex => {
+        DecryptionError(ex.getMessage, ex)
+      })
+
     }
 
   }
