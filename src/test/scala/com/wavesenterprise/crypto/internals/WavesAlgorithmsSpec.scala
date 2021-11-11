@@ -1,13 +1,16 @@
 package com.wavesenterprise.crypto.internals
 
-import java.nio.file.Files
 import com.wavesenterprise.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.crypto
 import com.wavesenterprise.crypto.WavesKeyStore
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
+import java.io.ByteArrayInputStream
+import java.nio.file.Files
+import scala.collection.mutable.ArrayBuffer
 
 class WavesAlgorithmsSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers {
 
@@ -107,6 +110,45 @@ class WavesAlgorithmsSpec extends PropSpec with ScalaCheckPropertyChecks with Ma
           .explicitGet()
 
         decryptedData should contain theSameElementsAs data
+    }
+  }
+
+  property("Stream encrypt and decrypt") {
+    val genSomeBytes: Gen[Array[Byte]] = for {
+      length    <- Gen.choose(32 * 1024, 1 * 1024 * 1024)
+      dataBytes <- Gen.containerOfN[Array, Byte](length, Arbitrary.arbitrary[Byte])
+    } yield dataBytes
+    val genChunkSize: () => Int = () => Gen.choose(512, 2048).sample.get
+
+    forAll(genSomeBytes) { data =>
+      val sender    = WavesAlgorithms.generateKeyPair()
+      val recipient = WavesAlgorithms.generateKeyPair()
+
+      val (encryptedKey, encryptor) = WavesAlgorithms.buildEncryptor(sender.getPrivate, recipient.getPublic).explicitGet()
+      val dataStream                = new ByteArrayInputStream(data)
+
+      val encryptedChunks = ArrayBuffer[Byte]()
+
+      while (dataStream.available() != 0) {
+        val chunk = dataStream.readNBytes(Math.min(genChunkSize(), dataStream.available()))
+        encryptedChunks ++= encryptor(chunk)
+      }
+      encryptedChunks ++= encryptor.doFinal()
+
+      val finalEncrypted = EncryptedForSingle(encryptedChunks.toArray, encryptedKey)
+
+      val decryptor           = WavesAlgorithms.buildDecryptor(finalEncrypted.wrappedStructure, recipient.getPrivate, sender.getPublic).explicitGet()
+      val encryptedDataStream = new ByteArrayInputStream(finalEncrypted.encryptedData)
+      val resultDecrypted     = ArrayBuffer[Byte]()
+
+      while (encryptedDataStream.available() != 0) {
+        val chunk = encryptedDataStream.readNBytes(Math.min(genChunkSize(), encryptedDataStream.available()))
+        resultDecrypted ++= decryptor(chunk).explicitGet()
+      }
+
+      resultDecrypted ++= decryptor.doFinal().explicitGet()
+
+      assertResult(data)(resultDecrypted.toArray)
     }
   }
 

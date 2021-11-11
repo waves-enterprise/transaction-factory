@@ -308,4 +308,9 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
         log.error("Error in decrypt", ex)
         GenericError("Error in decrypt")
       }
+
+  override def buildEncryptor(senderPrivateKey: PrivateKey0, recipientPublicKey: PublicKey0): Either[CryptoError, (Array[Byte], StreamCipher.AbstractEncryptor)] = ???
+
+  override def buildDecryptor(encryptedKeyInfo: Array[Byte], recipientPrivateKey: PrivateKey0, senderPublicKey: PublicKey0): Either[CryptoError, StreamCipher.AbstractDecryptor] = ???
+
 }
