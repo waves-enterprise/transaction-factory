@@ -11,6 +11,7 @@ import javax.crypto.{Cipher, KeyAgreement, KeyGenerator}
 import scala.util.Try
 
 class KuznechikAlgorithm extends GostAlgorithms {
+
   override private[gost] lazy val CryptoAlgorithm = JCP.GOST_K_CIPHER_NAME
   private val KeyAlgorithm                        = JCP.GOST_DH_2012_256_NAME
 
@@ -53,7 +54,7 @@ class KuznechikAlgorithm extends GostAlgorithms {
   }
 
   /**
-    * Encryption for a single recipient with GOST28147 and DH agreement key
+    * Encryption for a single recipient with Kuznechik and DH agreement key
     */
   override def encrypt(data: Array[Byte],
                        senderPrivateKey: GostPrivateKey,
@@ -88,8 +89,40 @@ class KuznechikAlgorithm extends GostAlgorithms {
   }
 
   /**
+    *
+    * @param senderPrivateKey
+    * @param recipientPublicKey
+    * @return (encrypted encryption key with some additional data, stream encryptor)
+    */
+  override def buildEncryptor(senderPrivateKey: GostPrivateKey,
+                              recipientPublicKey: AbstractGostPublicKey): Either[CryptoError, (Array[Byte], KuznechikStream.Encryptor)] = {
+    Try {
+      val (agreementIV, kExpSpec, expUKM, extendedUKM) = generateIV
+      val agreementSecretKey                           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
+      val encryptionKey                                = encryptionKeyGenerator.generateKey()
+
+      val wrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
+      wrapCipher.init(Cipher.WRAP_MODE, agreementSecretKey, kExpSpec)
+      val wrappedKey = wrapCipher.wrap(encryptionKey)
+
+      val wrappedStructure = ByteBuffer
+        .allocate(WrappedStructureLength)
+        .put(agreementIV.getIV)
+        .put(expUKM)
+        .put(extendedUKM)
+        .put(wrappedKey)
+
+      (wrappedStructure.array(), KuznechikStream.Encryptor(encryptionKey))
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error in encryptor creating process", ex)
+        GenericError("Error in encryptor creating process")
+      }
+  }
+
+  /**
     * Encryption for many recipients
-    * Data is encrypted with GOST28147, then each recipient gets his own key, wrapped via DH agreement algorithm
+    * Data is encrypted with Kuznechik, then each recipient gets his own key, wrapped via DH agreement algorithm
     */
   override def encryptForMany(data: Array[Byte],
                               senderPrivateKey: GostPrivateKey,
@@ -135,7 +168,7 @@ class KuznechikAlgorithm extends GostAlgorithms {
   }
 
   /**
-    * Decrypt data, encrypted with GOST28147, given encryption key wrapped via DH agreement algorithm
+    * Decrypt data, encrypted with Kuznechik, given encryption key wrapped via DH agreement algorithm
     */
   override def decrypt(encryptedWithWrappedKey: EncryptedForSingle,
                        receiverPrivateKey: GostPrivateKey,
@@ -178,4 +211,51 @@ class KuznechikAlgorithm extends GostAlgorithms {
         GenericError("Error in decrypt")
       }
   }
+
+  /**
+    *
+    * @param encryptedKeyInfo - encrypted encryption key with some additional data
+    * @param recipientPrivateKey
+    * @param senderPublicKey
+    * @return decryptor object which can be used for stream data decryption
+    */
+  override def buildDecryptor(encryptedKeyInfo: Array[Byte],
+                              recipientPrivateKey: GostPrivateKey,
+                              senderPublicKey: AbstractGostPublicKey): Either[CryptoError, KuznechikStream.Decryptor] = {
+
+    Try {
+
+      val agreementIVBytes = new Array[Byte](AgreementIVBytes)
+      val expUkmBytes      = new Array[Byte](ExpUKMLength)
+      val extendedUkmBytes = new Array[Byte](ExtendedExpUKMLength)
+      val wrappedKey       = new Array[Byte](WrappedKeyLength)
+
+      ByteBuffer
+        .wrap(encryptedKeyInfo)
+        .get(agreementIVBytes)
+        .get(expUkmBytes)
+        .get(extendedUkmBytes)
+        .get(wrappedKey)
+
+      val agreementIV = new IvParameterSpec(agreementIVBytes)
+      val kExpSpec    = new Kexp15ParamsSpec(expUkmBytes, extendedUkmBytes)
+
+      val agreementSecretKey = generateAgreementSecret(recipientPrivateKey, senderPublicKey, agreementIV)
+
+      val unwrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
+      unwrapCipher.init(Cipher.UNWRAP_MODE, agreementSecretKey, kExpSpec)
+      val encryptionKey = unwrapCipher.unwrap(wrappedKey, null, Cipher.SECRET_KEY)
+
+      KuznechikStream.Decryptor(encryptionKey)
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error in decryptor creating process", ex)
+        GenericError("Error in decryptor creating process")
+      }
+  }
+}
+
+object KuznechikAlgorithm {
+  val nonFinalChunkByte: Byte = 0x00
+  val finalChunkByte: Byte    = 0x01
 }
