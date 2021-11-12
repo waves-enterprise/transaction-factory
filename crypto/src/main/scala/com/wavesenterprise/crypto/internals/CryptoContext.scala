@@ -14,7 +14,5 @@ abstract class CryptoContext {
 
   val algorithms: CryptoAlgorithms[KeyPair0]
 
-  val modernAlgorithms: CryptoAlgorithms[KeyPair0]
-
   def keyStore(file: Option[File], password: Array[Char]): KeyStore[KeyPair0]
 }

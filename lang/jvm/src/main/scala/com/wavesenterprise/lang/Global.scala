@@ -5,7 +5,7 @@ import com.wavesenterprise.lang.v1.BaseGlobal
 import com.wavesenterprise.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
-import com.wavesenterprise.crypto.internals.gost.{GostAlgorithms, GostPrivateKey, GostPublicKey}
+import com.wavesenterprise.crypto.internals.gost.{GostKuznechikAlgorithms, GostPrivateKey, GostPublicKey}
 
 import scala.util.Try
 
@@ -50,7 +50,7 @@ object Global extends CommonGlobal {
 
 object GostGlobal extends CommonGlobal {
 
-  val algorithms = new GostAlgorithms
+  val algorithms = new GostKuznechikAlgorithms
 
   def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean = {
     Try(algorithms.verify(sig, message, pub)).getOrElse(false)

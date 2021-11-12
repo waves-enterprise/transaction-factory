@@ -15,7 +15,7 @@ import java.security.{KeyStoreException, NoSuchAlgorithmException, Unrecoverable
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
-private[gost] abstract class JcspKeyStore(algorithms: GostAlgorithms, generatorKeyStoreFileOpt: Option[File], password: Array[Char])
+private[gost] abstract class JcspKeyStore(algorithms: GostKuznechikAlgorithms, generatorKeyStoreFileOpt: Option[File], password: Array[Char])
     extends KeyStore[GostKeyPair](None, password) {
 
   private val ProviderName = JCSP.PROVIDER_NAME
@@ -135,9 +135,8 @@ private[gost] abstract class JcspKeyStore(algorithms: GostAlgorithms, generatorK
 abstract class GostCryptoContext() extends CryptoContext with ScorexLogging { self =>
 
   override type KeyPair0 = GostKeyPair
-  override val isGost           = true
-  override val algorithms       = new GostAlgorithms
-  override val modernAlgorithms = new KuznechikAlgorithm
+  override val isGost     = true
+  override val algorithms = new GostKuznechikAlgorithms
 
   def toAlias(keyPair: GostKeyPair): String
 
