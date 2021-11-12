@@ -498,33 +498,38 @@ trait CoreTransactionGen extends ScriptGen with CommonGen with NTPTime { _: Suit
     size <- Gen.choose[Byte](5, MaxKeySize)
   } yield Random.alphanumeric.take(size).mkString
 
-  def longEntryGen(keyGen: Gen[String] = dataKeyGen) =
+  val dataAsciiRussianGen = for {
+    size <- Gen.choose[Byte](5, MaxKeySize)
+    s    <- Gen.pick(size, List('!' to '~', 'а' to 'я').flatten)
+  } yield s.mkString
+
+  def longEntryGen(keyGen: Gen[String] = dataAsciiRussianGen) =
     for {
       key   <- keyGen
       value <- Gen.choose[Long](Long.MinValue, Long.MaxValue)
     } yield IntegerDataEntry(key, value)
 
-  def booleanEntryGen(keyGen: Gen[String] = dataKeyGen) =
+  def booleanEntryGen(keyGen: Gen[String] = dataAsciiRussianGen) =
     for {
       key   <- keyGen
       value <- Gen.oneOf(true, false)
     } yield BooleanDataEntry(key, value)
 
-  def binaryEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def binaryEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiRussianGen) =
     for {
       key   <- keyGen
       size  <- Gen.choose(0, maxSize)
       value <- byteArrayGen(size)
     } yield BinaryDataEntry(key, ByteStr(value))
 
-  def stringEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def stringEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiRussianGen) =
     for {
       key   <- keyGen
       size  <- Gen.choose(0, maxSize)
       value <- Gen.listOfN(size, aliasAlphabetGen)
     } yield StringDataEntry(key, value.mkString)
 
-  def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =
+  def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataAsciiRussianGen) =
     Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
   val dataTransactionV1Gen: Gen[DataTransactionV1] = dataTransactionV1Gen(DataValidation.MaxEntryCount)

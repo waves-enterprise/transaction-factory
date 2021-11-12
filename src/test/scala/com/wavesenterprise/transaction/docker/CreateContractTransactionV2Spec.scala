@@ -56,6 +56,11 @@ class CreateContractTransactionV2Spec extends PropSpec with ScalaCheckPropertyCh
         val invalidImageHashTx =
           CreateContractTransactionV2.create(sender, image, invalidImageHash, contractName, tooBigTxParams, fee, feeAssetId, timestamp, proofs)
         invalidImageHashTx shouldBe Left(ValidationError.GenericError(s"Image hash string $invalidImageHash is not valid SHA-256 hex string"))
+
+        val withNonAsciiKeysParams = List(IntegerDataEntry("key∂√1", 2), StringDataEntry("kååey1", "value"))
+        val withNonAsciiKeysEither =
+          CreateContractTransactionV2.create(sender, image, imageHash, contractName, withNonAsciiKeysParams, fee, feeAssetId, timestamp, proofs)
+        withNonAsciiKeysEither shouldBe Left(ValidationError.InvalidContractKeys("key∂√1 -> ∂√; kååey1 -> å"))
     }
   }
 
