@@ -3,7 +3,7 @@ package com.wavesenterprise.crypto.internals
 import com.wavesenterprise.NoShrink
 import com.wavesenterprise.account.Address
 import com.wavesenterprise.crypto.GostKeystoreSpec
-import com.wavesenterprise.crypto.internals.gost.{GostKeyPair, GostKuznechikAlgorithms, GostPrivateKey}
+import com.wavesenterprise.crypto.internals.gost.{GostKeyPair, GostAlgorithms, GostPrivateKey}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
@@ -11,8 +11,8 @@ import org.scalatest.{FreeSpec, Matchers}
 import java.io.ByteArrayInputStream
 import scala.collection.mutable.ArrayBuffer
 
-class GostKuznechikAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with ScalaCheckPropertyChecks {
-  val gostCrypto = new GostKuznechikAlgorithms
+class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with ScalaCheckPropertyChecks {
+  val gostCrypto = new GostAlgorithms
 
   val oneKilobyteInBytes: Int = 1024
   val oneMegabyteInBytes: Int = 1024 * oneKilobyteInBytes
