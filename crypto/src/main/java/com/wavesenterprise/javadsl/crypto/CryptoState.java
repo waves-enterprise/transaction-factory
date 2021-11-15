@@ -91,11 +91,11 @@ public class CryptoState {
         return package$.MODULE$.verify(signature, message, publicKey);
     }
 
-    public static Either<CryptoError, EncryptedForSingle> encrypt(byte[] data, PrivateKey senderPrivateKey, PublicKey recipientPublicKey, boolean useModernAlgo) {
+    public static Either<CryptoError, EncryptedForSingle> encrypt(byte[] data, PrivateKey senderPrivateKey, PublicKey recipientPublicKey) {
         return package$.MODULE$.encrypt(data, senderPrivateKey, recipientPublicKey);
     }
 
-    public static Either<CryptoError, EncryptedForMany> encryptForMany(byte[] data, PrivateKey senderPrivateKey, List<PublicKey> recipientPublicKeys, boolean useModernAlgo) {
+    public static Either<CryptoError, EncryptedForMany> encryptForMany(byte[] data, PrivateKey senderPrivateKey, List<PublicKey> recipientPublicKeys) {
         scala.collection.immutable.List<PublicKey> scalaList = JavaConverters.collectionAsScalaIterableConverter(recipientPublicKeys).asScala().toList();
         return package$.MODULE$.encryptForMany(data, senderPrivateKey, scalaList);
     }
