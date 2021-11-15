@@ -6,13 +6,11 @@ option java_package = "com.wavesenterprise.protobuf.service.alias";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/empty.proto";
 import "entity/address.proto";
 
 service AliasPublicService {
-    rpc AddressByAlias (AliasRequest) returns (wavesenterprise.entity.AddressResponse);
-    rpc AliasesByAddress (wavesenterprise.entity.AddressRequest) returns (AliasesResponse);
+  rpc AddressByAlias (AliasRequest) returns (wavesenterprise.entity.AddressResponse);
+  rpc AliasesByAddress (wavesenterprise.entity.AddressRequest) returns (AliasesResponse);
 }
 
 message AliasRequest {

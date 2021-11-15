@@ -176,7 +176,7 @@ object StreamCipher {
         }
       }
 
-      Try{
+      Try {
         if (buffer.position() != 0 && buffer.hasRemaining) {
           val decryptedData = decrypt()
           validate(decryptedData)
