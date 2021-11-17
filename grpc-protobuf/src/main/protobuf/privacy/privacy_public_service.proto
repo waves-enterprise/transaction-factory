@@ -43,28 +43,12 @@ message PolicyItemDataExistsResponse {
   bool exists = 1;
 }
 
-message File {
-  bytes content = 1;
-}
-
 message PolicyItemFileInfo {
   string filename = 1;
   int32 size = 2;
   int64 timestamp = 3;
   string author = 4;
   string comment = 5;
-}
-
-message SendDataMetadata {
-  string sender_address = 1;
-  bytes policy_id = 2;
-  bytes data_hash = 3;
-  PolicyItemFileInfo info = 4;
-  int64 fee = 5;
-  google.protobuf.BytesValue fee_asset_id = 6;
-  AtomicBadge atomic_badge = 7;
-  google.protobuf.StringValue password = 8;
-  bool broadcast_tx = 9;
 }
 
 message SendDataResponse {
