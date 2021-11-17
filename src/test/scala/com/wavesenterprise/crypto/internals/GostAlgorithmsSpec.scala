@@ -3,10 +3,11 @@ package com.wavesenterprise.crypto.internals
 import com.wavesenterprise.NoShrink
 import com.wavesenterprise.account.Address
 import com.wavesenterprise.crypto.GostKeystoreSpec
-import com.wavesenterprise.crypto.internals.gost.{GostKeyPair, GostAlgorithms, GostPrivateKey}
+import com.wavesenterprise.crypto.internals.gost.{GostAlgorithms, GostKeyPair, GostPrivateKey}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import java.io.ByteArrayInputStream
 import scala.collection.mutable.ArrayBuffer
