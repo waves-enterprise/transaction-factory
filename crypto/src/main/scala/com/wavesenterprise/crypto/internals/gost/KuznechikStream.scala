@@ -59,7 +59,6 @@ object KuznechikStream {
     }
   }
 
-
   class Decryptor private (key: Key, val chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
     override protected def ivLength: Int  = 16
     override protected def macLength: Int = 16

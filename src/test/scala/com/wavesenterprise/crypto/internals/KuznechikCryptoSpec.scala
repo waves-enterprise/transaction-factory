@@ -8,7 +8,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import java.io.ByteArrayInputStream
 import scala.collection.mutable.ArrayBuffer
 
-class KuznechikCryptoSpec extends GostCryptoSpec with ScalaCheckPropertyChecks{
+class KuznechikCryptoSpec extends GostCryptoSpec with ScalaCheckPropertyChecks {
   override val gostCrypto: GostAlgorithms = new KuznechikAlgorithm
 
   "Stream encrypt and decrypt" in {

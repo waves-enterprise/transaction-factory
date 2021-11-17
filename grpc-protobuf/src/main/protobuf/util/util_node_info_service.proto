@@ -12,6 +12,7 @@ import "constants.proto";
 
 service NodeInfoService {
   rpc NodeConfig (google.protobuf.Empty) returns (NodeConfigResponse);
+  rpc NodeOwner (google.protobuf.Empty) returns (AddressWithPubKeyResponse);
 }
 
 message NodeConfigResponse {
@@ -37,4 +38,9 @@ message PoaRoundInfo {
 
 message PosRoundInfo {
   google.protobuf.Duration average_block_delay = 1;
+}
+
+message AddressWithPubKeyResponse {
+  string address = 1;
+  string public_key = 2;
 }

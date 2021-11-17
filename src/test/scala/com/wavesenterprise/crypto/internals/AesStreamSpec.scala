@@ -26,7 +26,7 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       val chunkSize: Int = 128 * 1024
 
       val dataStream = new ByteArrayInputStream(data)
-      val key = new Array[Byte](16)
+      val key        = new Array[Byte](16)
       random.nextBytes(key)
 
       val encryptor = AesStream.Encryptor.custom(key, chunkSize)

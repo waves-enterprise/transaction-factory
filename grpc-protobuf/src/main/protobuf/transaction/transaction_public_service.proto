@@ -13,6 +13,7 @@ service TransactionPublicService {
   rpc Broadcast (Transaction) returns (Transaction);
   rpc UtxInfo (google.protobuf.Empty) returns (stream UtxSize);
   rpc TransactionInfo (TransactionInfoRequest) returns (TransactionInfoResponse);
+  rpc UnconfirmedTransactionInfo (TransactionInfoRequest) returns (Transaction);
 }
 
 message UtxSize {

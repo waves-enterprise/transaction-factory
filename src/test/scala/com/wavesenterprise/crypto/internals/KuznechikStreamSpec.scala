@@ -1,6 +1,5 @@
 package com.wavesenterprise.crypto.internals
 
-
 import com.wavesenterprise.crypto.internals.gost.KuznechikStream
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import org.scalacheck.{Arbitrary, Gen}

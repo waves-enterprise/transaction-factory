@@ -9,12 +9,17 @@ option go_package = "wavesenterprise.com/weproto";
 import "atomic_badge.proto";
 import "google/protobuf/wrappers.proto";
 import "managed/policy_data_hash_transaction.proto";
+import "entity/address.proto";
 
 service PrivacyPublicService {
   rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
   rpc SendData (SendDataRequest) returns (SendDataResponse);
+  rpc Recipients (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
+  rpc Owners (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
+  rpc Hashes (PolicyIdRequest) returns (HashesResponse);
+  rpc ForceSync (PolicyIdRequest) returns (ForceSyncResponse);
 }
 
 message PolicyItemRequest {
@@ -61,4 +66,16 @@ message PolicyItemDataExistsResponse {
 message SendDataResponse {
   int32 tx_version = 1;
   PolicyDataHashTransaction tx = 2;
+}
+
+message PolicyIdRequest {
+  bytes policy_id = 1;
+}
+
+message HashesResponse {
+  repeated bytes hashes = 1;
+}
+
+message ForceSyncResponse {
+  int32 force_restarted = 1;
 }
