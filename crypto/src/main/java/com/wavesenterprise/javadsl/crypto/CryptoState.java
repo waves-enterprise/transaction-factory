@@ -91,17 +91,17 @@ public class CryptoState {
         return package$.MODULE$.verify(signature, message, publicKey);
     }
 
-    public static Either<CryptoError, EncryptedForSingle> encrypt(byte[] data, PrivateKey senderPrivateKey, PublicKey recipientPublicKey, boolean useModernAlgo) {
-        return package$.MODULE$.encrypt(data, senderPrivateKey, recipientPublicKey, useModernAlgo);
+    public static Either<CryptoError, EncryptedForSingle> encrypt(byte[] data, PrivateKey senderPrivateKey, PublicKey recipientPublicKey) {
+        return package$.MODULE$.encrypt(data, senderPrivateKey, recipientPublicKey);
     }
 
-    public static Either<CryptoError, EncryptedForMany> encryptForMany(byte[] data, PrivateKey senderPrivateKey, List<PublicKey> recipientPublicKeys, boolean useModernAlgo) {
+    public static Either<CryptoError, EncryptedForMany> encryptForMany(byte[] data, PrivateKey senderPrivateKey, List<PublicKey> recipientPublicKeys) {
         scala.collection.immutable.List<PublicKey> scalaList = JavaConverters.collectionAsScalaIterableConverter(recipientPublicKeys).asScala().toList();
-        return package$.MODULE$.encryptForMany(data, senderPrivateKey, scalaList, useModernAlgo);
+        return package$.MODULE$.encryptForMany(data, senderPrivateKey, scalaList);
     }
 
     public static Either<CryptoError, byte[]> decrypt(EncryptedForSingle encryptedDataWithKey, PrivateKey recipientPrivateKey, PublicKey senderPublicKey, boolean useModerAlgo) {
-        return package$.MODULE$.decrypt(encryptedDataWithKey, recipientPrivateKey, senderPublicKey, useModerAlgo);
+        return package$.MODULE$.decrypt(encryptedDataWithKey, recipientPrivateKey, senderPublicKey);
     }
 
     public static boolean safeIsEqual(byte[] a, byte[] b) {

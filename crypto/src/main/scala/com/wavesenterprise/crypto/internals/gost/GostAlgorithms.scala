@@ -4,7 +4,7 @@ import cats.syntax.either._
 import com.wavesenterprise.crypto.internals._
 import ru.CryptoPro.Crypto.CryptoProvider
 import ru.CryptoPro.JCP.JCP
-import ru.CryptoPro.JCP.params.{CryptDhAllowedSpec, CryptParamsSpec}
+import ru.CryptoPro.JCP.params.{CryptDhAllowedSpec, CryptParamsSpec, Kexp15ParamsSpec}
 import ru.CryptoPro.JCSP.JCSP
 import ru.CryptoPro.reprov.RevCheck
 import ru.CryptoPro.ssl.Provider
@@ -23,20 +23,27 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   val provider = new Provider()
   Security.addProvider(provider)
 
-  private[gost] lazy val CryptoAlgorithm = CryptoProvider.GOST_CIPHER_NAME
+  private[gost] lazy val CryptoAlgorithm = JCP.GOST_K_CIPHER_NAME // kuznechik encryption
+  private val KeyAlgorithm               = JCP.GOST_DH_2012_256_NAME
   private val ProviderName               = JCSP.PROVIDER_NAME
 
-  override val DigestSize: Int                  = messageDigestInstance().getDigestLength
-  override val SignatureLength: Int             = 64
-  override val KeyLength: Int                   = GostPublicKey.length
-  override val SessionKeyLength: Int            = 104
-  private val IVLength                          = 8
-  private[gost] val WrappedKeyLength            = 42
-  override lazy val WrappedStructureLength: Int = WrappedKeyLength + 3 * IVLength
-
   private[gost] val DataCipherAlgorithm    = CryptoAlgorithm + "/CFB/NoPadding"
-  private[gost] val WrapperCipherAlgorithm = CryptoAlgorithm + "/SIMPLE_EXPORT/NoPadding"
-  private val secureRandom                 = SecureRandom.getInstance(JCP.CP_RANDOM, ProviderName)
+  private[gost] val WrapperCipherAlgorithm = CryptoAlgorithm + "/KEXP_2015_K_EXPORT/NoPadding"
+
+  override val DigestSize: Int       = messageDigestInstance().getDigestLength
+  override val SignatureLength: Int  = 64
+  override val KeyLength: Int        = GostPublicKey.length
+  override val SessionKeyLength: Int = 104
+
+  private val UKMLength                = 32
+  private val ExpUKMLength             = 8
+  private val ExtendedExpUKMLength     = 8
+  private val AgreementIVBytes         = 16
+  private val CipherIVLength           = 16
+  private[gost] val WrappedKeyLength   = 48
+  lazy val WrappedStructureLength: Int = ExpUKMLength + ExtendedExpUKMLength + AgreementIVBytes + CipherIVLength + WrappedKeyLength
+
+  private val secureRandom = SecureRandom.getInstance(JCP.CP_RANDOM, ProviderName)
 
   /**
     * Used to generate user keys (requires graphical interface and user interaction)
@@ -60,33 +67,7 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   /**
     * Generates symmetric data encryption key
     */
-  private[gost] val encryptionKeyGenerator: KeyGenerator = {
-    val kg = KeyGenerator.getInstance(CryptoAlgorithm, ProviderName)
-    kg.init(CryptParamsSpec.getInstance(CryptParamsSpec.Rosstandart_TC26_Z))
-    kg
-  }
-
-  /**
-    * Generates a secret from Diffie-Hellman key agreement for two keys
-    *   - agreementIV - initialization vector, should be passed or created externally
-    */
-  private[gost] def generateAgreementSecret(senderPrivateKey: GostPrivateKey,
-                                            recipientPublicKey: AbstractGostPublicKey,
-                                            agreementIV: IvParameterSpec): SecretKey = {
-    val agreement = KeyAgreement.getInstance(JCP.GOST_DH_2012_256_NAME, ProviderName)
-    agreement.init(senderPrivateKey.internal, agreementIV, null)
-    agreement.doPhase(recipientPublicKey.internal, true)
-    agreement.generateSecret(CryptoAlgorithm)
-  }
-
-  /**
-    * Generates random bytes to use as initialization vector (IV)
-    */
-  private[gost] def generateIVBytes(size: Int = IVLength): Array[Byte] = {
-    val IvBytes = new Array[Byte](size)
-    secureRandom.nextBytes(IvBytes)
-    IvBytes
-  }
+  private[gost] val encryptionKeyGenerator = KeyGenerator.getInstance(CryptoAlgorithm)
 
   override def generateKeyPair(): GostKeyPair = {
     val kp = userKeyGenerator.generateKeyPair()
@@ -157,42 +138,62 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
     }.getOrElse(false)
 
   /**
-    * Encryption for a single recipient with GOST28147 and DH agreement key
+    * Generates a secret from Diffie-Hellman key agreement for two keys
+    *   - agreementIV - initialization vector, should be passed or created externally
     */
-  def encrypt(data: Array[Byte],
-              senderPrivateKey: GostPrivateKey,
-              recipientPublicKey: AbstractGostPublicKey): Either[CryptoError, EncryptedForSingle] =
+  private[gost] def generateAgreementSecret(senderPrivateKey: GostPrivateKey,
+                                            recipientPublicKey: AbstractGostPublicKey,
+                                            agreementIV: IvParameterSpec) = {
+    val keyAgreement = KeyAgreement.getInstance(KeyAlgorithm)
+    keyAgreement.init(senderPrivateKey.internal, agreementIV)
+    keyAgreement.doPhase(recipientPublicKey.internal, true)
+    keyAgreement.generateSecret(CryptoAlgorithm)
+  }
+
+  /**
+    * Generates random bytes to use as initialization vector (IV)
+    */
+  private[gost] def generateIVBytes(size: Int): Array[Byte] = {
+    val IvBytes = new Array[Byte](size)
+    secureRandom.nextBytes(IvBytes)
+    IvBytes
+  }
+
+  private def generateIV: (IvParameterSpec, Kexp15ParamsSpec, Array[Byte], Array[Byte]) = {
+    val UKM                          = generateIVBytes(UKMLength)
+    val bUKM                         = UKM.take(AgreementIVBytes).reverse
+    val agreementIV: IvParameterSpec = new IvParameterSpec(bUKM)
+    val expUKM: Array[Byte]          = UKM.takeRight(ExpUKMLength)
+    val extendedUKM: Array[Byte]     = UKM.slice(16, 16 + ExpUKMLength)
+    val kExpSpec: Kexp15ParamsSpec   = new Kexp15ParamsSpec(expUKM, extendedUKM)
+    (agreementIV, kExpSpec, expUKM, extendedUKM)
+  }
+
+  /**
+    * Encryption for a single recipient with Kuznechik and DH agreement key
+    */
+  override def encrypt(data: Array[Byte],
+                       senderPrivateKey: GostPrivateKey,
+                       recipientPublicKey: AbstractGostPublicKey): Either[CryptoError, EncryptedForSingle] = {
     Try {
-      log.warn("GOST-28147 encryption algorithm is deprecated and will be removed in WE Node v1.6.0")
+      val (agreementIV, kExpSpec, expUKM, extendedUKM) = generateIV
+      val agreementSecretKey                           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
+      val encryptionKey                                = encryptionKeyGenerator.generateKey()
 
-      val agreementIVBytes = generateIVBytes()
-      val agreementIV      = new IvParameterSpec(agreementIVBytes)
-
-      // sender's agreement secret with agreementIV for Bob's public key
-      val senderSecret = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
-
-      // generate symmetric encryption key
-      val encryptionKey = encryptionKeyGenerator.generateKey()
-
-      // create cipher for encryption key
-      val cipher = Cipher.getInstance(DataCipherAlgorithm, ProviderName)
+      val cipher = Cipher.getInstance(DataCipherAlgorithm)
       cipher.init(Cipher.ENCRYPT_MODE, encryptionKey)
-      val cipherIVBytes = cipher.getIV
-
-      // encrypt data
       val encryptedData = cipher.doFinal(data, 0, data.length)
 
-      // Wrap encryption key using sender's secret
-      val wrapCipher = Cipher.getInstance(WrapperCipherAlgorithm, ProviderName)
-      wrapCipher.init(Cipher.WRAP_MODE, senderSecret)
-      val wrapIVBytes = wrapCipher.getIV
-      val wrappedKey  = wrapCipher.wrap(encryptionKey)
+      val wrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
+      wrapCipher.init(Cipher.WRAP_MODE, agreementSecretKey, kExpSpec)
+      val wrappedKey = wrapCipher.wrap(encryptionKey)
 
       val wrappedStructure = ByteBuffer
         .allocate(WrappedStructureLength)
-        .put(agreementIVBytes)
-        .put(cipherIVBytes)
-        .put(wrapIVBytes)
+        .put(agreementIV.getIV)
+        .put(cipher.getIV)
+        .put(expUKM)
+        .put(extendedUKM)
         .put(wrappedKey)
 
       EncryptedForSingle(encryptedData, wrappedStructure.array())
@@ -201,50 +202,72 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
         log.error("Error in encrypt", ex)
         GenericError("Error in encrypt")
       }
+  }
+
+  /**
+    *
+    * @param senderPrivateKey
+    * @param recipientPublicKey
+    * @return (encrypted encryption key with some additional data, stream encryptor)
+    */
+  override def buildEncryptor(senderPrivateKey: GostPrivateKey,
+                              recipientPublicKey: AbstractGostPublicKey): Either[CryptoError, (Array[Byte], KuznechikStream.Encryptor)] = {
+    Try {
+      val (agreementIV, kExpSpec, expUKM, extendedUKM) = generateIV
+      val agreementSecretKey                           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
+      val encryptionKey                                = encryptionKeyGenerator.generateKey()
+
+      val wrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
+      wrapCipher.init(Cipher.WRAP_MODE, agreementSecretKey, kExpSpec)
+      val wrappedKey = wrapCipher.wrap(encryptionKey)
+
+      val wrappedStructure = ByteBuffer
+        .allocate(WrappedStructureLength)
+        .put(agreementIV.getIV)
+        .put(expUKM)
+        .put(extendedUKM)
+        .put(wrappedKey)
+
+      (wrappedStructure.array(), KuznechikStream.Encryptor(encryptionKey))
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error in encryptor creating process", ex)
+        GenericError("Error in encryptor creating process")
+      }
+  }
 
   /**
     * Encryption for many recipients
-    * Data is encrypted with GOST28147, then each recipient gets his own key, wrapped via DH agreement algorithm
+    * Data is encrypted with Kuznechik, then each recipient gets his own key, wrapped via DH agreement algorithm
     */
-  def encryptForMany(data: Array[Byte],
-                     senderPrivateKey: GostPrivateKey,
-                     recipientPublicKeys: Seq[AbstractGostPublicKey]): Either[CryptoError, EncryptedForMany] = {
+  override def encryptForMany(data: Array[Byte],
+                              senderPrivateKey: GostPrivateKey,
+                              recipientPublicKeys: Seq[AbstractGostPublicKey]): Either[CryptoError, EncryptedForMany] = {
     Either
       .cond(recipientPublicKeys.nonEmpty, (), GenericError("Cannot encrypt for an empty list of recipients"))
       .flatMap { _ =>
         Try {
-          log.warn("GOST-28147 encryption algorithm is deprecated and will be removed in WE Node v1.6.0")
-
-          // generate symmetric encryption key for GOST28147
           val encryptionKey = encryptionKeyGenerator.generateKey()
 
-          // create cipher for encryption key
           val cipher = Cipher.getInstance(DataCipherAlgorithm)
           cipher.init(Cipher.ENCRYPT_MODE, encryptionKey)
-          val cipherIVBytes = cipher.getIV
-
-          // encrypt data
           val encryptedData = cipher.doFinal(data, 0, data.length)
 
-          // make a wrapped key for every recipient
           val recipientPubKeyToWrappedStructure: Map[PublicKey, Array[Byte]] = recipientPublicKeys.map { recipientPublicKey =>
-            // shared agreement for sender and current recipient
-            val agreementIVBytes = generateIVBytes()
-            val secret           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, new IvParameterSpec(agreementIVBytes))
+            val (agreementIV, kExpSpec, expUKM, extendedUKM) = generateIV
+            val agreementSecretKey                           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
 
-            // wrap encryption key using agreement secret
             val wrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
-            wrapCipher.init(Cipher.WRAP_MODE, secret)
-            val wrapIVBytes = wrapCipher.getIV
-            val wrappedKey  = wrapCipher.wrap(encryptionKey)
+            wrapCipher.init(Cipher.WRAP_MODE, agreementSecretKey, kExpSpec)
+            val wrappedKey = wrapCipher.wrap(encryptionKey)
 
             val wrappedStructure = ByteBuffer
               .allocate(WrappedStructureLength)
-              .put(agreementIVBytes)
-              .put(cipherIVBytes)
-              .put(wrapIVBytes)
+              .put(agreementIV.getIV)
+              .put(cipher.getIV)
+              .put(expUKM)
+              .put(extendedUKM)
               .put(wrappedKey)
-
             recipientPublicKey -> wrappedStructure.array()
           }.toMap
 
@@ -261,59 +284,89 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   }
 
   /**
-    * Decrypt data, encrypted with GOST28147, given encryption key wrapped via DH agreement algorithm
+    * Decrypt data, encrypted with Kuznechik, given encryption key wrapped via DH agreement algorithm
     */
-  def decrypt(encryptedWithWrappedKey: EncryptedForSingle,
-              receiverPrivateKey: GostPrivateKey,
-              senderPublicKey: PublicKey0): Either[CryptoError, Array[Byte]] =
+  override def decrypt(encryptedWithWrappedKey: EncryptedForSingle,
+                       receiverPrivateKey: GostPrivateKey,
+                       senderPublicKey: PublicKey0): Either[CryptoError, Array[Byte]] = {
     Try {
-      log.warn("GOST-28147 encryption algorithm is deprecated and will be removed in WE Node v1.6.0")
-
       val EncryptedForSingle(encryptedData, wrappedStructure) = encryptedWithWrappedKey
 
-      val cipherIVBytes    = new Array[Byte](IVLength)
-      val agreementIVBytes = new Array[Byte](IVLength)
-      val wrapIVBytes      = new Array[Byte](IVLength)
-
-      val wrappedKey = new Array[Byte](WrappedKeyLength)
+      val cipherIVBytes    = new Array[Byte](CipherIVLength)
+      val agreementIVBytes = new Array[Byte](AgreementIVBytes)
+      val expUkmBytes      = new Array[Byte](ExpUKMLength)
+      val extendedUkmBytes = new Array[Byte](ExtendedExpUKMLength)
+      val wrappedKey       = new Array[Byte](WrappedKeyLength)
 
       ByteBuffer
         .wrap(wrappedStructure)
         .get(agreementIVBytes)
         .get(cipherIVBytes)
-        .get(wrapIVBytes)
+        .get(expUkmBytes)
+        .get(extendedUkmBytes)
         .get(wrappedKey)
 
-      // all necessary initialization vectors
       val agreementIV = new IvParameterSpec(agreementIVBytes)
       val cipherIV    = new IvParameterSpec(cipherIVBytes)
-      val wrapIV      = new IvParameterSpec(wrapIVBytes)
+      val kExpSpec    = new Kexp15ParamsSpec(expUkmBytes, extendedUkmBytes)
 
-      // agreement on receiver's side
-      val recipientSecret = generateAgreementSecret(receiverPrivateKey, senderPublicKey, agreementIV)
+      val agreementSecretKey = generateAgreementSecret(receiverPrivateKey, senderPublicKey, agreementIV)
 
-      // unwrap the original symmetric encryption key
       val unwrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
-      unwrapCipher.init(Cipher.UNWRAP_MODE, recipientSecret, wrapIV)
-      val unwrappedKey = unwrapCipher.unwrap(wrappedKey, null, Cipher.SECRET_KEY).asInstanceOf[SecretKey]
+      unwrapCipher.init(Cipher.UNWRAP_MODE, agreementSecretKey, kExpSpec)
+      val encryptionKey = unwrapCipher.unwrap(wrappedKey, null, Cipher.SECRET_KEY)
 
-      // decrypt the data
-      val decipher = Cipher.getInstance(DataCipherAlgorithm)
-      decipher.init(Cipher.DECRYPT_MODE, unwrappedKey, cipherIV, null)
-      val decryptedData = decipher.doFinal(encryptedData, 0, encryptedData.length)
-
-      decryptedData
+      val cipher = Cipher.getInstance(DataCipherAlgorithm)
+      cipher.init(Cipher.DECRYPT_MODE, encryptionKey, cipherIV, null)
+      cipher.doFinal(encryptedData, 0, encryptedData.length)
     }.toEither
       .leftMap { ex =>
         log.error("Error in decrypt", ex)
+        ex.printStackTrace()
+        if (ex.getCause != null) ex.printStackTrace()
         GenericError("Error in decrypt")
       }
+  }
 
-  override def buildEncryptor(senderPrivateKey: PrivateKey0,
-                              recipientPublicKey: PublicKey0): Either[CryptoError, (Array[Byte], StreamCipher.AbstractEncryptor)] = ???
-
+  /**
+    *
+    * @param encryptedKeyInfo - encrypted encryption key with some additional data
+    * @param recipientPrivateKey
+    * @param senderPublicKey
+    * @return decryptor object which can be used for stream data decryption
+    */
   override def buildDecryptor(encryptedKeyInfo: Array[Byte],
-                              recipientPrivateKey: PrivateKey0,
-                              senderPublicKey: PublicKey0): Either[CryptoError, StreamCipher.AbstractDecryptor] = ???
+                              recipientPrivateKey: GostPrivateKey,
+                              senderPublicKey: AbstractGostPublicKey): Either[CryptoError, KuznechikStream.Decryptor] = {
 
+    Try {
+
+      val agreementIVBytes = new Array[Byte](AgreementIVBytes)
+      val expUkmBytes      = new Array[Byte](ExpUKMLength)
+      val extendedUkmBytes = new Array[Byte](ExtendedExpUKMLength)
+      val wrappedKey       = new Array[Byte](WrappedKeyLength)
+
+      ByteBuffer
+        .wrap(encryptedKeyInfo)
+        .get(agreementIVBytes)
+        .get(expUkmBytes)
+        .get(extendedUkmBytes)
+        .get(wrappedKey)
+
+      val agreementIV = new IvParameterSpec(agreementIVBytes)
+      val kExpSpec    = new Kexp15ParamsSpec(expUkmBytes, extendedUkmBytes)
+
+      val agreementSecretKey = generateAgreementSecret(recipientPrivateKey, senderPublicKey, agreementIV)
+
+      val unwrapCipher = Cipher.getInstance(WrapperCipherAlgorithm)
+      unwrapCipher.init(Cipher.UNWRAP_MODE, agreementSecretKey, kExpSpec)
+      val encryptionKey = unwrapCipher.unwrap(wrappedKey, null, Cipher.SECRET_KEY)
+
+      KuznechikStream.Decryptor(encryptionKey)
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error in decryptor creating process", ex)
+        GenericError("Error in decryptor creating process")
+      }
+  }
 }

@@ -6,8 +6,8 @@ option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
 enum CryptoAlgo {
+  reserved 1; // GOST_28147 is not supported anymore
   UNKNOWN_CRYPTO_ALGO = 0;
-  GOST_28147 = 1;
   GOST_3412_2015_K = 2;
   AES = 3;
 }
