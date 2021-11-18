@@ -26,6 +26,7 @@ object BlockchainFeatures {
   val AtomicTransactionSupport             = BlockchainFeature(140, "Support of atomic transaction")
   val ParallelLiquidBlockGenerationSupport = BlockchainFeature(160, "Support of parallel generation of liquid block with micro-block")
   val ContractValidationsSupport           = BlockchainFeature(162, "Support of Docker contracts validation")
+  val MicroBlockInventoryV2Support         = BlockchainFeature(173, "Support of micro-block inventory v2")
 
   private val dict = Seq(
     NG,
@@ -43,7 +44,8 @@ object BlockchainFeatures {
     MinerBanHistoryOptimisationFix,
     AtomicTransactionSupport,
     ParallelLiquidBlockGenerationSupport,
-    ContractValidationsSupport
+    ContractValidationsSupport,
+    MicroBlockInventoryV2Support
   ).map(f => f.id -> f).toMap
 
   val implemented: Set[Short] = dict.keySet
