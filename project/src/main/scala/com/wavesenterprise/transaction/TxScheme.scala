@@ -140,7 +140,7 @@ object TxScheme extends Enum[TxScheme] {
           case 2 =>
             Seq(
               BlockchainFeature.SmartAccounts,
-              BlockchainFeature.EvalFeature("script.map(_ => Seq(BlockchainFeatures.SmartAssets)).getOrElse(Seq.empty)")
+              BlockchainFeature.EvalFeature("script.map(_ => Seq(BlockchainFeature.SmartAssets)).getOrElse(Seq.empty)")
             )
         }
       )
@@ -338,7 +338,7 @@ object TxScheme extends Enum[TxScheme] {
           case 2 =>
             Seq(
               BlockchainFeature.SmartAccounts,
-              BlockchainFeature.EvalFeature("feeAssetId.fold(Seq.empty[BlockchainFeature])(_ => Seq(BlockchainFeatures.SponsoredFeesSupport))")
+              BlockchainFeature.EvalFeature("feeAssetId.fold(Seq.empty[BlockchainFeature])(_ => Seq(BlockchainFeature.SponsoredFeesSupport))")
             )
           case 3 =>
             Seq(
@@ -544,7 +544,7 @@ object TxScheme extends Enum[TxScheme] {
           case 2 =>
             Seq(
               BlockchainFeature.ContractsGrpcSupport,
-              BlockchainFeature.EvalFeature("feeAssetId.fold(Seq.empty[BlockchainFeature])(_ => Seq(BlockchainFeatures.SponsoredFeesSupport))")
+              BlockchainFeature.EvalFeature("feeAssetId.fold(Seq.empty[BlockchainFeature])(_ => Seq(BlockchainFeature.SponsoredFeesSupport))")
             )
           case 3 =>
             Seq(
@@ -715,8 +715,8 @@ object TxScheme extends Enum[TxScheme] {
           case 1 =>
             Seq(
               BlockchainFeature.EvalFeature("""Seq((script.map(_.version.value) match {
-                                              |  case Some(1) | None => BlockchainFeatures.SmartAccounts
-                                              |  case _              => BlockchainFeatures.SmartAccountTrading
+                                              |  case Some(1) | None => BlockchainFeature.SmartAccounts
+                                              |  case _              => BlockchainFeature.SmartAccountTrading
                                               |}))""".stripMargin)
             )
         }
