@@ -12,7 +12,7 @@ import ru.CryptoPro.ssl.Provider
 import java.nio.ByteBuffer
 import java.security.{PublicKey => _, _}
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.{Cipher, KeyAgreement, KeyGenerator, SecretKey}
+import javax.crypto.{Cipher, KeyAgreement, KeyGenerator}
 import scala.util.Try
 
 class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
