@@ -10,15 +10,15 @@ object AesStream {
 
   private val CipherName = "AES/GCM/NoPadding"
 
-  private val DefaultChunkSize = 1024
+  private val DefaultChunkSize = 8 * 1024 * 1024
 
   private val keySize = 16 // 256 bit
 
   private val random = WavesAlgorithms.createSecureRandomInstance()
 
-  class Encryptor private (key: Array[Byte], val chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+  class Encryptor private(key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
-      var keyBytes           = key
+      var keyBytes = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
       keyBytes = sha.digest(keyBytes)
       keyBytes = java.util.Arrays.copyOf(keyBytes, keySize)
@@ -52,8 +52,8 @@ object AesStream {
   }
 
   object Encryptor {
-    def apply(key: Array[Byte], chunkSize: Int = DefaultChunkSize): Encryptor = {
-      new Encryptor(key, chunkSize)
+    def apply(key: Array[Byte]): Encryptor = {
+      new Encryptor(key)
     }
 
     /**
@@ -65,23 +65,24 @@ object AesStream {
     }
   }
 
-  class Decryptor private (key: Array[Byte], val chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+  class Decryptor private(key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
-      var keyBytes           = key
+      var keyBytes = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
       keyBytes = sha.digest(keyBytes)
       keyBytes = java.util.Arrays.copyOf(keyBytes, keySize)
       new SecretKeySpec(keyBytes, "AES")
     }
 
-    override protected def ivLength: Int  = 16
+    override protected def ivLength: Int = 16
+
     override protected def macLength: Int = 16
 
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 
     override def decrypt(): Array[Byte] = {
-      val data      = buffer.array().dropRight(buffer.remaining())
-      val iv        = data.take(ivLength)
+      val data = buffer.array().dropRight(buffer.remaining())
+      val iv = data.take(ivLength)
       val encrypted = data.slice(ivLength, data.length)
       cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(128, iv))
       val decrypted = cipher.doFinal(encrypted)

@@ -67,6 +67,8 @@ object ValidationError {
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))
+
+    def apply(msg: String, cause: Throwable): GenericError = new GenericError(s"$msg\nCause: ${Throwables.getStackTraceAsString(cause)}")
   }
 
   case class TransactionNotFound(txId: ByteStr) extends ValidationError {
@@ -191,10 +193,10 @@ object ValidationError {
 
   def fromCryptoError(e: CryptoError): ValidationError = {
     e match {
-      case CryptoInvalidAddress(message)     => InvalidAddress(message)
-      case CryptoInvalidPublicKey(message)   => InvalidPublicKey(message)
-      case CryptoDecryptionError(message, _) => GenericError(message)
-      case CryptoGenericError(message)       => GenericError(message)
+      case CryptoInvalidAddress(message)         => InvalidAddress(message)
+      case CryptoInvalidPublicKey(message)       => InvalidPublicKey(message)
+      case CryptoDecryptionError(message, cause) => GenericError(message, cause)
+      case CryptoGenericError(message)           => GenericError(message)
     }
   }
 }

@@ -22,7 +22,7 @@ object KuznechikStream {
     }
   }
 
-  class Encryptor private (key: Key, val chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+  class Encryptor private(key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
     override protected def ivLength: Int = 16
 
     override protected def macLength: Int = 16
@@ -59,16 +59,17 @@ object KuznechikStream {
     }
   }
 
-  class Decryptor private (key: Key, val chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
-    override protected def ivLength: Int  = 16
+  class Decryptor private(key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+    override protected def ivLength: Int = 16
+
     override protected def macLength: Int = 16
 
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 
     override def decrypt(): Array[Byte] = {
-      val data      = buffer.array().dropRight(buffer.remaining())
-      val iv        = data.take(ivLength)
-      val mac       = data.takeRight(macLength)
+      val data = buffer.array().dropRight(buffer.remaining())
+      val iv = data.take(ivLength)
+      val mac = data.takeRight(macLength)
       val encrypted = data.slice(ivLength, data.length - macLength)
       cipher.init(Cipher.DECRYPT_MODE, key, new OmacParamsSpec(mac, iv))
       val decrypted = cipher.doFinal(encrypted)
