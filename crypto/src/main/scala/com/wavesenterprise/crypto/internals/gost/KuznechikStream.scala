@@ -1,7 +1,7 @@
 package com.wavesenterprise.crypto.internals.gost
 
 import com.wavesenterprise.crypto.internals.StreamCipher
-import com.wavesenterprise.crypto.internals.StreamCipher.{AbstractDecryptor, AbstractEncryptor, FinalChunkByte, NonFinalChunkByte}
+import com.wavesenterprise.crypto.internals.StreamCipher.{AbstractDecryptor, AbstractEncryptor}
 import ru.CryptoPro.JCP.JCP
 import ru.CryptoPro.JCP.params.OmacParamsSpec
 import ru.CryptoPro.JCSP.JCSP
