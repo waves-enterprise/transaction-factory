@@ -27,11 +27,11 @@ object AesStream {
 
     private var iv: Array[Byte] = _
 
-    override def getIv: Array[Byte] = iv
+    override protected def getIv: Array[Byte] = iv
 
-    override protected def ivLength: Int = 16
+    override protected lazy val ivLength: Int = 16
 
-    override protected def macLength: Int = 16
+    override protected lazy val macLength: Int = 16
 
     override protected lazy val cipher: Cipher = Cipher.getInstance(CipherName)
 
@@ -74,9 +74,9 @@ object AesStream {
       new SecretKeySpec(keyBytes, "AES")
     }
 
-    override protected def ivLength: Int = 16
+    override protected lazy val ivLength: Int = 16
 
-    override protected def macLength: Int = 16
+    override protected lazy val macLength: Int = 16
 
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 
