@@ -28,8 +28,11 @@ object BlockchainFeature extends ShortEnum[BlockchainFeature] {
   case object ParallelLiquidBlockGenerationSupport extends BlockchainFeature(160, "Support of parallel generation of liquid block with micro-block")
   case object ContractValidationsSupport           extends BlockchainFeature(162, "Support of Docker contracts validation")
   case object MicroBlockInventoryV2Support         extends BlockchainFeature(173, "Support of micro-block inventory v2")
+  case object PrivacyLargeObjectSupport            extends BlockchainFeature(180, "Support of privacy large object subsystem")
 
   override def values: immutable.IndexedSeq[BlockchainFeature] = findValues
+
+  val implemented: Set[Short] = values.view.map(_.id).toSet
 
   implicit val BlockchainFeatureOrdering: Ordering[BlockchainFeature] = Ordering.by(_.id)
 }
