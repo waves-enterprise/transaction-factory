@@ -5,7 +5,7 @@ import enumeratum._
 import scala.collection.immutable
 
 sealed trait BlockchainFeature extends EnumEntry {
-  def seqCode: String = s"Seq(BlockchainFeatures.$entryName)"
+  def seqCode: String = s"Seq(BlockchainFeature.$entryName)"
 }
 
 object BlockchainFeature extends Enum[BlockchainFeature] {
