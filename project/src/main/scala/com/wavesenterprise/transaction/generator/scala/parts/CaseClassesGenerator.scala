@@ -58,7 +58,6 @@ trait CaseClassesGenerator extends ScalaGenerator {
           .fold(
             Set(
               "com.wavesenterprise.features.BlockchainFeature",
-              "com.wavesenterprise.features.BlockchainFeature",
               "scala.collection.SortedSet"
             )
           ) {
