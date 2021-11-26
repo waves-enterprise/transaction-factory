@@ -14,12 +14,12 @@ service ContractStatusService {
 }
 
 message ContractExecutionRequest {
-  bytes tx_id = 1;
+  string tx_id = 1;
 }
 
 message ContractExecutionResponse {
-  bytes sender = 1;
-  bytes tx_id = 2;
+  string sender = 1;
+  string tx_id = 2;
   enum Status {
     SUCCESS = 0;
     ERROR = 1;
@@ -29,5 +29,5 @@ message ContractExecutionResponse {
   google.protobuf.Int32Value  code = 4;
   string message = 5;
   int64 timestamp = 6;
-  bytes signature = 7;
+  string signature = 7;
 }
