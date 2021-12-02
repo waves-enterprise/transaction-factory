@@ -24,8 +24,8 @@ service PrivacyPublicService {
 }
 
 message PolicyItemRequest {
-  bytes policy_id = 1;
-  bytes data_hash = 2;
+  string policy_id = 1;
+  string data_hash = 2;
 }
 
 message PolicyItemDataResponse {
@@ -34,13 +34,26 @@ message PolicyItemDataResponse {
 
 message PolicyItemInfoResponse {
   string sender_address = 1;
-  bytes policy_id = 2;
+  string policy_id = 2;
   PolicyItemFileInfo info = 3;
-  bytes data_hash = 4;
+  string data_hash = 4;
 }
 
 message PolicyItemDataExistsResponse {
   bool exists = 1;
+}
+
+message SendDataRequest {
+  string sender_address = 1;
+  string policy_id = 2;
+  string data_hash = 3;
+  bytes data = 4;
+  PolicyItemFileInfo info = 5;
+  int64 fee = 6;
+  google.protobuf.StringValue fee_asset_id = 7;
+  AtomicBadge atomic_badge = 8;
+  google.protobuf.StringValue password = 9;
+  bool broadcast_tx = 10;
 }
 
 message PolicyItemFileInfo {
@@ -74,8 +87,8 @@ message File {
 
 message SendDataMetadata {
   string sender_address = 1;
-  bytes policy_id = 2;
-  bytes data_hash = 3;
+  string policy_id = 2;
+  string data_hash = 3;
   PolicyItemFileInfo info = 5;
   int64 fee = 6;
   google.protobuf.BytesValue fee_asset_id = 7;
@@ -85,11 +98,11 @@ message SendDataMetadata {
 }
 
 message PolicyIdRequest {
-  bytes policy_id = 1;
+  string policy_id = 1;
 }
 
 message HashesResponse {
-  repeated bytes hashes = 1;
+  repeated string hashes = 1;
 }
 
 message ForceSyncResponse {
