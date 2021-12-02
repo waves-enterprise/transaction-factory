@@ -45,7 +45,7 @@ object CheckJCSP {
             s"CryptoPro JCSP '${Dependencies.supportedJcspVersion}' is not found"))
       case envJcspVersion =>
         Left(new CheckJCSPException(
-          s"Supported JCSP versions are ['${Dependencies.supportedJcspVersion}'"))
+          s"Supported JCSP versions is '${Dependencies.supportedJcspVersion}',  actual is '$envJcspVersion'"))
     }
 
   private def checkJcspLicenseValid: Either[RuntimeException, Unit] = {
