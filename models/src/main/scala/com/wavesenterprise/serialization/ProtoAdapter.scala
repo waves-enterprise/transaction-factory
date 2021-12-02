@@ -27,7 +27,6 @@ import com.wavesenterprise.transaction.protobuf.{
   ValidationProof => PbValidationProof
 }
 import com.wavesenterprise.transaction.transfer.ParsedTransfer
-import com.wavesenterprise.utils.Base58
 
 import scala.concurrent.duration.Duration
 
@@ -225,24 +224,19 @@ object ProtoAdapter {
      Either.cond(value.minorVersion.isValidShort && value.minorVersion >= 0, value.minorVersion.toShort, GenericError(s"Invalid minor version")))
       .mapN(ContractApiVersion(_, _))
 
-  def toProto(info: PolicyItemInfo): Either[ValidationError, PolicyItemInfoResponse] = {
-    for {
-      policyId <- Base58.decode(info.policy).toEither.left.map(_ => GenericError(s"Failed to decode policyId: '${info.policy}'"))
-      hash     <- Base58.decode(info.hash).toEither.left.map(_ => GenericError(s"Failed to decode hash: '${info.hash}'"))
-    } yield {
-      val pbInfo = PbPolicyItemFileInfo(
-        filename = info.info.filename,
-        size = info.info.size,
-        timestamp = info.info.timestamp,
-        author = info.info.author,
-        comment = info.info.comment
-      )
-      PolicyItemInfoResponse(
-        senderAddress = info.sender,
-        policyId = byteArrayToByteString(policyId),
-        info = Some(pbInfo),
-        dataHash = byteArrayToByteString(hash)
-      )
-    }
+  def toProto(info: PolicyItemInfo): PolicyItemInfoResponse = {
+    val pbInfo = PbPolicyItemFileInfo(
+      filename = info.info.filename,
+      size = info.info.size,
+      timestamp = info.info.timestamp,
+      author = info.info.author,
+      comment = info.info.comment
+    )
+    PolicyItemInfoResponse(
+      senderAddress = info.sender,
+      policyId = info.policy,
+      info = Some(pbInfo),
+      dataHash = info.hash
+    )
   }
 }
