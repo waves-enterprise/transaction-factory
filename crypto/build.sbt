@@ -17,7 +17,6 @@ lazy val gostCryptoVersionSource = Def.task {
        |  val supportedCspVersion              = "${Dependencies.supportedCspVersion}"
        |  val supportedJcspVersion             = "${Dependencies.supportedJcspVersion}"
        |  val supportedExperimentalCspVersion  = "${Dependencies.supportedExperimentalCspVersion}"
-       |  val supportedExperimentalJcspVersion = "${Dependencies.supportedExperimentalJcspVersion}"
        |}
        |""".stripMargin
   )
