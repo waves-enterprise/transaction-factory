@@ -14,9 +14,9 @@ import "entity/address.proto";
 service PrivacyPublicService {
   rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
-  rpc PolicyItemDataExists(PolicyItemRequest) returns (PolicyItemDataExistsResponse);
-  rpc SendData(SendDataSingleRequest) returns (SendDataResponse);
-  rpc SendLargeData(stream SendLargeDataRequest) returns (SendDataResponse);
+  rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
+  rpc SendData (SendDataSingleRequest) returns (SendDataResponse);
+  rpc SendLargeData (stream SendLargeDataRequest) returns (SendDataResponse);
   rpc Recipients (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Owners (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Hashes (PolicyIdRequest) returns (HashesResponse);
@@ -91,7 +91,7 @@ message SendDataMetadata {
   string data_hash = 3;
   PolicyItemFileInfo info = 5;
   int64 fee = 6;
-  google.protobuf.BytesValue fee_asset_id = 7;
+  google.protobuf.StringValue fee_asset_id = 7;
   AtomicBadge atomic_badge = 8;
   google.protobuf.StringValue password = 9;
   bool broadcast_tx = 10;
