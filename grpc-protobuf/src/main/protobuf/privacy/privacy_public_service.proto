@@ -16,7 +16,7 @@ service PrivacyPublicService {
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
   rpc SendData (SendDataSingleRequest) returns (SendDataResponse);
-  rpc SendLargeData (stream SendLargeDataRequest) returns (SendDataResponse);
+  rpc SendDataLarge (stream SendDataLargeRequest) returns (SendDataResponse);
   rpc Recipients (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Owners (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Hashes (PolicyIdRequest) returns (HashesResponse);
@@ -74,7 +74,7 @@ message SendDataSingleRequest {
   bytes data = 2;
 }
 
-message SendLargeDataRequest {
+message SendDataLargeRequest {
   oneof request {
     SendDataMetadata metadata = 1;
     File file = 2;
