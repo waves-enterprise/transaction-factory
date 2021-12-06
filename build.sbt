@@ -129,7 +129,6 @@ scalacOptions ++= Seq(
   "-Ypartial-unification",
   "-language:postfixOps"
 )
-logBuffered := false
 
 inThisBuild(
   Seq(

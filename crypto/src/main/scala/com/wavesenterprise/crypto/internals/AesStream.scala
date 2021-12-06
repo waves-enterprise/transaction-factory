@@ -10,13 +10,13 @@ object AesStream {
 
   private val CipherName = "AES/GCM/NoPadding"
 
-  private val DefaultChunkSize = 1024
+  private val DefaultChunkSize = 8 * 1024 * 1024
 
   private val keySize = 16 // 256 bit
 
   private val random = WavesAlgorithms.createSecureRandomInstance()
 
-  class Encryptor private (key: Array[Byte], val chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+  class Encryptor private (key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
       var keyBytes           = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
@@ -27,11 +27,11 @@ object AesStream {
 
     private var iv: Array[Byte] = _
 
-    override def getIv: Array[Byte] = iv
+    override protected def getIv: Array[Byte] = iv
 
-    override protected def ivLength: Int = 16
+    override protected lazy val ivLength: Int = 16
 
-    override protected def macLength: Int = 16
+    override protected lazy val macLength: Int = 16
 
     override protected lazy val cipher: Cipher = Cipher.getInstance(CipherName)
 
@@ -52,8 +52,8 @@ object AesStream {
   }
 
   object Encryptor {
-    def apply(key: Array[Byte], chunkSize: Int = DefaultChunkSize): Encryptor = {
-      new Encryptor(key, chunkSize)
+    def apply(key: Array[Byte]): Encryptor = {
+      new Encryptor(key)
     }
 
     /**
@@ -65,7 +65,7 @@ object AesStream {
     }
   }
 
-  class Decryptor private (key: Array[Byte], val chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+  class Decryptor private (key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
       var keyBytes           = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
@@ -74,8 +74,9 @@ object AesStream {
       new SecretKeySpec(keyBytes, "AES")
     }
 
-    override protected def ivLength: Int  = 16
-    override protected def macLength: Int = 16
+    override protected lazy val ivLength: Int = 16
+
+    override protected lazy val macLength: Int = 16
 
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 

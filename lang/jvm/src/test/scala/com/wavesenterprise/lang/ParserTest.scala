@@ -12,7 +12,7 @@ import org.scalatest.exceptions.TestFailedException
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import scodec.bits.ByteVector
-import scorex.crypto.encode.{Base58 => ScorexBase58}
+import scorex.util.encode.{Base58 => ScorexBase58}
 
 class ParserTest extends PropSpec with ScalaCheckPropertyChecks with Matchers with ScriptGenParser with NoShrink {
 

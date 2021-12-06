@@ -22,10 +22,10 @@ object KuznechikStream {
     }
   }
 
-  class Encryptor private (key: Key, val chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
-    override protected def ivLength: Int = 16
+  class Encryptor private (key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+    override protected lazy val ivLength: Int = 16
 
-    override protected def macLength: Int = 16
+    override protected lazy val macLength: Int = 16
 
     override protected lazy val cipher: Cipher = Cipher.getInstance(CipherName)
 
@@ -59,9 +59,10 @@ object KuznechikStream {
     }
   }
 
-  class Decryptor private (key: Key, val chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
-    override protected def ivLength: Int  = 16
-    override protected def macLength: Int = 16
+  class Decryptor private (key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+    override protected lazy val ivLength: Int = 16
+
+    override protected lazy val macLength: Int = 16
 
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 
