@@ -16,9 +16,9 @@ object AesStream {
 
   private val random = WavesAlgorithms.createSecureRandomInstance()
 
-  class Encryptor private(key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+  class Encryptor private (key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
-      var keyBytes = key
+      var keyBytes           = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
       keyBytes = sha.digest(keyBytes)
       keyBytes = java.util.Arrays.copyOf(keyBytes, keySize)
@@ -65,9 +65,9 @@ object AesStream {
     }
   }
 
-  class Decryptor private(key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+  class Decryptor private (key: Array[Byte], chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
     private lazy val keySpec: SecretKeySpec = {
-      var keyBytes = key
+      var keyBytes           = key
       val sha: MessageDigest = MessageDigest.getInstance("MD5")
       keyBytes = sha.digest(keyBytes)
       keyBytes = java.util.Arrays.copyOf(keyBytes, keySize)
@@ -81,8 +81,8 @@ object AesStream {
     override protected val cipher: Cipher = Cipher.getInstance(CipherName)
 
     override def decrypt(): Array[Byte] = {
-      val data = buffer.array().dropRight(buffer.remaining())
-      val iv = data.take(ivLength)
+      val data      = buffer.array().dropRight(buffer.remaining())
+      val iv        = data.take(ivLength)
       val encrypted = data.slice(ivLength, data.length)
       cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(128, iv))
       val decrypted = cipher.doFinal(encrypted)

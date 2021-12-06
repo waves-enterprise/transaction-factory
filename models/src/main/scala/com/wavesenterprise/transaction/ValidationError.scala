@@ -191,10 +191,10 @@ object ValidationError {
 
   def fromCryptoError(e: CryptoError): ValidationError = {
     e match {
-      case CryptoInvalidAddress(message)         => InvalidAddress(message)
-      case CryptoInvalidPublicKey(message) => InvalidPublicKey(message)
+      case CryptoInvalidAddress(message)     => InvalidAddress(message)
+      case CryptoInvalidPublicKey(message)   => InvalidPublicKey(message)
       case CryptoDecryptionError(message, _) => GenericError(message)
-      case CryptoGenericError(message) => GenericError(message)
+      case CryptoGenericError(message)       => GenericError(message)
     }
   }
 }
