@@ -15,7 +15,7 @@ service PrivacyPublicService {
   rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
-  rpc SendData (SendDataSingleRequest) returns (SendDataResponse);
+  rpc SendData (SendDataRequest) returns (SendDataResponse);
   rpc SendDataLarge (stream SendDataLargeRequest) returns (SendDataResponse);
   rpc Recipients (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Owners (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
@@ -43,19 +43,6 @@ message PolicyItemDataExistsResponse {
   bool exists = 1;
 }
 
-message SendDataRequest {
-  string sender_address = 1;
-  string policy_id = 2;
-  string data_hash = 3;
-  bytes data = 4;
-  PolicyItemFileInfo info = 5;
-  int64 fee = 6;
-  google.protobuf.StringValue fee_asset_id = 7;
-  AtomicBadge atomic_badge = 8;
-  google.protobuf.StringValue password = 9;
-  bool broadcast_tx = 10;
-}
-
 message PolicyItemFileInfo {
   string filename = 1;
   int32 size = 2;
@@ -69,7 +56,7 @@ message SendDataResponse {
   PolicyDataHashTransaction tx = 2;
 }
 
-message SendDataSingleRequest {
+message SendDataRequest {
   SendDataMetadata metadata = 1;
   bytes data = 2;
 }
