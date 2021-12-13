@@ -13,6 +13,7 @@ import "entity/address.proto";
 
 service PrivacyPublicService {
   rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
+  rpc GetPolicyItemLargeData (PolicyItemRequest) returns (stream PolicyItemDataResponse);
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
   rpc SendData (SendDataRequest) returns (SendDataResponse);
