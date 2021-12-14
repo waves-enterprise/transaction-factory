@@ -13,9 +13,11 @@ import "entity/address.proto";
 
 service PrivacyPublicService {
   rpc GetPolicyItemData (PolicyItemRequest) returns (PolicyItemDataResponse);
+  rpc GetPolicyItemLargeData (PolicyItemRequest) returns (stream PolicyItemDataResponse);
   rpc GetPolicyItemInfo (PolicyItemRequest) returns (PolicyItemInfoResponse);
   rpc PolicyItemDataExists (PolicyItemRequest) returns (PolicyItemDataExistsResponse);
   rpc SendData (SendDataRequest) returns (SendDataResponse);
+  rpc SendLargeData (stream SendLargeDataRequest) returns (SendDataResponse);
   rpc Recipients (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Owners (PolicyIdRequest) returns (wavesenterprise.entity.AddressesResponse);
   rpc Hashes (PolicyIdRequest) returns (HashesResponse);
@@ -38,17 +40,8 @@ message PolicyItemInfoResponse {
   string data_hash = 4;
 }
 
-message SendDataRequest {
-  string sender_address = 1;
-  string policy_id = 2;
-  string data_hash = 3;
-  bytes data = 4;
-  PolicyItemFileInfo info = 5;
-  int64 fee = 6;
-  google.protobuf.StringValue fee_asset_id = 7;
-  AtomicBadge atomic_badge = 8;
-  google.protobuf.StringValue password = 9;
-  bool broadcast_tx = 10;
+message PolicyItemDataExistsResponse {
+  bool exists = 1;
 }
 
 message PolicyItemFileInfo {
@@ -59,13 +52,37 @@ message PolicyItemFileInfo {
   string comment = 5;
 }
 
-message PolicyItemDataExistsResponse {
-  bool exists = 1;
-}
-
 message SendDataResponse {
   int32 tx_version = 1;
   PolicyDataHashTransaction tx = 2;
+}
+
+message SendDataRequest {
+  SendDataMetadata metadata = 1;
+  bytes data = 2;
+}
+
+message SendLargeDataRequest {
+  oneof request {
+    SendDataMetadata metadata = 1;
+    File file = 2;
+  }
+}
+
+message File {
+  bytes content = 1;
+}
+
+message SendDataMetadata {
+  string sender_address = 1;
+  string policy_id = 2;
+  string data_hash = 3;
+  PolicyItemFileInfo info = 5;
+  int64 fee = 6;
+  google.protobuf.StringValue fee_asset_id = 7;
+  AtomicBadge atomic_badge = 8;
+  google.protobuf.StringValue password = 9;
+  bool broadcast_tx = 10;
 }
 
 message PolicyIdRequest {
