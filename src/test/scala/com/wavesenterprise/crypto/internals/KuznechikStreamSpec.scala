@@ -33,8 +33,8 @@ class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
       val dataStream = new ByteArrayInputStream(data)
       val key        = encryptionKeyGenerator.generateKey()
 
-      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
-      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor(key, chunkSize)
 
       val encryptedChunks = ArrayBuffer[Byte]()
 
@@ -63,8 +63,8 @@ class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
       val key = encryptionKeyGenerator.generateKey()
 
       val chunkSize      = 128 * 1024
-      val encryptor      = KuznechikStream.Encryptor.custom(key, chunkSize)
-      val decryptor      = KuznechikStream.Decryptor.custom(key, chunkSize)
+      val encryptor      = KuznechikStream.Encryptor(key, chunkSize)
+      val decryptor      = KuznechikStream.Decryptor(key, chunkSize)
       val encrypted      = encryptor(data) ++ encryptor.doFinal()
       val changedByteIdx = random.nextInt(encrypted.length)
 
@@ -86,8 +86,8 @@ class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
 
       val chunkSize = 16 * 1024
 
-      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
-      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor(key, chunkSize)
 
       val encrypted         = encryptor(data) ++ encryptor.doFinal()
       val encryptedWithLost = encrypted.take(chunkSize)
@@ -107,8 +107,8 @@ class KuznechikStreamSpec extends PropSpec with ScalaCheckDrivenPropertyChecks {
 
       val chunkSize = 16 * 1024
 
-      val encryptor = KuznechikStream.Encryptor.custom(key, chunkSize)
-      val decryptor = KuznechikStream.Decryptor.custom(key, chunkSize)
+      val encryptor = KuznechikStream.Encryptor(key, chunkSize)
+      val decryptor = KuznechikStream.Decryptor(key, chunkSize)
 
       val encrypted          = encryptor(data) ++ encryptor.doFinal()
       val reorderedEncrypted = encrypted.slice(chunkSize, chunkSize * 2) ++ encrypted.take(chunkSize)

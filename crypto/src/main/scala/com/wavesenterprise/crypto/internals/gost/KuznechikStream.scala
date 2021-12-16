@@ -14,15 +14,13 @@ object KuznechikStream {
 
   private val CipherName = JCP.GOST_K_CIPHER_NAME + "/OMAC_CTR/NoPadding"
 
-  private val DefaultChunkSize = 8 * 1024 * 1024
-
   def ensureCryptoInitialized(): Unit = {
     if (Option(Security.getProvider("JCSP")).isEmpty) {
       Security.addProvider(new JCSP())
     }
   }
 
-  class Encryptor private (key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractEncryptor(chunkSize) {
+  class Encryptor private (key: Key, chunkSize: Int) extends AbstractEncryptor(chunkSize) {
     override protected lazy val ivLength: Int = 16
 
     override protected lazy val macLength: Int = 16
@@ -47,19 +45,14 @@ object KuznechikStream {
   }
 
   object Encryptor {
-    def apply(key: Key): Encryptor = {
-      new Encryptor(key)
-    }
 
     /**
-      * Use only for tests!!!
+      * Warning: decryption with chunk size which not equal to used in encryption won't give same result.
       */
-    def custom(key: Key, chunkSize: Int): Encryptor = {
-      new Encryptor(key, chunkSize)
-    }
+    def apply(key: Key, chunkSize: Int): Encryptor = new Encryptor(key, chunkSize)
   }
 
-  class Decryptor private (key: Key, chunkSize: Int = DefaultChunkSize) extends AbstractDecryptor(chunkSize) {
+  class Decryptor private (key: Key, chunkSize: Int) extends AbstractDecryptor(chunkSize) {
     override protected lazy val ivLength: Int = 16
 
     override protected lazy val macLength: Int = 16
@@ -79,17 +72,11 @@ object KuznechikStream {
   }
 
   object Decryptor {
-    def apply(key: Key): Decryptor = {
-      new Decryptor(key)
-    }
 
     /**
-      * Use only for tests!!!
-      * (Decryption with chunk size which not equal to used in encryption won't give sane result)
+      * Warning: decryption with chunk size which not equal to used in encryption won't give same result.
       */
-    def custom(key: Key, chunkSize: Int): Decryptor = {
-      new Decryptor(key, chunkSize)
-    }
+    def apply(key: Key, chunkSize: Int): Decryptor = new Decryptor(key, chunkSize)
   }
 
 }

@@ -130,41 +130,43 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
   }
 
   "Stream encrypt and decrypt" in {
-    val genSomeBytes: Gen[Array[Byte]] = for {
+    val genSomeBytes: Gen[(Array[Byte], Int)] = for {
       length    <- Gen.choose(32 * 1024, 1 * 1024 * 1024)
+      chunkSize <- Gen.choose(1, length)
       dataBytes <- Gen.containerOfN[Array, Byte](length, Arbitrary.arbitrary[Byte])
-    } yield dataBytes
+    } yield dataBytes -> chunkSize
     val genChunkSize: () => Int = () => Gen.choose(512, 2048).sample.get
 
-    forAll(genSomeBytes) { data =>
-      val sender    = gostCrypto.generateSessionKey()
-      val recipient = gostCrypto.generateSessionKey()
+    forAll(genSomeBytes) {
+      case (data, chunkSize) =>
+        val sender    = gostCrypto.generateSessionKey()
+        val recipient = gostCrypto.generateSessionKey()
 
-      val (encryptedKey, encryptor) = gostCrypto.buildEncryptor(sender.getPrivate, recipient.getPublic).explicitGet()
-      val dataStream                = new ByteArrayInputStream(data)
+        val (encryptedKey, encryptor) = gostCrypto.buildEncryptor(sender.getPrivate, recipient.getPublic, chunkSize).explicitGet()
+        val dataStream                = new ByteArrayInputStream(data)
 
-      val encryptedChunks = ArrayBuffer[Byte]()
+        val encryptedChunks = ArrayBuffer[Byte]()
 
-      while (dataStream.available() != 0) {
-        val chunk = dataStream.readNBytes(Math.min(genChunkSize(), dataStream.available()))
-        encryptedChunks ++= encryptor(chunk)
-      }
-      encryptedChunks ++= encryptor.doFinal()
+        while (dataStream.available() != 0) {
+          val chunk = dataStream.readNBytes(Math.min(genChunkSize(), dataStream.available()))
+          encryptedChunks ++= encryptor(chunk)
+        }
+        encryptedChunks ++= encryptor.doFinal()
 
-      val finalEncrypted = EncryptedForSingle(encryptedChunks.toArray, encryptedKey)
+        val finalEncrypted = EncryptedForSingle(encryptedChunks.toArray, encryptedKey)
 
-      val decryptor           = gostCrypto.buildDecryptor(finalEncrypted.wrappedStructure, recipient.getPrivate, sender.getPublic).explicitGet()
-      val encryptedDataStream = new ByteArrayInputStream(finalEncrypted.encryptedData)
-      val resultDecrypted     = ArrayBuffer[Byte]()
+        val decryptor           = gostCrypto.buildDecryptor(finalEncrypted.wrappedStructure, recipient.getPrivate, sender.getPublic, chunkSize).explicitGet()
+        val encryptedDataStream = new ByteArrayInputStream(finalEncrypted.encryptedData)
+        val resultDecrypted     = ArrayBuffer[Byte]()
 
-      while (encryptedDataStream.available() != 0) {
-        val chunk = encryptedDataStream.readNBytes(Math.min(genChunkSize(), encryptedDataStream.available()))
-        resultDecrypted ++= decryptor(chunk).explicitGet()
-      }
+        while (encryptedDataStream.available() != 0) {
+          val chunk = encryptedDataStream.readNBytes(Math.min(genChunkSize(), encryptedDataStream.available()))
+          resultDecrypted ++= decryptor(chunk).explicitGet()
+        }
 
-      resultDecrypted ++= decryptor.doFinal().explicitGet()
+        resultDecrypted ++= decryptor.doFinal().explicitGet()
 
-      assertResult(data)(resultDecrypted.toArray)
+        assertResult(data)(resultDecrypted.toArray)
     }
   }
 }
