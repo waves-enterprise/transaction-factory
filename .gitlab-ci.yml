@@ -126,6 +126,7 @@ test-core:
         - lang/jvm/target/test-reports/*.xml
   dependencies:
     - download-crypto
+    - compile
 
 publish-nexus-artifacts:
   <<: *create-environment
@@ -142,3 +143,4 @@ publish-nexus-artifacts:
     - branches
   dependencies:
     - download-crypto
+    - compile
