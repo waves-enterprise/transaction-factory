@@ -8,6 +8,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 stages:
+  - download-crypto
   - compile
   - test
   - publish
@@ -72,6 +73,22 @@ stages:
   - tar -xf targets.tar.gz
   - tar -xf managed.tar.gz
 
+### Download crypto libs
+download-crypto:
+  stage: download-crypto
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - nexusUser=$(sed -n 's/^user=//p' $SBT_CREDENTIALS)
+    - nexusPassword=$(sed -n 's/^password=//p' $SBT_CREDENTIALS)
+    - mkdir lib/
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/java-csp-5.0.42119-A.tgz --output lib/java-csp-5.0.42119-A.tgz
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5.0.11823.tgz --output lib/csp-linux-amd64-deb-5.0.11823.tgz
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5R2-RC7.tgz --output lib/csp-linux-amd64-deb-5R2-RC7.tgz
+  artifacts:
+    paths:
+      - lib/
+
 ### Compile jobs
 compile:
   <<: *create-environment
@@ -84,6 +101,8 @@ compile:
       - targets.tar.gz
       - managed.tar.gz
     expire_in: 1 day
+  dependencies:
+    - download-crypto
 
 ### Testing jobs
 test-core:
@@ -105,11 +124,15 @@ test-core:
       junit:
         - target/test-reports/*.xml
         - lang/jvm/target/test-reports/*.xml
+  dependencies:
+    - download-crypto
+    - compile
 
 publish-nexus-artifacts:
   <<: *create-environment
   stage: publish
   needs:
+    - download-crypto
     - compile
     - test-core
   script:
@@ -118,3 +141,6 @@ publish-nexus-artifacts:
   only:
     - tags
     - branches
+  dependencies:
+    - download-crypto
+    - compile
