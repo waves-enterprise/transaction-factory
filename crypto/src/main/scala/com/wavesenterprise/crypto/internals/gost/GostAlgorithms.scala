@@ -205,13 +205,11 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   }
 
   /**
-    *
-    * @param senderPrivateKey
-    * @param recipientPublicKey
-    * @return (encrypted encryption key with some additional data, stream encryptor)
+    * @return encrypted encryption key and encryptor - object which can be used for stream data encryption.
     */
   override def buildEncryptor(senderPrivateKey: GostPrivateKey,
-                              recipientPublicKey: AbstractGostPublicKey): Either[CryptoError, (Array[Byte], KuznechikStream.Encryptor)] = {
+                              recipientPublicKey: AbstractGostPublicKey,
+                              chunkSize: Int): Either[CryptoError, (Array[Byte], KuznechikStream.Encryptor)] = {
     Try {
       val (agreementIV, kExpSpec, expUKM, extendedUKM) = generateIV
       val agreementSecretKey                           = generateAgreementSecret(senderPrivateKey, recipientPublicKey, agreementIV)
@@ -228,7 +226,7 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
         .put(extendedUKM)
         .put(wrappedKey)
 
-      (wrappedStructure.array(), KuznechikStream.Encryptor(encryptionKey))
+      (wrappedStructure.array(), KuznechikStream.Encryptor(encryptionKey, chunkSize))
     }.toEither
       .leftMap { ex =>
         log.error("Error in encryptor creating process", ex)
@@ -329,15 +327,13 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   }
 
   /**
-    *
-    * @param encryptedKeyInfo - encrypted encryption key with some additional data
-    * @param recipientPrivateKey
-    * @param senderPublicKey
-    * @return decryptor object which can be used for stream data decryption
+    * @param encryptedKeyInfo - encrypted encryption key
+    * @return decryptor - object which can be used for stream data decryption
     */
   override def buildDecryptor(encryptedKeyInfo: Array[Byte],
                               recipientPrivateKey: GostPrivateKey,
-                              senderPublicKey: AbstractGostPublicKey): Either[CryptoError, KuznechikStream.Decryptor] = {
+                              senderPublicKey: AbstractGostPublicKey,
+                              chunkSize: Int): Either[CryptoError, KuznechikStream.Decryptor] = {
 
     Try {
 
@@ -362,7 +358,7 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
       unwrapCipher.init(Cipher.UNWRAP_MODE, agreementSecretKey, kExpSpec)
       val encryptionKey = unwrapCipher.unwrap(wrappedKey, null, Cipher.SECRET_KEY)
 
-      KuznechikStream.Decryptor(encryptionKey)
+      KuznechikStream.Decryptor(encryptionKey, chunkSize)
     }.toEither
       .leftMap { ex =>
         log.error("Error in decryptor creating process", ex)

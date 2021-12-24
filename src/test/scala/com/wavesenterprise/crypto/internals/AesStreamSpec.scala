@@ -28,8 +28,8 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       val key        = new Array[Byte](16)
       random.nextBytes(key)
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = AesStream.Encryptor(key, chunkSize)
+      val decryptor = AesStream.Decryptor(key, chunkSize)
 
       val encryptedChunks = ArrayBuffer[Byte]()
 
@@ -59,8 +59,8 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
       random.nextBytes(key)
 
       val chunkSize      = 128 * 1024
-      val encryptor      = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor      = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor      = AesStream.Encryptor(key, chunkSize)
+      val decryptor      = AesStream.Decryptor(key, chunkSize)
       val encrypted      = encryptor(data) ++ encryptor.doFinal()
       val changedByteIdx = random.nextInt(encrypted.length)
 
@@ -82,8 +82,8 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
 
       val chunkSize = 1024
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = AesStream.Encryptor(key, chunkSize)
+      val decryptor = AesStream.Decryptor(key, chunkSize)
 
       val encrypted         = encryptor(data) ++ encryptor.doFinal()
       val encryptedWithLost = encrypted.take(chunkSize)
@@ -104,8 +104,8 @@ class AesStreamSpec extends PropSpec with ScalaCheckPropertyChecks with Matchers
 
       val chunkSize = 16 * 1024
 
-      val encryptor = AesStream.Encryptor.custom(key, chunkSize)
-      val decryptor = AesStream.Decryptor.custom(key, chunkSize)
+      val encryptor = AesStream.Encryptor(key, chunkSize)
+      val decryptor = AesStream.Decryptor(key, chunkSize)
 
       val encrypted          = encryptor(data) ++ encryptor.doFinal()
       val reorderedEncrypted = encrypted.slice(chunkSize, chunkSize * 2) ++ encrypted.take(chunkSize)
