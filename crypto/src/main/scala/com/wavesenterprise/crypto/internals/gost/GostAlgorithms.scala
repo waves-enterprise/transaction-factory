@@ -10,6 +10,7 @@ import ru.CryptoPro.reprov.RevCheck
 import ru.CryptoPro.ssl.Provider
 
 import java.nio.ByteBuffer
+import java.security
 import java.security.{PublicKey => _, _}
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.{Cipher, KeyAgreement, KeyGenerator}
@@ -20,7 +21,7 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   Security.addProvider(new JCSP())
   Security.addProvider(new RevCheck())
   Security.addProvider(new CryptoProvider())
-  val provider = new Provider()
+  private val provider = new Provider()
   Security.addProvider(provider)
 
   private[gost] lazy val CryptoAlgorithm = JCP.GOST_K_CIPHER_NAME // kuznechik encryption
@@ -365,4 +366,6 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
         GenericError("Error in decryptor creating process")
       }
   }
+
+  override def sslProvider: Option[security.Provider] = Some(provider)
 }

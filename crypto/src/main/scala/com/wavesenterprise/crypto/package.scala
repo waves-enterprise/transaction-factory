@@ -10,6 +10,7 @@ import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKeyBytes}
 
+import java.security.Provider
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
@@ -160,4 +161,6 @@ package object crypto {
   // linear time equality comparison against time attacks
   def safeIsEqual(a1: Array[Byte], a2: Array[Byte]): Boolean =
     java.security.MessageDigest.isEqual(a1, a2)
+
+  def sslProvider: Option[Provider] = algorithms.sslProvider
 }

@@ -1,6 +1,6 @@
 package com.wavesenterprise.crypto.internals
 
-import java.security.SecureRandom
+import java.security.{Provider, SecureRandom}
 import java.util
 import scorex.util.encode.Base58
 import scorex.crypto.hash.{Blake2b256, Keccak256}
@@ -60,6 +60,8 @@ trait CryptoAlgorithms[KP <: KeyPair] {
   def decrypt(encryptedDataWithKey: EncryptedForSingle,
               recipientPrivateKey: PrivateKey0,
               senderPublicKey: PublicKey0): Either[CryptoError, Array[Byte]]
+
+  def sslProvider: Option[Provider]
 }
 
 case class EncryptedForSingle(encryptedData: Array[Byte], wrappedStructure: Array[Byte]) {
@@ -316,4 +318,5 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       .getOrElse(SecureRandom.getInstanceStrong)
   }
 
+  override def sslProvider: Option[Provider] = None
 }
