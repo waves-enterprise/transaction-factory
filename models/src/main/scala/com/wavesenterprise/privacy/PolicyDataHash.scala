@@ -36,7 +36,6 @@ object PolicyDataHash {
       .leftMap(_ => GenericError(s"Failed to decode policy data hash: '$str'"))
       .ensure(GenericError("Invalid policy data hash length"))(_.arr.length == DataHashLength)
       .map(PolicyDataHashImpl)
-      .leftMap(e => GenericError(e.toString))
   }
 
   def deserialize(bytes: Array[Byte]): PolicyDataHash = {
