@@ -54,7 +54,9 @@ object ValidationError {
   case class Mistiming(err: String)                                         extends ValidationError
   case class ActivationError(err: String)                                   extends ValidationError
   case class UnsupportedVersion(version: Int)                               extends ValidationError
-  case class GenericError(err: String)                                      extends ValidationError
+  case class GenericError(err: String)                                      extends ValidationError {
+    override def toString: String = err
+  }
   case class PermissionError(err: String)                                   extends ValidationError
   case class WrongHandshake(err: String)                                    extends ValidationError
   case class InvalidSender(err: String)                                     extends ValidationError
