@@ -3,9 +3,9 @@ import sbt._
 
 object Dependencies {
 
-  val supportedCspVersion              = "5.0.11823"
-  val supportedJcspVersion             = "5.0.42119-A"
-  val supportedExperimentalCspVersion  = "5R2-RC7"
+  val supportedCspVersion             = "5.0.11823"
+  val supportedJcspVersion            = "5.0.42119-A"
+  val supportedExperimentalCspVersion = "5R2-RC7"
 
   lazy val serialization = Seq(
     "com.google.guava"  % "guava"                     % "28.1-jre",
@@ -43,8 +43,9 @@ object Dependencies {
     "commons-codec"      % "commons-codec" % "1.11"
   )
 
-  lazy val scalatest  = Seq("org.scalatest"  %% "scalatest"  % "3.0.8")
-  lazy val scalacheck = Seq("org.scalacheck" %% "scalacheck" % "1.14.1")
+  lazy val scalatest             = Seq("org.scalatest"          %% "scalatest"               % "3.0.8")
+  lazy val scalacheck            = Seq("org.scalacheck"         %% "scalacheck"              % "1.14.1")
+  lazy val scalaCollectionCompat = Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0")
 
   lazy val asyncHttpClient = Seq("org.asynchttpclient" % "async-http-client" % "2.10.5")
 
@@ -61,7 +62,8 @@ object Dependencies {
   lazy val enumeratum    = Seq("com.beachape" %% "enumeratum-play-json" % "1.5.16")
 
   lazy val pureConfig = Seq(
-    "com.github.pureconfig" %% "pureconfig" % "0.12.2"
+    "com.github.pureconfig" %% "pureconfig"            % "0.12.2",
+    "com.github.pureconfig" %% "pureconfig-enumeratum" % "0.12.2"
   )
 
   lazy val protobuf = Seq("com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf")
