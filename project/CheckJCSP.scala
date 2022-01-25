@@ -38,14 +38,14 @@ object CheckJCSP {
     }.toEither.left.map {
       new RuntimeException(s"CryptoPro JCSP version check failed", _)
     } flatMap {
-      case Dependencies.supportedJcspVersion | Dependencies.supportedExperimentalJcspVersion => Right(())
+      case Dependencies.supportedJcspVersion => Right(())
       case EmptyVersion =>
         Left(
           new CheckJCSPException(
-            s"CryptoPro JCSP '${Dependencies.supportedJcspVersion}' or '${Dependencies.supportedExperimentalJcspVersion}' is not found"))
+            s"CryptoPro JCSP '${Dependencies.supportedJcspVersion}' is not found"))
       case envJcspVersion =>
         Left(new CheckJCSPException(
-          s"Supported JCSP versions are ['${Dependencies.supportedJcspVersion}', '${Dependencies.supportedExperimentalJcspVersion}'], actual is '$envJcspVersion'"))
+          s"Supported JCSP versions is '${Dependencies.supportedJcspVersion}',  actual is '$envJcspVersion'"))
     }
 
   private def checkJcspLicenseValid: Either[RuntimeException, Unit] = {

@@ -8,6 +8,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 stages:
+  - download-crypto
   - compile
   - test
   - publish
@@ -18,13 +19,17 @@ stages:
   - tar zxf lib/csp-linux-amd64-deb-5.0.11823.tgz -C lib/
   - lib/linux-amd64_deb/install.sh
   # Install jscp
-  - mkdir lib/java-csp && tar zxf lib/java-csp-5.0.40621-A.tgz -C lib/java-csp
+  - mkdir lib/java-csp && tar zxf lib/java-csp-5.0.42119-A.tgz -C lib/java-csp
   - mkdir crypto/lib
   - cp lib/java-csp/AdES-core.jar crypto/lib
   - cp lib/java-csp/ASN1P.jar crypto/lib
   - cp lib/java-csp/asn1rt.jar crypto/lib
   - cp lib/java-csp/CAdES.jar crypto/lib
+  - cp lib/java-csp/cmsutil.jar crypto/lib
+  - cp lib/java-csp/cpSSL.jar crypto/lib
   - cp lib/java-csp/forms_rt.jar crypto/lib
+  - cp lib/java-csp/J6CF.jar crypto/lib
+  - cp lib/java-csp/J6Oscar.jar crypto/lib
   - cp lib/java-csp/JCP.jar crypto/lib
   - cp lib/java-csp/JCPControlPane.jar crypto/lib
   - cp lib/java-csp/JCPRequest.jar crypto/lib
@@ -36,6 +41,7 @@ stages:
   - cp lib/java-csp/Rutoken.jar crypto/lib
   - cp lib/java-csp/XAdES.jar crypto/lib
   - cp lib/java-csp/XMLDSigRI.jar crypto/lib
+  - cp lib/java-csp/tls_proxy.jar crypto/lib
   # Copy keys for tests
   - cp -r src/test/resources/gost_keystore/* /var/opt/cprocsp/keys/root/
   - chmod -R u=rwX,go=-rwx /var/opt/cprocsp/keys/root/
@@ -67,6 +73,22 @@ stages:
   - tar -xf targets.tar.gz
   - tar -xf managed.tar.gz
 
+### Download crypto libs
+download-crypto:
+  stage: download-crypto
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - nexusUser=$(sed -n 's/^user=//p' $SBT_CREDENTIALS)
+    - nexusPassword=$(sed -n 's/^password=//p' $SBT_CREDENTIALS)
+    - mkdir lib/
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/java-csp-5.0.42119-A.tgz --output lib/java-csp-5.0.42119-A.tgz
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5.0.11823.tgz --output lib/csp-linux-amd64-deb-5.0.11823.tgz
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5R2-RC7.tgz --output lib/csp-linux-amd64-deb-5R2-RC7.tgz
+  artifacts:
+    paths:
+      - lib/
+
 ### Compile jobs
 compile:
   <<: *create-environment
@@ -79,6 +101,8 @@ compile:
       - targets.tar.gz
       - managed.tar.gz
     expire_in: 1 day
+  dependencies:
+    - download-crypto
 
 ### Testing jobs
 test-core:
@@ -100,11 +124,15 @@ test-core:
       junit:
         - target/test-reports/*.xml
         - lang/jvm/target/test-reports/*.xml
+  dependencies:
+    - download-crypto
+    - compile
 
 publish-nexus-artifacts:
   <<: *create-environment
   stage: publish
   needs:
+    - download-crypto
     - compile
     - test-core
   script:
@@ -113,3 +141,6 @@ publish-nexus-artifacts:
   only:
     - tags
     - branches
+  dependencies:
+    - download-crypto
+    - compile

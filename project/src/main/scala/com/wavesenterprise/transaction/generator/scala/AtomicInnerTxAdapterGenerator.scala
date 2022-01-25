@@ -69,6 +69,7 @@ object AtomicInnerTxAdapterGenerator extends Adapter {
           writer.addLines(s"case PbInnerTransaction.Transaction.${scheme.entryName}(value) => ${scheme.entryName}.fromProto(protoTx.version, value)")
       }
       .addLines("""case PbInnerTransaction.Transaction.Empty => Left(ValidationError.GenericError(s"Empty inner transaction"))""")
+      .addLines("""case transaction => Left(ValidationError.GenericError(s"Impossible inner transaction type: ${transaction.getClass()}"))""")
       .outdent
       .addLines("}")
       .newLine

@@ -13,12 +13,11 @@ service PrivacyEventsService {
 }
 
 message PrivacyEvent {
-  bytes policy_id = 1;
-  bytes data_hash = 2;
+  string policy_id = 1;
+  string data_hash = 2;
   enum EventType {
     DATA_ACQUIRED = 0;
     DATA_INVALIDATED = 1;
-    DATA_REMOVED = 2;
   }
   EventType event_type = 3;
 }

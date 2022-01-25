@@ -49,6 +49,11 @@ class CallContractTransactionV1Spec extends PropSpec with ScalaCheckPropertyChec
         val tooBigTxEither =
           CallContractTransactionV1.create(sender, contractId, tooBigTxParams, fee, timestamp, proofs)
         tooBigTxEither.left.get shouldBe a[ValidationError.ContractTransactionTooBig]
+
+        val withNonAsciiKeysParams = List(IntegerDataEntry("key∂√1", 2), StringDataEntry("kååey1", "value"))
+        val withNonAsciiKeysEither =
+          CallContractTransactionV1.create(sender, contractId, withNonAsciiKeysParams, fee, timestamp, proofs)
+        withNonAsciiKeysEither shouldBe Left(ValidationError.InvalidContractKeys("key∂√1 -> ∂√; kååey1 -> å"))
     }
   }
 

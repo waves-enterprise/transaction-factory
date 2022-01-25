@@ -25,6 +25,8 @@ class GostCryptoTools(keyStoreProvider: KeyStoreProvider[GostKeyPair], tspServer
   System.setProperty("ru.CryptoPro.reprov.enableCRLDP", "true")
   System.setProperty("com.sun.security.enableCRLDP", "true")
   System.setProperty("com.ibm.security.enableCRLDP", "true")
+  System.setProperty("com.sun.security.enableAIAcaIssuers", "true")
+  System.setProperty("ru.CryptoPro.reprov.enableAIAcaIssuers", "true")
 
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -134,7 +136,7 @@ class GostCryptoTools(keyStoreProvider: KeyStoreProvider[GostKeyPair], tspServer
         cades.addSigner(
           JCSP.PROVIDER_NAME,
           signerPrivateKey,
-          certChain.asJava,
+          certChain.map(_.asInstanceOf[java.security.cert.X509Certificate]).asJava,
           signatureType.jcpTypeId,
           tspServerUrl,
           false,

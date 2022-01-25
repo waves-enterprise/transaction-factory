@@ -135,9 +135,8 @@ private[gost] abstract class JcspKeyStore(algorithms: GostAlgorithms, generatorK
 abstract class GostCryptoContext() extends CryptoContext with ScorexLogging { self =>
 
   override type KeyPair0 = GostKeyPair
-  override val isGost           = true
-  override val algorithms       = new GostAlgorithms
-  override val modernAlgorithms = new KuznechikAlgorithm
+  override val isGost     = true
+  override val algorithms = new GostAlgorithms
 
   def toAlias(keyPair: GostKeyPair): String
 

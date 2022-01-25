@@ -54,20 +54,17 @@ object CheckEnvironment extends ScorexLogging {
   private def checkJcspVersion: Either[CryptoError, Unit] =
     Either
       .catchNonFatal(JarChecker.getFromManifest(classOf[JCSP], "Release-Version", EmptyVersion))
-      .leftMap(_ =>
-        GenericError(s"CryptoPro JCSP '${CryptoVersion.supportedJcspVersion}' or '${CryptoVersion.supportedExperimentalJcspVersion}' is not found"))
+      .leftMap(_ => GenericError(s"CryptoPro JCSP '${CryptoVersion.supportedJcspVersion}' is not found"))
       .flatMap {
-        case CryptoVersion.supportedJcspVersion | CryptoVersion.supportedExperimentalJcspVersion =>
-          Right(())
-
+        case CryptoVersion.supportedJcspVersion => Right(())
         case EmptyVersion =>
           Left(GenericError {
-            s"CryptoPro JCSP '${CryptoVersion.supportedJcspVersion}' or '${CryptoVersion.supportedExperimentalJcspVersion}' is not found"
+            s"CryptoPro JCSP '${CryptoVersion.supportedJcspVersion}' is not found"
           })
 
         case envJcspVersion =>
           Left(GenericError {
-            s"Supported JCSP versions are ['${CryptoVersion.supportedJcspVersion}', '${CryptoVersion.supportedExperimentalJcspVersion}'], actual is $envJcspVersion"
+            s"Supported JCSP versions are ['${CryptoVersion.supportedJcspVersion}', actual is $envJcspVersion"
           })
       }
 }

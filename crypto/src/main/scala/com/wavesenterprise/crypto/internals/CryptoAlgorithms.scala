@@ -1,8 +1,7 @@
 package com.wavesenterprise.crypto.internals
 
-import java.security.SecureRandom
+import java.security.{Provider, SecureRandom}
 import java.util
-
 import scorex.util.encode.Base58
 import scorex.crypto.hash.{Blake2b256, Keccak256}
 import scorex.crypto.signatures.{Curve25519, PrivateKey => PrivateKeyS, PublicKey => PublicKeyS, Signature => SignatureS}
@@ -30,6 +29,7 @@ trait CryptoAlgorithms[KP <: KeyPair] {
   def generateSessionKey(): KeyPair0
 
   def publicKeyFromBytes(bytes: Array[Byte]): PublicKey0
+
   def sessionKeyFromBytes(bytes: Array[Byte]): PublicKey0
 
   def fastHash(input: Array[Byte]): Array[Byte]
@@ -44,6 +44,15 @@ trait CryptoAlgorithms[KP <: KeyPair] {
     verify(signature, message, publicKeyFromBytes(publicKey))
   }
 
+  def buildEncryptor(senderPrivateKey: PrivateKey0,
+                     recipientPublicKey: PublicKey0,
+                     chunkSize: Int): Either[CryptoError, (Array[Byte], StreamCipher.AbstractEncryptor)]
+
+  def buildDecryptor(encryptedKeyInfo: Array[Byte],
+                     recipientPrivateKey: PrivateKey0,
+                     senderPublicKey: PublicKey0,
+                     chunkSize: Int): Either[CryptoError, StreamCipher.AbstractDecryptor]
+
   def encrypt(data: Array[Byte], senderPrivateKey: PrivateKey0, recipientPublicKey: PublicKey0): Either[CryptoError, EncryptedForSingle]
 
   def encryptForMany(data: Array[Byte], senderKey: PrivateKey0, recipientPublicKeys: Seq[PublicKey0]): Either[CryptoError, EncryptedForMany]
@@ -51,6 +60,8 @@ trait CryptoAlgorithms[KP <: KeyPair] {
   def decrypt(encryptedDataWithKey: EncryptedForSingle,
               recipientPrivateKey: PrivateKey0,
               senderPublicKey: PublicKey0): Either[CryptoError, Array[Byte]]
+
+  def sslProvider: Option[Provider]
 }
 
 case class EncryptedForSingle(encryptedData: Array[Byte], wrappedStructure: Array[Byte]) {
@@ -146,8 +157,8 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
 
   /**
     * Encryption/Decryption is done via AES using Diffie-Hellman common secret.
-    *   A generated random symmetric key is used for encryption,
-    *   then it is encrypted on Diffie-Hellman secret of two participants.
+    * A generated random symmetric key is used for encryption,
+    * then it is encrypted on Diffie-Hellman secret of two participants.
     */
   def encrypt(data: Array[Byte], senderPrivateKey: WavesPrivateKey, recipientPublicKey: WavesPublicKey): Either[CryptoError, EncryptedForSingle] =
     Try {
@@ -162,6 +173,25 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
         log.error("Error in encrypt", ex)
         GenericError("Error in encrypt")
       }
+
+  /**
+    * @return encrypted encryption key and encryptor - object which can be used for stream data encryption.
+    */
+  def buildEncryptor(senderPrivateKey: WavesPrivateKey,
+                     recipientPublicKey: WavesPublicKey,
+                     chunkSize: Int): Either[CryptoError, (Array[Byte], AesStream.Encryptor)] = {
+    Try {
+      val symmetricKey                   = aesEncryption.generateEncryptionKey()
+      val secret: Array[Byte]            = sharedSecret(senderPrivateKey, recipientPublicKey)
+      val encryptedKey: Array[Byte]      = aesEncryption.encrypt(secret, symmetricKey)
+      val encryptor: AesStream.Encryptor = AesStream.Encryptor(symmetricKey, chunkSize)
+      (encryptedKey, encryptor)
+    }.toEither
+      .leftMap { ex =>
+        log.error("Error while building AES stream encryptor", ex)
+        GenericError("Error while building AES stream encryptor")
+      }
+  }
 
   def encryptForMany(data: Array[Byte],
                      senderKey: WavesPrivateKey,
@@ -190,6 +220,25 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       symmetricKey <- aesEncryption.decrypt(secret, wrappedKey)
       data         <- aesEncryption.decrypt(symmetricKey, encryptedData)
     } yield data
+  }
+
+  /**
+    * @param encryptedKeyInfo - encrypted encryption key
+    * @return decryptor - object which can be used for stream data decryption
+    */
+  def buildDecryptor(encryptedKeyInfo: Array[Byte],
+                     recipientPrivateKey: WavesPrivateKey,
+                     senderPublicKey: WavesPublicKey,
+                     chunkSize: Int): Either[CryptoError, AesStream.Decryptor] = {
+
+    for {
+      secret <- Try(sharedSecret(recipientPrivateKey, senderPublicKey)).toEither
+        .leftMap { ex =>
+          log.error("Error in decrypt", ex)
+          GenericError(s"Failed to make Diffie-Hellman shared secret")
+        }
+      symmetricKey <- aesEncryption.decrypt(secret, encryptedKeyInfo)
+    } yield AesStream.Decryptor(symmetricKey, chunkSize)
   }
 
   private def generateKeyPair(seed: Array[Byte]): WavesKeyPair = {
@@ -269,4 +318,5 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
       .getOrElse(SecureRandom.getInstanceStrong)
   }
 
+  override def sslProvider: Option[Provider] = None
 }

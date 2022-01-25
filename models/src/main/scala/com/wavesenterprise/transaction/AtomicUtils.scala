@@ -24,9 +24,39 @@ object AtomicUtils {
     }
   }
 
+  /** reverse op for [[addExecutedTxs]] */
+  def rollbackExecutedTxs[T >: AtomicTransaction](container: AtomicTransaction): T = {
+    val newInnerTransactions = container.transactions
+      .map {
+        case executed: ExecutedContractTransaction =>
+          executed.tx match {
+            case atomicInnerTx: AtomicInnerTransaction =>
+              atomicInnerTx
+
+            case notAtomicInnerTx: ExecutableTransaction =>
+              throw new Exception(s"Rollback executed tx - inner tx not atomic: '$notAtomicInnerTx'")
+          }
+
+        case tx => tx
+      }
+
+    container match {
+      case txV1: AtomicTransactionV1 =>
+        val proofsWithoutMiner = txV1.proofs.copy(proofs = txV1.proofs.proofs.init)
+
+        txV1.copy(
+          transactions = newInnerTransactions,
+          miner = None,
+          proofs = proofsWithoutMiner
+        )
+    }
+  }
+
+  /** miner proof must be added to end of list because of [[rollbackExecutedTxs]] */
   def addMinerProof[T >: AtomicTransaction](container: AtomicTransaction, account: PrivateKeyAccount): Either[ValidationError, T] = {
     val minerProofSourceBytes = extractMinerProofSource(container)
     val minerProof            = ByteStr(crypto.sign(account, minerProofSourceBytes))
+
     Proofs.create(container.proofs.proofs :+ minerProof).map { newProofs =>
       container match {
         case txV1: AtomicTransactionV1 => txV1.copy(miner = Some(account), proofs = newProofs)

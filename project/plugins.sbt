@@ -17,5 +17,5 @@ Seq(
   "com.github.tkawachi"     % "sbt-repeat"               % "0.1.0",
   "com.lightbend.sbt"       % "sbt-proguard"             % "0.3.0",
   "com.codacy"              % "sbt-codacy-coverage"      % "3.0.3",
-  "com.lightbend.akka.grpc" % "sbt-akka-grpc"            % "0.8.4"
+  "com.lightbend.akka.grpc" % "sbt-akka-grpc"            % "1.1.1"
 ).map(addSbtPlugin)

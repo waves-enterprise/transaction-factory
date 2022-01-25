@@ -5,6 +5,7 @@ import com.wavesenterprise.account.{Address, Alias, PublicKeyAccount}
 import com.wavesenterprise.acl.{NonEmptyRole, Role}
 import com.wavesenterprise.crypto.internals.{
   CryptoError,
+  DecryptionError => CryptoDecryptionError,
   GenericError => CryptoGenericError,
   InvalidAddress => CryptoInvalidAddress,
   InvalidPublicKey => CryptoInvalidPublicKey
@@ -15,6 +16,7 @@ import com.wavesenterprise.privacy.PolicyDataHash
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.transaction.assets.exchange.Order
 import com.wavesenterprise.transaction.docker.{ExecutableTransaction, UpdateContractTransaction}
+import com.wavesenterprise.utils.StringUtilites.ValidateAsciiAndRussian.{mapToString, stringToMap}
 
 import scala.util.Either
 
@@ -33,6 +35,7 @@ object ValidationError {
   case object InvalidName                                      extends ValidationError
   case object OverflowError                                    extends ValidationError
   case object ConstraintsOverflowError                         extends ValidationError
+  case object MvccConflictError                                extends ValidationError
   case object ToSelf                                           extends ValidationError
   case object MissingSenderPrivateKey                          extends ValidationError
   case object UnsupportedTransactionType                       extends ValidationError
@@ -41,26 +44,26 @@ object ValidationError {
     override def toString: String =
       s"BlockFromFuture(rejected block timestamp is '$rejectedBlockTs', but current timestamp is '$currentTimestamp')"
   }
-  case class ScriptParseError(message: String)                         extends ValidationError
-  case class AlreadyInProcessing(txId: ByteStr)                        extends ValidationError
-  case class AlreadyInTheState(txId: ByteStr, txHeight: Int)           extends ValidationError
-  case class AccountBalanceError(errs: Map[Address, String])           extends ValidationError
-  case class AliasDoesNotExist(a: Alias)                               extends ValidationError
-  case class AliasIsDisabled(a: Alias)                                 extends ValidationError
-  case class OrderValidationError(order: Order, err: String)           extends ValidationError
-  case class Mistiming(err: String)                                    extends ValidationError
-  case class ActivationError(err: String)                              extends ValidationError
-  case class UnsupportedVersion(version: Int)                          extends ValidationError
-  case class GenericError(err: String)                                 extends ValidationError
-  case class PermissionError(err: String)                              extends ValidationError
-  case class WrongHandshake(err: String)                               extends ValidationError
-  case class InvalidSender(err: String)                                extends ValidationError
-  case class ParticipantNotRegistered(address: Address)                extends ValidationError
-  case class PolicyDataTooBig(policySize: Long, maxSize: Long)         extends ValidationError
-  case class AddressIsLastOfRole(address: Address, role: NonEmptyRole) extends ValidationError
-  case class InvalidAssetId(err: String)                               extends ValidationError
-  case class UnsupportedContractApiVersion(err: String)                extends ValidationError
-  case class InvalidContractApiVersion(err: String)                    extends ValidationError
+  case class ScriptParseError(message: String)                              extends ValidationError
+  case class AlreadyInProcessing(txId: ByteStr)                             extends ValidationError
+  case class AlreadyInTheState(txId: ByteStr, txHeight: Int)                extends ValidationError
+  case class AccountBalanceError(errs: Map[Address, String])                extends ValidationError
+  case class AliasDoesNotExist(a: Alias)                                    extends ValidationError
+  case class AliasIsDisabled(a: Alias)                                      extends ValidationError
+  case class OrderValidationError(order: Order, err: String)                extends ValidationError
+  case class Mistiming(err: String)                                         extends ValidationError
+  case class ActivationError(err: String)                                   extends ValidationError
+  case class UnsupportedVersion(version: Int)                               extends ValidationError
+  case class GenericError(err: String)                                      extends ValidationError
+  case class PermissionError(err: String)                                   extends ValidationError
+  case class WrongHandshake(err: String)                                    extends ValidationError
+  case class InvalidSender(err: String)                                     extends ValidationError
+  case class ParticipantNotRegistered(address: Address)                     extends ValidationError
+  case class PolicyDataTooBig(policySize: Long, maxSize: Long)              extends ValidationError
+  case class AddressIsLastOfRole(address: Address, role: NonEmptyRole)      extends ValidationError
+  case class InvalidAssetId(err: String)                                    extends ValidationError
+  case class UnsupportedContractApiVersion(contractId: String, err: String) extends ValidationError
+  case class InvalidContractApiVersion(err: String)                         extends ValidationError
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))
@@ -117,6 +120,17 @@ object ValidationError {
     override def toString: String = s"Contract update transaction sender '${tx.sender}' is not equal to contract creator '$contractCreator'"
   }
 
+  case class InvalidContractKeys(keysAndForbiddenSymbols: Map[String, String]) extends ContractError {
+    def this(s: String) = this(stringToMap(s))
+    override def toString: String =
+      s"Keys and invalid symbols in it: [${mapToString(keysAndForbiddenSymbols)}]\n" +
+        s"Allowed characters are ascii non-control and lower and uppercase russian letters"
+  }
+
+  object InvalidContractKeys {
+    def apply(s: String) = new InvalidContractKeys(s)
+  }
+
   sealed trait PrivacyError extends ValidationError
 
   case class PolicyDoesNotExist(policyId: ByteStr) extends PrivacyError {
@@ -137,6 +151,7 @@ object ValidationError {
 
   case class InvalidValidationProofs(actualCount: Int,
                                      expectedCount: Int,
+                                     currentValidators: Set[Address],
                                      resultsHash: ByteStr,
                                      containsRequiredAddresses: Boolean = true,
                                      requiredAddresses: Set[Address] = Set.empty)
@@ -144,7 +159,8 @@ object ValidationError {
 
     override def toString: String =
       s"Invalid validation proofs for results hash '$resultsHash'. Actual '$actualCount', expected '$expectedCount'." +
-        (if (containsRequiredAddresses) "" else s" Proofs does not contain any required addresses: '${requiredAddresses.mkString("', '")}'")
+        s"Current validators set: '${currentValidators.mkString("', '")}'." +
+        (if (containsRequiredAddresses) "" else s" Proofs does not contain one of required addresses: '${requiredAddresses.mkString("', '")}'")
   }
 
   case class InvalidValidatorSignature(publicKeyAccount: PublicKeyAccount, signature: ByteStr) extends ContractError {
@@ -175,9 +191,10 @@ object ValidationError {
 
   def fromCryptoError(e: CryptoError): ValidationError = {
     e match {
-      case CryptoInvalidAddress(message)   => InvalidAddress(message)
-      case CryptoInvalidPublicKey(message) => InvalidPublicKey(message)
-      case CryptoGenericError(message)     => GenericError(message)
+      case CryptoInvalidAddress(message)     => InvalidAddress(message)
+      case CryptoInvalidPublicKey(message)   => InvalidPublicKey(message)
+      case CryptoDecryptionError(message, _) => GenericError(message)
+      case CryptoGenericError(message)       => GenericError(message)
     }
   }
 }

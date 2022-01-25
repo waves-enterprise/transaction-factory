@@ -129,7 +129,6 @@ scalacOptions ++= Seq(
   "-Ypartial-unification",
   "-language:postfixOps"
 )
-logBuffered := false
 
 inThisBuild(
   Seq(
@@ -151,7 +150,7 @@ scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true)))
 updateSbtClassifiers / dependencyResolution := IvyDependencyResolution((updateSbtClassifiers / ivyConfiguration).value)
 resolvers ++= Seq(
   "WE Nexus" at "https://artifacts.wavesenterprise.com/repository/we-releases",
-  "WE Nexus Snapshot" at "https://artifacts.wavesenterprise.com/repository/maven-snapshots",
+  "WE Nexus Snapshot" at "https://artifacts.wavesenterprise.com/repository/we-snapshots",
   Resolver.bintrayRepo("ethereum", "maven"),
   Resolver.bintrayRepo("dnvriend", "maven"),
   Resolver.sbtPluginRepo("releases"),
@@ -345,7 +344,7 @@ lazy val testCore: Project = (project in file("test-core"))
     publishArtifact in (Compile, packageDoc) := false
   )
 
-val grpcProtobufVersion = "1.2"
+val grpcProtobufVersion = "1.5"
 
 lazy val grpcProtobuf = (project in file("grpc-protobuf"))
   .enablePlugins(AkkaGrpcPlugin)
@@ -476,7 +475,7 @@ lazy val isSnapshotVersion: Def.Initialize[Boolean] = version(_ endsWith "-SNAPS
 
 lazy val wePublishingRepo: Def.Initialize[Some[Resolver]] = isSnapshotVersion {
   case true =>
-    Some("Sonatype Nexus Snapshots Repository Manager" at "https://artifacts.wavesenterprise.com/repository/maven-snapshots")
+    Some("Sonatype Nexus Snapshots Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-snapshots")
   case _ =>
     Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
 }

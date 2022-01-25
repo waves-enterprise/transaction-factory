@@ -10,6 +10,7 @@ import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKeyBytes}
 
+import java.security.Provider
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
@@ -140,37 +141,26 @@ package object crypto {
   def verify(signature: Array[Byte], message: MessageToSign, publicKey: PublicKey): Boolean =
     algorithms.verify(Signature(signature), message, publicKey)
 
-  def encrypt(data: Array[Byte],
-              senderPrivateKey: PrivateKey,
-              recipientPublicKey: PublicKey,
-              useModernAlgo: Boolean = false): Either[CryptoError, EncryptedForSingle] =
-    if (useModernAlgo) {
-      context.modernAlgorithms.encrypt(data, senderPrivateKey, recipientPublicKey)
-    } else {
-      algorithms.encrypt(data, senderPrivateKey, recipientPublicKey)
-    }
+  def encrypt(data: Array[Byte], senderPrivateKey: PrivateKey, recipientPublicKey: PublicKey): Either[CryptoError, EncryptedForSingle] =
+    context.algorithms.encrypt(data, senderPrivateKey, recipientPublicKey)
 
   def encryptForMany(data: Array[Byte],
                      senderPrivateKey: PrivateKey,
-                     recipientsPublicKeys: List[PublicKey],
-                     useModernAlgo: Boolean = false): Either[CryptoError, EncryptedForMany] =
-    if (useModernAlgo) {
-      context.modernAlgorithms.encryptForMany(data, senderPrivateKey, recipientsPublicKeys)
-    } else {
-      algorithms.encryptForMany(data, senderPrivateKey, recipientsPublicKeys)
-    }
+                     recipientsPublicKeys: List[PublicKey]): Either[CryptoError, EncryptedForMany] = {
+
+    algorithms.encryptForMany(data, senderPrivateKey, recipientsPublicKeys)
+  }
 
   def decrypt(encryptedDataWithKey: EncryptedForSingle,
               recipientPrivateKey: PrivateKey,
-              senderPublicKey: PublicKey,
-              useModernAlgo: Boolean = false): Either[CryptoError, Array[Byte]] =
-    if (useModernAlgo) {
-      context.modernAlgorithms.decrypt(encryptedDataWithKey, recipientPrivateKey, senderPublicKey)
-    } else {
-      algorithms.decrypt(encryptedDataWithKey, recipientPrivateKey, senderPublicKey)
-    }
+              senderPublicKey: PublicKey): Either[CryptoError, Array[Byte]] = {
+
+    algorithms.decrypt(encryptedDataWithKey, recipientPrivateKey, senderPublicKey)
+  }
 
   // linear time equality comparison against time attacks
   def safeIsEqual(a1: Array[Byte], a2: Array[Byte]): Boolean =
     java.security.MessageDigest.isEqual(a1, a2)
+
+  def sslProvider: Option[Provider] = algorithms.sslProvider
 }
