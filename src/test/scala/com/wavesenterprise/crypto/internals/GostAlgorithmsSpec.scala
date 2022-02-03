@@ -3,8 +3,9 @@ package com.wavesenterprise.crypto.internals
 import com.wavesenterprise.NoShrink
 import com.wavesenterprise.account.Address
 import com.wavesenterprise.crypto.GostKeystoreSpec
-import com.wavesenterprise.crypto.internals.gost.{GostAlgorithms, GostKeyPair, GostPrivateKey}
+import com.wavesenterprise.crypto.internals.gost.{AbstractGostPublicKey, GostAlgorithms, GostKeyPair, GostPrivateKey, GostPublicKey}
 import com.wavesenterprise.utils.EitherUtils.EitherExt
+import org.bouncycastle.util.encoders.Hex
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -25,6 +26,18 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
 
   val aliceRealKeypair: GostKeyPair =
     GostKeystoreSpec.keyStore.getKeyPair(GostKeystoreSpec.addressWithoutPassword, pwd = None).explicitGet()
+
+  val alicePubKey: AbstractGostPublicKey = aliceRealKeypair.getPublic
+  val alicePubKeyEncoded: Array[Byte]    = alicePubKey.getEncoded
+  println(Hex.toHexString(alicePubKeyEncoded))
+
+  val recreatedAlicePubKey: GostPublicKey = gostCrypto.publicKeyFromBytes(alicePubKeyEncoded)
+
+  val recrAlicePubKeyEncoded: Array[Byte] = recreatedAlicePubKey.getEncoded
+
+  println(Hex.toHexString(recrAlicePubKeyEncoded))
+
+  println(Hex.toHexString(aliceRealKeypair.getPublic.getEncoded))
   val bobRealKeypair: GostKeyPair =
     GostKeystoreSpec.keyStore.getKeyPair(GostKeystoreSpec.secondAddressWithoutPassword, pwd = None).explicitGet()
   val charlesRealKeypair: GostKeyPair =
