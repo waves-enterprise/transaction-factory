@@ -8,3 +8,4 @@ case class InvalidAddress(message: String)                    extends CryptoErro
 case class InvalidPublicKey(message: String)                  extends CryptoError
 case class GenericError(message: String)                      extends CryptoError
 case class DecryptionError(message: String, cause: Throwable) extends CryptoError
+case class PKIError(message: String)                          extends CryptoError
