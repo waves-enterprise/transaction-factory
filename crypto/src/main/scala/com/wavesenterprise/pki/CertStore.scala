@@ -97,9 +97,10 @@ class CertStore private (
     * Adds all the certificates from the input collection.
     * Complete chains including intermediate and CA certificates must be passed within the input certificates.
     */
-  def addCertificates(certs: List[X509Certificate]): Either[CryptoError, Unit] = {
-    CertStore.buildCertStore(certs, certsByDN.clone()).map(writeLock(mergeWith))
-  }
+  def addCertificates(certs: List[X509Certificate]): Either[CryptoError, Unit] =
+    writeLock {
+      CertStore.buildCertStore(certs, certsByDN.clone()).map(mergeWith)
+    }
 
   /**
     * Removes certificate form the CertStore.
