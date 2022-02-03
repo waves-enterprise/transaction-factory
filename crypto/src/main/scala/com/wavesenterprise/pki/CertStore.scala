@@ -2,8 +2,10 @@ package com.wavesenterprise.pki
 
 import cats.implicits.{catsStdInstancesForEither, catsSyntaxFlatMapOps}
 import com.wavesenterprise.crypto.internals.{CryptoError, PKIError}
+import com.wavesenterprise.utils.ReadWriteLocking
 
 import java.security.cert.X509Certificate
+import java.util.concurrent.locks.{ReadWriteLock, ReentrantReadWriteLock}
 import javax.security.auth.x500.X500Principal
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -19,24 +21,27 @@ class CertStore private (
     private val clientCerts: mutable.Set[X500Principal],
     private val certsByDN: mutable.Map[X500Principal, X509Certificate],
     private val certsGraph: mutable.Map[X500Principal, mutable.Set[X500Principal]]
-) {
-  def getCaCerts: Set[X500Principal]     = caCerts.view.toSet
-  def getClientCerts: Set[X500Principal] = clientCerts.view.toSet
+) extends ReadWriteLocking {
+  override protected val lock: ReadWriteLock = new ReentrantReadWriteLock()
+
+  def getCaCerts: Set[X500Principal]     = readLock(caCerts.view.toSet)
+  def getClientCerts: Set[X500Principal] = readLock(clientCerts.view.toSet)
 
   /**
     * @return Certificates chain ordered from client to CA certificate.
     */
-  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] = {
-    val subject = userCert.getSubjectX500Principal
-    if (clientCerts.contains(subject)) {
-      val chain = buildChain(subject)
-      Right(CertChain(chain.last, chain.tail.init, chain.head))
-    } else if (certsByDN.contains(subject)) {
-      Left(PKIError(s"Unable to build cert chain starting from the intermediate cert '$subject'"))
-    } else {
-      Left(PKIError(s"Certificate '$subject' was not found in the CertChain"))
+  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] =
+    readLock {
+      val subject = userCert.getSubjectX500Principal
+      if (clientCerts.contains(subject)) {
+        val chain = buildChain(subject)
+        Right(CertChain(chain.last, chain.tail.init, chain.head))
+      } else if (certsByDN.contains(subject)) {
+        Left(PKIError(s"Unable to build cert chain starting from the intermediate cert '$subject'"))
+      } else {
+        Left(PKIError(s"Certificate '$subject' was not found in the CertChain"))
+      }
     }
-  }
 
   @tailrec
   private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): List[X509Certificate] = {
@@ -54,63 +59,65 @@ class CertStore private (
     * All the intermediate certificates must be already in the CertStore.
     * The issuer must be intermediate or CA certificate.
     */
-  def addCert(cert: X509Certificate): Either[CryptoError, Unit] = {
-    val subject = cert.getSubjectX500Principal
-    if (certsByDN.contains(subject)) {
-      Right(())
-    } else {
-      val issuer = cert.getIssuerX500Principal
-      (if (issuer == subject) {
-         caCerts.add(subject)
-         Right(())
-       } else {
-         Either.cond(
-           !clientCerts.contains(issuer),
-           (),
-           PKIError(s"Certificate '$subject' is issued by a client certificate '$issuer' which is forbidden")
-         ) >> certsByDN
-           .get(issuer)
-           .toRight(PKIError(s"Issuer's certificate '$issuer' was not found in the CertStore"))
-           .flatMap { _ =>
-             val nei = certsGraph.getOrElseUpdate(issuer, mutable.HashSet.empty)
-             Either
-               .cond(
-                 !nei.contains(subject), {
-                   certsGraph.put(subject, mutable.HashSet.empty)
-                   clientCerts.add(subject)
-                   nei.add(subject)
-                 },
-                 PKIError(s"Duplicated certificate connection '$issuer' <- '$subject'")
-               )
-           }
-       }).map(_ => certsByDN.put(cert.getSubjectX500Principal, cert))
+  def addCert(cert: X509Certificate): Either[CryptoError, Unit] =
+    writeLock {
+      val subject = cert.getSubjectX500Principal
+      if (certsByDN.contains(subject)) {
+        Right(())
+      } else {
+        val issuer = cert.getIssuerX500Principal
+        (if (issuer == subject) {
+           caCerts.add(subject)
+           Right(())
+         } else {
+           Either.cond(
+             !clientCerts.contains(issuer),
+             (),
+             PKIError(s"Certificate '$subject' is issued by a client certificate '$issuer' which is forbidden")
+           ) >> certsByDN
+             .get(issuer)
+             .toRight(PKIError(s"Issuer's certificate '$issuer' was not found in the CertStore"))
+             .flatMap { _ =>
+               val nei = certsGraph.getOrElseUpdate(issuer, mutable.HashSet.empty)
+               Either
+                 .cond(
+                   !nei.contains(subject), {
+                     certsGraph.put(subject, mutable.HashSet.empty)
+                     clientCerts.add(subject)
+                     nei.add(subject)
+                   },
+                   PKIError(s"Duplicated certificate connection '$issuer' <- '$subject'")
+                 )
+             }
+         }).map(_ => certsByDN.put(cert.getSubjectX500Principal, cert))
+      }
     }
-  }
 
   /**
     * Adds all the certificates from the input collection.
     * Complete chains including intermediate and CA certificates must be passed within the input certificates.
     */
   def addCertificates(certs: List[X509Certificate]): Either[CryptoError, Unit] = {
-    CertStore.buildCertStore(certs, certsByDN.clone()).map(mergeWith)
+    CertStore.buildCertStore(certs, certsByDN.clone()).map(writeLock(mergeWith))
   }
 
   /**
     * Removes certificate form the CertStore.
     * The issuer's certificates will be removed in case no linked issued certificates remain.
     */
-  def removeCert(cert: X509Certificate): Either[CryptoError, Unit] = {
-    val subject = cert.getSubjectX500Principal
-    if (certsByDN.contains(subject)) {
-      Either.cond(
-        certsGraph(subject).isEmpty,
-        removeCertChain(cert),
-        PKIError(s"Unable to remove intermediate certificate '$subject' which still has dependent certificates")
-      )
-    } else {
-      Right(())
+  def removeCert(cert: X509Certificate): Either[CryptoError, Unit] =
+    writeLock {
+      val subject = cert.getSubjectX500Principal
+      if (certsByDN.contains(subject)) {
+        Either.cond(
+          certsGraph(subject).isEmpty,
+          removeCertChain(cert),
+          PKIError(s"Unable to remove intermediate certificate '$subject' which still has dependent certificates")
+        )
+      } else {
+        Right(())
+      }
     }
-  }
 
   @tailrec
   private def removeCertChain(cert: X509Certificate): Unit = {
