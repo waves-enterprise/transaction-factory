@@ -13,7 +13,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import java.math.BigInteger
 import java.security._
 import java.security.cert.X509Certificate
-import java.util.{Calendar, UUID}
+import java.util.Calendar
 import scala.collection.mutable
 import scala.util.Random
 
@@ -127,7 +127,7 @@ class CertStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks
     (List(caCertA, caCertB), List(certA, certC, certE), List(certB, certD, certF))
   }
 
-  private def generateSelfSignedCert(keyPair: KeyPair, dn: String = UUID.randomUUID().toString): X509Certificate = {
+  private def generateSelfSignedCert(keyPair: KeyPair, dn: String): X509Certificate = {
     val subject = new X500Name(s"CN=$dn")
     val serial  = Random.nextInt(Short.MaxValue)
     val endTime = Calendar.getInstance()
@@ -150,7 +150,7 @@ class CertStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks
       issuer: X500Name,
       issuerPrivateKey: PrivateKey,
       subjectPublicKey: PublicKey,
-      dn: String = UUID.randomUUID().toString
+      dn: String
   ): X509Certificate = {
     val subject = new X500Name(s"CN=$dn")
     val serial  = Random.nextInt(Short.MaxValue)

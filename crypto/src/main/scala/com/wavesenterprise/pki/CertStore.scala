@@ -24,8 +24,8 @@ class CertStore private (
 ) extends ReadWriteLocking {
   override protected val lock: ReadWriteLock = new ReentrantReadWriteLock()
 
-  def getCaCerts: Set[X500Principal]     = readLock(caCerts.view.toSet)
-  def getClientCerts: Set[X500Principal] = readLock(clientCerts.view.toSet)
+  def getCaCerts: Set[X500Principal]     = readLock(caCerts.toSet)
+  def getClientCerts: Set[X500Principal] = readLock(clientCerts.toSet)
 
   /**
     * @return Certificates chain ordered from client to CA certificate.
@@ -44,11 +44,11 @@ class CertStore private (
     }
 
   @tailrec
-  private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): List[X509Certificate] = {
+  private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): Seq[X509Certificate] = {
     val cert    = certsByDN(certDn)
-    val nextAcc = acc :+ cert
+    val nextAcc = cert :: acc
     if (caCerts.contains(certDn)) {
-      nextAcc
+      nextAcc.view.reverse.toIndexedSeq
     } else {
       buildChain(cert.getIssuerX500Principal, nextAcc)
     }
@@ -260,4 +260,4 @@ object CertStore {
   }
 }
 
-case class CertChain(caCert: X509Certificate, intermediateCerts: List[X509Certificate], userCert: X509Certificate)
+case class CertChain(caCert: X509Certificate, intermediateCerts: Seq[X509Certificate], userCert: X509Certificate)

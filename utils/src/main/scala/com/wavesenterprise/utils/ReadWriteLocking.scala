@@ -3,8 +3,8 @@ package com.wavesenterprise.utils
 import java.util.concurrent.locks.{Lock, ReadWriteLock}
 
 /**
- * A common wrapper for ReadWrite lock
- */
+  * A common wrapper for ReadWrite lock
+  */
 trait ReadWriteLocking {
   protected val lock: ReadWriteLock
   private def inLock[R](l: Lock, f: => R): R = {
