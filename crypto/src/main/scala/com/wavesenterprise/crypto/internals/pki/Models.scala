@@ -38,8 +38,8 @@ object Models {
   }
 
   case class Extensions(
-      keyUsages: List[KeyUsage],
-      extendedKeyUsages: List[ExtendedKeyUsage] = List.empty,
+      keyUsage: List[KeyUsage],
+      extendedKeyUsage: List[ExtendedKeyUsage] = List.empty,
       subjectAlternativeName: SubjectAlternativeName = SubjectAlternativeName.empty
   )
 
