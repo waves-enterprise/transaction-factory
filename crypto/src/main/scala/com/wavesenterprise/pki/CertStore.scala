@@ -35,7 +35,7 @@ class CertStore private (
       val subject = userCert.getSubjectX500Principal
       if (clientCerts.contains(subject)) {
         val chain = buildChain(subject)
-        Right(CertChain(chain.last, chain.tail.init, chain.head))
+        Right(CertChain(chain.last, chain.view.tail.init.toIndexedSeq, chain.head))
       } else if (certsByDN.contains(subject)) {
         Left(PKIError(s"Unable to build cert chain starting from the intermediate cert '$subject'"))
       } else {
@@ -89,7 +89,7 @@ class CertStore private (
                    PKIError(s"Duplicated certificate connection '$issuer' <- '$subject'")
                  )
              }
-         }).map(_ => certsByDN.put(cert.getSubjectX500Principal, cert))
+         }).map(_ => certsByDN.put(subject, cert))
       }
     }
 
@@ -215,8 +215,7 @@ object CertStore {
     }
 
     def validateGraph(rootCerts: Set[X500Principal]): Either[CryptoError, Unit] = {
-      val queue = mutable.Queue.empty[X500Principal]
-      rootCerts.foreach(queue.enqueue(_))
+      val queue = mutable.Queue.empty[X500Principal] ++ rootCerts
       var visitedCount = 0
       while (queue.nonEmpty) {
         val curr = queue.dequeue()
