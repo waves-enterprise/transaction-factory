@@ -16,7 +16,7 @@ import scala.collection.mutable
   * Graph consistency implemented with Kahn's algorithm.
   * Self-signed certificates are taken as CA certificates.
   */
-class CertStore private (
+class CertChainStore private (
     private val caCerts: mutable.Set[X500Principal],
     private val clientCerts: mutable.Set[X500Principal],
     private val certsByDN: mutable.Map[X500Principal, X509Certificate],
@@ -78,13 +78,13 @@ class CertStore private (
              .get(issuer)
              .toRight(PKIError(s"Issuer's certificate '$issuer' was not found in the CertStore"))
              .flatMap { _ =>
-               val nei = certsGraph.getOrElseUpdate(issuer, mutable.HashSet.empty)
+               val neighbors = certsGraph.getOrElseUpdate(issuer, mutable.HashSet.empty)
                Either
                  .cond(
-                   !nei.contains(subject), {
+                   !neighbors.contains(subject), {
                      certsGraph.put(subject, mutable.HashSet.empty)
                      clientCerts.add(subject)
-                     nei.add(subject)
+                     neighbors.add(subject)
                    },
                    PKIError(s"Duplicated certificate connection '$issuer' <- '$subject'")
                  )
@@ -99,7 +99,7 @@ class CertStore private (
     */
   def addCertificates(certs: List[X509Certificate]): Either[CryptoError, Unit] =
     writeLock {
-      CertStore.buildCertStore(certs, certsByDN.clone()).map(mergeWith)
+      CertChainStore.buildCertStore(certs, certsByDN.clone()).map(mergeWith)
     }
 
   /**
@@ -139,7 +139,7 @@ class CertStore private (
     }
   }
 
-  private def mergeWith(other: CertStore): Unit = {
+  private def mergeWith(other: CertChainStore): Unit = {
     this.caCerts ++= other.caCerts
     this.clientCerts ++= other.clientCerts
     this.certsByDN ++= other.certsByDN
@@ -149,8 +149,8 @@ class CertStore private (
   }
 }
 
-object CertStore {
-  def fromCertificates(certs: List[X509Certificate]): Either[CryptoError, CertStore] = {
+object CertChainStore {
+  def fromCertificates(certs: List[X509Certificate]): Either[CryptoError, CertChainStore] = {
     val certsByDN = mutable.HashMap.empty[X500Principal, X509Certificate]
     buildCertStore(certs, certsByDN)
   }
@@ -158,7 +158,7 @@ object CertStore {
   private def buildCertStore(
       newCerts: List[X509Certificate],
       certsByDN: mutable.Map[X500Principal, X509Certificate]
-  ): Either[CryptoError, CertStore] = {
+  ): Either[CryptoError, CertChainStore] = {
     val certsCount = newCerts.size
     val adjMap     = mutable.HashMap.empty[X500Principal, mutable.Set[X500Principal]]
     val inDegree   = mutable.HashMap.empty[X500Principal, Int]
@@ -191,7 +191,7 @@ object CertStore {
               if (issuer == subject) {
                 inDegree.getOrElseUpdate(subject, 0)
               } else {
-                inDegree.put(subject, inDegree.getOrElseUpdate(subject, 0) + 1)
+                inDegree.put(subject, inDegree.getOrElse(subject, 0) + 1)
               }
             }
             buildGraph(certIterator)
@@ -215,7 +215,7 @@ object CertStore {
     }
 
     def validateGraph(rootCerts: Set[X500Principal]): Either[CryptoError, Unit] = {
-      val queue = mutable.Queue.empty[X500Principal] ++ rootCerts
+      val queue        = mutable.Queue.empty[X500Principal] ++ rootCerts
       var visitedCount = 0
       while (queue.nonEmpty) {
         val curr = queue.dequeue()
@@ -242,13 +242,13 @@ object CertStore {
       )
     }
 
-    def createCertStore(rootCerts: Set[X500Principal]): Either[CryptoError, CertStore] = {
+    def createCertStore(rootCerts: Set[X500Principal]): Either[CryptoError, CertChainStore] = {
       val clientCerts = adjMap
         .collect {
           case (dn, neighbours) if neighbours.isEmpty => dn
         }
         .to[mutable.Set]
-      Right(new CertStore(rootCerts.to[mutable.Set], clientCerts, certsByDN, adjMap))
+      Right(new CertChainStore(rootCerts.to[mutable.Set], clientCerts, certsByDN, adjMap))
     }
 
     for {

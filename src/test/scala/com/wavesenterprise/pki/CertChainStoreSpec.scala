@@ -17,10 +17,10 @@ import java.util.Calendar
 import scala.collection.mutable
 import scala.util.Random
 
-class CertStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks {
+class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks {
   private val keypairGenerator: KeyPairGenerator = {
     val kpGen = KeyPairGenerator.getInstance("RSA")
-    kpGen.initialize(1024, new SecureRandom())
+    kpGen.initialize(512, new SecureRandom())
     kpGen
   }
 
@@ -32,7 +32,7 @@ class CertStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks
     val (caCerts, intermediateCerts, userCerts) = validCertChain(caKeyPair, clientKeyPair)
     val certificates                            = caCerts ++ intermediateCerts ++ userCerts
     val shuffledCerts                           = Random.shuffle(certificates)
-    val maybeCertStore                          = CertStore.fromCertificates(shuffledCerts)
+    val maybeCertStore                          = CertChainStore.fromCertificates(shuffledCerts)
 
     "with valid CA and user certificates" in {
       maybeCertStore shouldBe 'right
