@@ -30,9 +30,9 @@ class CertChainStore private (
   /**
     * @return Certificates chain ordered from client to CA certificate.
     */
-  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] =
+  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] = {
+    val subject = userCert.getSubjectX500Principal
     readLock {
-      val subject = userCert.getSubjectX500Principal
       if (clientCerts.contains(subject)) {
         val chain = buildChain(subject)
         Right(CertChain(chain.last, chain.view.tail.init.toIndexedSeq, chain.head))
@@ -42,6 +42,7 @@ class CertChainStore private (
         Left(PKIError(s"Certificate '$subject' was not found in the CertChain"))
       }
     }
+  }
 
   @tailrec
   private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): Seq[X509Certificate] = {
@@ -59,9 +60,9 @@ class CertChainStore private (
     * All the intermediate certificates must be already in the CertStore.
     * The issuer must be intermediate or CA certificate.
     */
-  def addCert(cert: X509Certificate): Either[CryptoError, Unit] =
+  def addCert(cert: X509Certificate): Either[CryptoError, Unit] = {
+    val subject = cert.getSubjectX500Principal
     writeLock {
-      val subject = cert.getSubjectX500Principal
       if (certsByDN.contains(subject)) {
         Right(())
       } else {
@@ -92,6 +93,7 @@ class CertChainStore private (
          }).map(_ => certsByDN.put(subject, cert))
       }
     }
+  }
 
   /**
     * Adds all the certificates from the input collection.
@@ -106,9 +108,9 @@ class CertChainStore private (
     * Removes certificate form the CertStore.
     * The issuer's certificates will be removed in case no linked issued certificates remain.
     */
-  def removeCert(cert: X509Certificate): Either[CryptoError, Unit] =
+  def removeCert(cert: X509Certificate): Either[CryptoError, Unit] = {
+    val subject = cert.getSubjectX500Principal
     writeLock {
-      val subject = cert.getSubjectX500Principal
       if (certsByDN.contains(subject)) {
         Either.cond(
           certsGraph(subject).isEmpty,
@@ -119,6 +121,7 @@ class CertChainStore private (
         Right(())
       }
     }
+  }
 
   @tailrec
   private def removeCertChain(cert: X509Certificate): Unit = {
@@ -159,9 +162,9 @@ object CertChainStore {
       newCerts: List[X509Certificate],
       certsByDN: mutable.Map[X500Principal, X509Certificate]
   ): Either[CryptoError, CertChainStore] = {
-    val certsCount = newCerts.size
-    val adjMap     = mutable.HashMap.empty[X500Principal, mutable.Set[X500Principal]]
-    val inDegree   = mutable.HashMap.empty[X500Principal, Int]
+    val certsCount   = newCerts.size
+    val adjacencyMap = mutable.HashMap.empty[X500Principal, mutable.Set[X500Principal]]
+    val inDegree     = mutable.HashMap.empty[X500Principal, Int]
 
     @tailrec
     def buildGraph(certIterator: Iterator[X509Certificate]): Either[CryptoError, Unit] = {
@@ -173,11 +176,11 @@ object CertChainStore {
         (if (!certsByDN.contains(subject)) {
            certsByDN.put(subject, cert)
            if (issuer != subject) {
-             adjMap.getOrElseUpdate(subject, mutable.HashSet.empty[X500Principal])
-             val nei = adjMap.getOrElseUpdate(issuer, mutable.HashSet.empty[X500Principal])
+             adjacencyMap.getOrElseUpdate(subject, mutable.HashSet.empty[X500Principal])
+             val neighbors = adjacencyMap.getOrElseUpdate(issuer, mutable.HashSet.empty[X500Principal])
              Either.cond(
-               !nei.contains(subject),
-               nei.add(subject),
+               !neighbors.contains(subject),
+               neighbors.add(subject),
                PKIError(s"Duplicated certificate connection: '$issuer' <- '$subject'")
              )
            } else {
@@ -214,6 +217,9 @@ object CertChainStore {
       Either.cond(errorCerts.isEmpty, rootCerts.toSet, PKIError(s"Couldn't build cert chain for the following certificates: $errorCerts"))
     }
 
+    /**
+     * Validates a graph using Kahn’s algorithm
+     */
     def validateGraph(rootCerts: Set[X500Principal]): Either[CryptoError, Unit] = {
       val queue        = mutable.Queue.empty[X500Principal] ++ rootCerts
       var visitedCount = 0
@@ -222,7 +228,7 @@ object CertChainStore {
         if (inDegree(curr) == 0) {
           visitedCount += 1
         }
-        adjMap.get(curr).foreach { neighbours =>
+        adjacencyMap.get(curr).foreach { neighbours =>
           neighbours.foreach { nei =>
             inDegree.put(nei, inDegree(nei) - 1)
             if (inDegree(nei) == 0) {
@@ -243,12 +249,12 @@ object CertChainStore {
     }
 
     def createCertStore(rootCerts: Set[X500Principal]): Either[CryptoError, CertChainStore] = {
-      val clientCerts = adjMap
+      val clientCerts = adjacencyMap
         .collect {
           case (dn, neighbours) if neighbours.isEmpty => dn
         }
         .to[mutable.Set]
-      Right(new CertChainStore(rootCerts.to[mutable.Set], clientCerts, certsByDN, adjMap))
+      Right(new CertChainStore(rootCerts.to[mutable.Set], clientCerts, certsByDN, adjacencyMap))
     }
 
     for {
