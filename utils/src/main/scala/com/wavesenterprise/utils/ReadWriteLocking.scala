@@ -10,8 +10,7 @@ trait ReadWriteLocking {
   private def inLock[R](l: Lock, f: => R): R = {
     try {
       l.lock()
-      val res = f
-      res
+      f
     } finally {
       l.unlock()
     }

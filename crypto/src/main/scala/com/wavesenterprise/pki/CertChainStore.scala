@@ -218,8 +218,8 @@ object CertChainStore {
     }
 
     /**
-     * Validates a graph using Kahn’s algorithm
-     */
+      * Validates a graph using Kahn’s algorithm
+      */
     def validateGraph(rootCerts: Set[X500Principal]): Either[CryptoError, Unit] = {
       val queue        = mutable.Queue.empty[X500Principal] ++ rootCerts
       var visitedCount = 0
