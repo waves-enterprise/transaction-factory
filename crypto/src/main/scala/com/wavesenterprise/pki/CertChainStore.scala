@@ -28,6 +28,11 @@ class CertChainStore private (
   def getClientCerts: Set[X500Principal] = readLock(clientCerts.toSet)
 
   /**
+    * @return Unordered sequence of all the certificates contained within the CertChainStore
+    */
+  def toSeq: Seq[X509Certificate] = readLock(certsByDN.values.toSeq)
+
+  /**
     * @return Certificates chain ordered from client to CA certificate.
     */
   def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] = {

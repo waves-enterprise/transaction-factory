@@ -112,6 +112,10 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
       certStore.getCertChain(certsByDN("CN=cF")) shouldBe Right(CertChain(certsByDN("CN=caB"), List(certsByDN("CN=cE")), certsByDN("CN=cF")))
       certStore.getCertChain(certsByDN("CN=cH")) shouldBe Right(CertChain(certsByDN("CN=caA"), List.empty, certsByDN("CN=cH")))
     }
+
+    "validate certificates" in {
+      certStore.toSeq should contain theSameElementsAs certsByDN.values.toSeq
+    }
   }
 
   private def validCertChain(caKeyPair: KeyPair, clientKeyPair: KeyPair): (List[X509Certificate], List[X509Certificate], List[X509Certificate]) = {
