@@ -99,7 +99,7 @@ class CertChainStore private (
     * Adds all the certificates from the input collection.
     * Complete chains including intermediate and CA certificates must be passed within the input certificates.
     */
-  def addCertificates(certs: List[X509Certificate]): Either[CryptoError, Unit] =
+  def addCertificates(certs: Seq[X509Certificate]): Either[CryptoError, Unit] =
     writeLock {
       CertChainStore.buildCertStore(certs, certsByDN.clone()).map(mergeWith)
     }
@@ -153,13 +153,13 @@ class CertChainStore private (
 }
 
 object CertChainStore {
-  def fromCertificates(certs: List[X509Certificate]): Either[CryptoError, CertChainStore] = {
+  def fromCertificates(certs: Seq[X509Certificate]): Either[CryptoError, CertChainStore] = {
     val certsByDN = mutable.HashMap.empty[X500Principal, X509Certificate]
     buildCertStore(certs, certsByDN)
   }
 
   private def buildCertStore(
-      newCerts: List[X509Certificate],
+      newCerts: Seq[X509Certificate],
       certsByDN: mutable.Map[X500Principal, X509Certificate]
   ): Either[CryptoError, CertChainStore] = {
     val certsCount   = newCerts.size
