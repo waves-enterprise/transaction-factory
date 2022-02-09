@@ -80,12 +80,12 @@ object PkiTools {
     request.setPublicKeyInfo(publicKey)
 
     maybeExtensions.foreach { extensions =>
-      extensions.keyUsages.toNel.foreach { keyUsages =>
+      extensions.keyUsage.toNel.foreach { keyUsages =>
         val keyUsageComposition = keyUsages.map(_.jcspValue).reduceLeft(_ | _)
         request.setKeyUsage(keyUsageComposition)
       }
 
-      extensions.extendedKeyUsages.foreach { extendedKeyUsage =>
+      extensions.extendedKeyUsage.foreach { extendedKeyUsage =>
         request.addExtKeyUsage(extendedKeyUsage.jcspValue)
       }
 
