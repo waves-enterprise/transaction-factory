@@ -24,13 +24,13 @@ class CertChainStore private (
 ) extends ReadWriteLocking {
   override protected val lock: ReadWriteLock = new ReentrantReadWriteLock()
 
-  def getCaCerts: Set[X500Principal]     = readLock(caCerts.toSet)
-  def getClientCerts: Set[X500Principal] = readLock(clientCerts.toSet)
+  def caCertificates: Set[X500Principal]     = readLock(caCerts.toSet)
+  def clientCertificates: Set[X500Principal] = readLock(clientCerts.toSet)
 
   /**
     * @return Unordered sequence of all the certificates contained within the CertChainStore
     */
-  def toSeq: Seq[X509Certificate] = readLock(certsByDN.values.toSeq)
+  def toSet: Set[X509Certificate] = readLock(certsByDN.values.toSet)
 
   /**
     * @return Certificates chain ordered from client to CA certificate.
@@ -169,7 +169,7 @@ object CertChainStore {
   ): Either[CryptoError, CertChainStore] = {
     val certsCount   = newCerts.size
     val adjacencyMap = mutable.HashMap.empty[X500Principal, mutable.Set[X500Principal]]
-    val inDegree     = mutable.HashMap.empty[X500Principal, Int]
+    val inDegree     = mutable.HashMap.empty[X500Principal, Boolean]
 
     @tailrec
     def buildGraph(certIterator: Iterator[X509Certificate]): Either[CryptoError, Unit] = {
@@ -196,11 +196,7 @@ object CertChainStore {
          }) match {
           case Right(_) =>
             if (!inDegree.contains(subject)) {
-              if (issuer == subject) {
-                inDegree.getOrElseUpdate(subject, 0)
-              } else {
-                inDegree.put(subject, inDegree.getOrElse(subject, 0) + 1)
-              }
+              inDegree.put(subject, issuer != subject)
             }
             buildGraph(certIterator)
           case Left(err) => Left(err)
@@ -213,7 +209,7 @@ object CertChainStore {
     def findRootCerts(): Either[PKIError, Set[X500Principal]] = {
       val (rootCerts, errorCerts) = inDegree
         .collect {
-          case (dn, count) if count == 0 => dn
+          case (dn, hasInDegree) if !hasInDegree => dn
         }
         .partition { dn =>
           val cert = certsByDN(dn)
@@ -223,22 +219,27 @@ object CertChainStore {
     }
 
     /**
-      * Validates a graph using Kahn’s algorithm
+      * Validates a graph using Kahn’s algorithm.
+      * Step-1: Compute in-degree (if a vertex has incoming edges) for each of the vertex present in the directed graph and initialize the count of visited nodes as 0.
+      * Step-2: Pick all the vertices with in-degree as `false` and add them into a queue (Enqueue operation)
+      * Step-3: Remove a vertex from the queue (Dequeue operation) and then:
+      *   -Increment count of visited nodes by 1.
+      *   -Set in-degree to `false` for all its neighbouring nodes and add all of them to the queue.
+      * Step 4: Repeat Step 3 until the queue is empty.
+      * Step 5: If count of visited nodes is not equal to the number of nodes in the graph then the topological sort is not possible for the given graph.
       */
     def validateGraph(rootCerts: Set[X500Principal]): Either[CryptoError, Unit] = {
       val queue        = mutable.Queue.empty[X500Principal] ++ rootCerts
       var visitedCount = 0
       while (queue.nonEmpty) {
         val curr = queue.dequeue()
-        if (inDegree(curr) == 0) {
+        if (!inDegree(curr)) {
           visitedCount += 1
         }
         adjacencyMap.get(curr).foreach { neighbours =>
           neighbours.foreach { nei =>
-            inDegree.put(nei, inDegree(nei) - 1)
-            if (inDegree(nei) == 0) {
-              queue.enqueue(nei)
-            }
+            inDegree.put(nei, false)
+            queue.enqueue(nei)
           }
         }
       }
@@ -246,7 +247,7 @@ object CertChainStore {
         visitedCount == certsCount,
         (), {
           val failedCerts = inDegree.collect {
-            case (dn, count) if count > 0 => dn
+            case (dn, hasInDegree) if hasInDegree => dn
           }
           PKIError(s"Unable to build cert chain for the following certificates: [${failedCerts.mkString(", ")}]")
         }

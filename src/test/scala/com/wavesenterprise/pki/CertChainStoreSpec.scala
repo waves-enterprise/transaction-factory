@@ -38,8 +38,8 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
       maybeCertStore shouldBe 'right
 
       val certStore = maybeCertStore.right.get
-      certStore.getClientCerts should contain theSameElementsAs userCerts.map(_.getSubjectX500Principal)
-      certStore.getCaCerts should contain theSameElementsAs caCerts.map(_.getSubjectX500Principal)
+      certStore.clientCertificates should contain theSameElementsAs userCerts.map(_.getSubjectX500Principal)
+      certStore.caCertificates should contain theSameElementsAs caCerts.map(_.getSubjectX500Principal)
     }
 
     val certsByDN = mutable.HashMap.empty ++ certificates.map { cert =>
@@ -114,10 +114,19 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
     }
 
     "validate certificates" in {
-      certStore.toSeq should contain theSameElementsAs certsByDN.values.toSeq
+      certStore.toSet should contain theSameElementsAs certsByDN.values.toSet
     }
   }
 
+  /**
+    *      caA       caB
+    *       |         |
+    *      cA        cE
+    *     /  \       |
+    *   cB   cC     cF
+    *         |
+    *        cD
+    */
   private def validCertChain(caKeyPair: KeyPair, clientKeyPair: KeyPair): (List[X509Certificate], List[X509Certificate], List[X509Certificate]) = {
     val caCertA = generateSelfSignedCert(caKeyPair, "caA")
     val caCertB = generateSelfSignedCert(caKeyPair, "caB")
