@@ -5,6 +5,7 @@ import com.wavesenterprise.account.{Address, Alias, PublicKeyAccount}
 import com.wavesenterprise.acl.{NonEmptyRole, Role}
 import com.wavesenterprise.crypto.internals.{
   CryptoError,
+  PKIError,
   DecryptionError => CryptoDecryptionError,
   GenericError => CryptoGenericError,
   InvalidAddress => CryptoInvalidAddress,
@@ -195,6 +196,7 @@ object ValidationError {
       case CryptoInvalidPublicKey(message)   => InvalidPublicKey(message)
       case CryptoDecryptionError(message, _) => GenericError(message)
       case CryptoGenericError(message)       => GenericError(message)
+      case PKIError(message)                 => GenericError(message)
     }
   }
 }
