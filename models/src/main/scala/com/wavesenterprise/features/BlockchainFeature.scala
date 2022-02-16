@@ -18,7 +18,6 @@ object BlockchainFeature extends ShortEnum[BlockchainFeature] {
   case object FeeSwitch                            extends BlockchainFeature(7, "Fee Switch")
   case object SmartAssets                          extends BlockchainFeature(9, "Smart Assets")
   case object SmartAccountTrading                  extends BlockchainFeature(10, "Smart Account Trading")
-  case object Ride4DApps                           extends BlockchainFeature(11, "RIDE 4 DAPPS")
   case object ConsensusFix                         extends BlockchainFeature(100, "Updated PoS")
   case object ContractsGrpcSupport                 extends BlockchainFeature(101, "Support of gRPC for Docker contracts")
   case object PoaOptimisationFix                   extends BlockchainFeature(119, "Performance optimisation for PoA")
