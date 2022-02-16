@@ -20,9 +20,11 @@ object Models {
       organizationalUnit: String, //OU
       organization: String, //O
       country: String, //C
-      extensions: Option[Extensions] //X.509 v3 Extensions
+      stateOrProvince: String, //S
+      locality: String, //L
+      extensions: Extensions //X.509 v3 Extensions
   ) {
-    def toX500Name: X500Name = new X500Name(commonName, organizationalUnit, organization, country)
+    def toX500Name: X500Name = new X500Name(commonName, organizationalUnit, organization, locality, stateOrProvince, country)
   }
 
   object CertRequestContent {
@@ -31,6 +33,8 @@ object Models {
       case "organizationalUnit" => "OU"
       case "organization"       => "O"
       case "country"            => "C"
+      case "locality"           => "L"
+      case "stateOrProvince"    => "S"
       case "extensions"         => "extensions"
     }
 

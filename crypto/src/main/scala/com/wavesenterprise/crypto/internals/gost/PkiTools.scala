@@ -42,7 +42,7 @@ object PkiTools {
   private val Algorithm              = JCP.GOST_DH_2012_256_NAME
   private val SignAlgorithm          = JCP.GOST_SIGN_2012_256_NAME
   private val CertificateFactoryName = JCP.CERTIFICATE_FACTORY_NAME
-  private val DefaultCertReqConfig   = CertRequestContent("Waves Enterprise CA", "IT Business", "Waves Enterprise", "RU", None)
+  private val DefaultCertReqConfig   = CertRequestContent("Waves Enterprise CA", "IT Business", "Waves Enterprise", "RU", "Moscow", "Moscow", null)
 
   case class PrivateKeyEntry(privateKey: PrivateKey, certificate: Certificate) {
     def asJcsp = new JCPPrivateKeyEntry(privateKey, Array(certificate))
@@ -104,14 +104,14 @@ object PkiTools {
   }
 
   def generateCertificate(keyPair: KeyPair, certificateConfig: CertRequestContent = DefaultCertReqConfig): Certificate = {
-    val gr  = generateCertificateRequest(keyPair.getPublic, certificateConfig.toX500Name, certificateConfig.extensions)
+    val gr  = generateCertificateRequest(keyPair.getPublic, certificateConfig.toX500Name, Option(certificateConfig.extensions))
     val enc = gr.getEncodedSelfCert(keyPair, certificateConfig.toX500Name, None.orNull)
     val cf  = CertificateFactory.getInstance(CertificateFactoryName)
     cf.generateCertificate(new ByteArrayInputStream(enc))
   }
 
   def generateAndEncodeCertificate(keyPair: KeyPair, certificateConfig: CertRequestContent): Array[Byte] = {
-    generateCertificateRequest(keyPair.getPublic, certificateConfig.toX500Name, certificateConfig.extensions)
+    generateCertificateRequest(keyPair.getPublic, certificateConfig.toX500Name, Option(certificateConfig.extensions))
       .getEncodedSelfCert(keyPair, certificateConfig.toX500Name, None.orNull)
   }
 
