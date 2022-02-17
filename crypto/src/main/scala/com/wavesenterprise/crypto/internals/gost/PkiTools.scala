@@ -2,15 +2,7 @@ package com.wavesenterprise.crypto.internals.gost
 
 import cats.implicits._
 import com.objsys.asn1j.runtime.{Asn1BerDecodeBuffer, Asn1BitString, Asn1DerEncodeBuffer}
-import com.wavesenterprise.crypto.internals.pki.Models.{
-  CertRequestContent,
-  ExtendedKeyUsage,
-  Extensions,
-  KeyUsage,
-  SubjectAlternativeName,
-  SubjectAlternativeNameItem,
-  SubjectAlternativeNameItemType
-}
+import com.wavesenterprise.crypto.internals.pki.Models._
 import ru.CryptoPro.Crypto.CryptoProvider
 import ru.CryptoPro.JCP.ASN.CertificateExtensions.{ALL_CertificateExtensionsValues, _extKeyUsage_ExtnType}
 import ru.CryptoPro.JCP.ASN.PKIX1Explicit88.{Extension, RDNSequence}
@@ -20,7 +12,6 @@ import ru.CryptoPro.JCP.KeyStore.JCPPrivateKeyEntry
 import ru.CryptoPro.JCP.params.CryptDhAllowedSpec
 import ru.CryptoPro.JCPRequest.GostCertificateRequest
 import ru.CryptoPro.JCSP.JCSP
-import ru.CryptoPro.JCSP.Key.GostPublicKey
 import ru.CryptoPro.reprov.RevCheck
 import ru.CryptoPro.reprov.array.{DerInputStream, DerOutputStream}
 import ru.CryptoPro.reprov.x509.{GeneralNames, IPAddressName, X500Name, X509CertImpl}
@@ -31,7 +22,6 @@ import java.nio.charset.Charset
 import java.security._
 import java.security.cert.{Certificate, CertificateFactory}
 import java.util
-import scala.util.Success
 import scala.util.Using
 
 object PkiTools {
@@ -42,7 +32,9 @@ object PkiTools {
   private val Algorithm              = JCP.GOST_DH_2012_256_NAME
   private val SignAlgorithm          = JCP.GOST_SIGN_2012_256_NAME
   private val CertificateFactoryName = JCP.CERTIFICATE_FACTORY_NAME
-  private val DefaultCertReqConfig   = CertRequestContent("Waves Enterprise CA", "IT Business", "Waves Enterprise", "RU", None)
+  private val DefaultExtensions      = Extensions(List(KeyUsage.DigitalSignature))
+  private val DefaultCertReqConfig =
+    CertRequestContent("Waves Enterprise CA", "IT Business", "Waves Enterprise", "RU", "Moscow", "Moscow", DefaultExtensions)
 
   case class PrivateKeyEntry(privateKey: PrivateKey, certificate: Certificate) {
     def asJcsp = new JCPPrivateKeyEntry(privateKey, Array(certificate))
@@ -74,23 +66,21 @@ object PkiTools {
     PrivateKeyEntry(keyPair.getPrivate, cert)
   }
 
-  def generateCertificateRequest(publicKey: PublicKey, subjectName: X500Name, maybeExtensions: Option[Extensions]): GostCertificateRequest = {
+  def generateCertificateRequest(publicKey: PublicKey, subjectName: X500Name, extensions: Extensions): GostCertificateRequest = {
     val request = new GostCertificateRequest(ProviderName)
 
     request.setPublicKeyInfo(publicKey)
 
-    maybeExtensions.foreach { extensions =>
-      extensions.keyUsage.toNel.foreach { keyUsages =>
-        val keyUsageComposition = keyUsages.map(_.jcspValue).reduceLeft(_ | _)
-        request.setKeyUsage(keyUsageComposition)
-      }
-
-      extensions.extendedKeyUsage.foreach { extendedKeyUsage =>
-        request.addExtKeyUsage(extendedKeyUsage.jcspValue)
-      }
-
-      addSubjectAlternativeName(request, extensions.subjectAlternativeName)
+    extensions.keyUsage.toNel.foreach { keyUsages =>
+      val keyUsageComposition = keyUsages.map(_.jcspValue).reduceLeft(_ | _)
+      request.setKeyUsage(keyUsageComposition)
     }
+
+    extensions.extendedKeyUsage.foreach { extendedKeyUsage =>
+      request.addExtKeyUsage(extendedKeyUsage.jcspValue)
+    }
+
+    addSubjectAlternativeName(request, extensions.subjectAlternativeName)
 
     request.setSubjectInfo(subjectName)
 
@@ -186,28 +176,28 @@ object PkiTools {
       )
     }
 
-    val maybeExtensions = certificateRequest.certificationRequestInfo.attributes.elements.headOption.flatMap {
-      _.values.elements.headOption.collect {
-        case extensions: ru.CryptoPro.JCP.ASN.PKIX1Explicit88.Extensions =>
-          extensions
+    val extensions = certificateRequest.certificationRequestInfo.attributes.elements.headOption
+      .flatMap {
+        _.values.elements.headOption.collect {
+          case extensions: ru.CryptoPro.JCP.ASN.PKIX1Explicit88.Extensions =>
+            extensions
+        }
       }
-    }
+      .getOrElse(throw new RuntimeException("'extensions' field in certificate request cannot be empty"))
 
-    val maybeKeyUsages = maybeExtensions
-      .flatMap { extensions =>
-        extensions.elements.find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_keyUsage))
-      }
-      .map { keyUsages =>
-        val decodeBuffer = new Asn1BerDecodeBuffer(keyUsages.extnValue.value)
-        val bitString    = new Asn1BitString()
-        bitString.decode(decodeBuffer)
-        bitString.toBoolArray.zip(KeyUsage.values).collect { case (true, flag) => flag }
-      }
+    val keyUsages =
+      extensions.elements
+        .find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_keyUsage))
+        .map { keyUsages =>
+          val decodeBuffer = new Asn1BerDecodeBuffer(keyUsages.extnValue.value)
+          val bitString    = new Asn1BitString()
+          bitString.decode(decodeBuffer)
+          bitString.toBoolArray.zip(KeyUsage.values).collect { case (true, flag) => flag }
+        }
+        .getOrElse(throw new RuntimeException("'extensions.key-usage' field in certificate request cannot be empty"))
 
-    val maybeExtKeyUsages = maybeExtensions
-      .flatMap { extensions =>
-        extensions.elements.find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_extKeyUsage))
-      }
+    val maybeExtKeyUsages = extensions.elements
+      .find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_extKeyUsage))
       .map { extKeyUsages =>
         val decodeBuffer = new Asn1BerDecodeBuffer(extKeyUsages.extnValue.value)
 
@@ -219,10 +209,8 @@ object PkiTools {
         }
       }
 
-    val maybeSubjectAltName = maybeExtensions
-      .flatMap { extensions =>
-        extensions.elements.find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_subjectAltName))
-      }
+    val subjectAltName = extensions.elements
+      .find(e => util.Arrays.equals(e.extnID.value, ALL_CertificateExtensionsValues.id_ce_subjectAltName))
       .map { subjectAltName =>
         val stream = new DerInputStream(subjectAltName.extnValue.value)
 
@@ -236,16 +224,16 @@ object PkiTools {
           }
         }
       }
+      .map(_.toList)
+      .getOrElse(List.empty)
 
-    val maybeResultExtensions = maybeSubjectAltName.map { subjectAltName =>
-      Extensions(
-        maybeKeyUsages.toList.flatten,
-        maybeExtKeyUsages.toList.flatten,
-        SubjectAlternativeName(subjectAltName.toList)
-      )
-    }
+    val resultExtensions = Extensions(
+      keyUsages.toList,
+      maybeExtKeyUsages.toList.flatten,
+      SubjectAlternativeName(subjectAltName)
+    )
 
-    ParseCertReqResult(subjectName, publicKey, generateCertificateRequest(publicKey, subjectName, maybeResultExtensions))
+    ParseCertReqResult(subjectName, publicKey, generateCertificateRequest(publicKey, subjectName, resultExtensions))
   }
 
   def exportCertificate(certificate: Certificate, file: File): Unit =
