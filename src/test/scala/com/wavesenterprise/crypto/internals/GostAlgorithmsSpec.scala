@@ -3,18 +3,30 @@ package com.wavesenterprise.crypto.internals
 import com.wavesenterprise.NoShrink
 import com.wavesenterprise.account.Address
 import com.wavesenterprise.crypto.GostKeystoreSpec
-import com.wavesenterprise.crypto.internals.gost.{AbstractGostPublicKey, GostAlgorithms, GostKeyPair, GostPrivateKey, GostPublicKey}
+import com.wavesenterprise.crypto.internals.gost._
+import com.wavesenterprise.pki.CertChain
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import org.bouncycastle.util.encoders.Hex
+import monix.eval.Coeval
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{FreeSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import ru.CryptoPro.JCP.JCP
+import ru.CryptoPro.JCPRequest
+import ru.CryptoPro.JCPRequest.GostCertificateRequest
+import ru.CryptoPro.JCSP.JCSP
 
 import java.io.ByteArrayInputStream
+import java.security.cert.{CertificateFactory, X509Certificate}
+import java.security.{KeyPair => JavaKeyPair, KeyStore => JavaKeyStore, PublicKey => JavaPublicKey}
 import scala.collection.mutable.ArrayBuffer
 
 class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with ScalaCheckPropertyChecks {
-  val gostCrypto = new GostAlgorithms
+
+  val pkiRequiredOid: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7)
+  val pkiRequiredOidStr: String  = pkiRequiredOid.mkString(".")
+
+  def buildGostCrypto(pkiRequiredOids: Set[String] = Set.empty, maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None) =
+    new GostAlgorithms(pkiRequiredOids, crlCheckIsEnabled = false, maybeTrustKeyStoreProvider)
 
   val oneKilobyteInBytes: Int = 1024
   val oneMegabyteInBytes: Int = 1024 * oneKilobyteInBytes
@@ -26,18 +38,8 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
 
   val aliceRealKeypair: GostKeyPair =
     GostKeystoreSpec.keyStore.getKeyPair(GostKeystoreSpec.addressWithoutPassword, pwd = None).explicitGet()
-
-  val alicePubKey: AbstractGostPublicKey = aliceRealKeypair.getPublic
-  val alicePubKeyEncoded: Array[Byte]    = alicePubKey.getEncoded
-  println(Hex.toHexString(alicePubKeyEncoded))
-
-  val recreatedAlicePubKey: GostPublicKey = gostCrypto.publicKeyFromBytes(alicePubKeyEncoded)
-
-  val recrAlicePubKeyEncoded: Array[Byte] = recreatedAlicePubKey.getEncoded
-
-  println(Hex.toHexString(recrAlicePubKeyEncoded))
-
-  println(Hex.toHexString(aliceRealKeypair.getPublic.getEncoded))
+  val aliceCert: X509Certificate =
+    GostKeystoreSpec.keyStore.getCertificate(GostKeystoreSpec.addressWithoutPassword).explicitGet().asInstanceOf[X509Certificate]
   val bobRealKeypair: GostKeyPair =
     GostKeystoreSpec.keyStore.getKeyPair(GostKeystoreSpec.secondAddressWithoutPassword, pwd = None).explicitGet()
   val charlesRealKeypair: GostKeyPair =
@@ -46,11 +48,156 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
   "Basic key operations" - {
     "sign & verify signature" - {
       "with real keys (using testing gost_keystore)" in {
-        val data = sampleBytesGenerator.sample.get
+        val algorithms = buildGostCrypto()
+        val data       = sampleBytesGenerator.sample.get
+        val signature  = algorithms.sign(aliceRealKeypair.getPrivate, data)
 
-        val signature = gostCrypto.sign(aliceRealKeypair.getPrivate, data)
+        algorithms.verify(signature, data, aliceRealKeypair.getPublic) shouldBe true
+      }
+    }
 
-        gostCrypto.verify(signature, data, aliceRealKeypair.getPublic) shouldBe true
+    "sign & verify signature with cert chain" - {
+
+      "successful sign & verify complex chain" in {
+        val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
+
+        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+
+        val intermediateKeyPair = charlesRealKeypair.internal
+        val intermediateCert = buildCert(
+          issuerKeyPair = caKeyPair,
+          issuer = caCert.getSubjectX500Principal.toString,
+          publicKey = charlesRealKeypair.internal.getPublic,
+          subject = "CN=charles",
+          keyUsages = Seq(JCPRequest.KeyUsage.KEY_CERT_SIGN)
+        )
+
+        val userKeyPair        = bobRealKeypair.internal
+        val userGostPrivateKey = bobRealKeypair.getPrivate
+
+        val userCert = buildCert(
+          issuerKeyPair = intermediateKeyPair,
+          issuer = intermediateCert.getSubjectX500Principal.toString,
+          publicKey = userKeyPair.getPublic,
+          subject = "CN=bob",
+          keyUsages = Seq(JCPRequest.KeyUsage.DIGITAL_SIGNATURE),
+          extKeyUsages = Seq(pkiRequiredOid)
+        )
+
+        val data      = sampleBytesGenerator.sample.get
+        val signature = algorithms.sign(userGostPrivateKey, data)
+        val certChain = CertChain(caCert, Seq(intermediateCert), userCert)
+
+        algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe 'right
+      }
+
+      "verification error when DIGITAL_SIGNATURE key usage is not specified" in {
+        val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
+
+        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+
+        val userKeyPair        = bobRealKeypair.internal
+        val userGostPrivateKey = bobRealKeypair.getPrivate
+        val userSubject        = "CN=bob"
+        val data               = sampleBytesGenerator.sample.get
+        val signature          = algorithms.sign(userGostPrivateKey, data)
+        val userCert = buildCert(
+          issuerKeyPair = caKeyPair,
+          issuer = caCert.getSubjectX500Principal.toString,
+          publicKey = userKeyPair.getPublic,
+          subject = userSubject,
+          extKeyUsages = Seq(pkiRequiredOid)
+        )
+
+        val certChain = CertChain(caCert, Seq.empty, userCert)
+
+        algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe
+          Left {
+            PKIError(
+              s"Signature validation failed: 'digitalSignature' is not present in 'keyUsage' " +
+                s"extension of signer's certificate (DN=$userSubject)")
+          }
+      }
+
+      "verification error when required oid is not specified" in {
+        val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
+
+        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+
+        val userKeyPair        = bobRealKeypair.internal
+        val userGostPrivateKey = bobRealKeypair.getPrivate
+        val userSubject        = "CN=bob"
+
+        val data      = sampleBytesGenerator.sample.get
+        val signature = algorithms.sign(userGostPrivateKey, data)
+
+        val userCert = buildCert(
+          issuerKeyPair = caKeyPair,
+          issuer = caCert.getSubjectX500Principal.toString,
+          publicKey = userKeyPair.getPublic,
+          subject = userSubject,
+          keyUsages = Seq(JCPRequest.KeyUsage.DIGITAL_SIGNATURE)
+        )
+
+        val certChain = CertChain(caCert, Seq.empty, userCert)
+
+        algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe
+          Left(PKIError(s"Required oids [$pkiRequiredOidStr] not found in certificate (DN=$userSubject)"))
+      }
+
+      "verification error when root cert is not trusted" in {
+        val (caKeyPair, caCert, _) = buildCaSetup()
+
+        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), None)
+
+        val userKeyPair        = bobRealKeypair.internal
+        val userGostPrivateKey = bobRealKeypair.getPrivate
+        val userSubject        = "CN=bob"
+
+        val data      = sampleBytesGenerator.sample.get
+        val signature = algorithms.sign(userGostPrivateKey, data)
+
+        val userCert = buildCert(
+          issuerKeyPair = caKeyPair,
+          issuer = caCert.getSubjectX500Principal.toString,
+          publicKey = userKeyPair.getPublic,
+          subject = userSubject,
+          keyUsages = Seq(JCPRequest.KeyUsage.DIGITAL_SIGNATURE),
+          extKeyUsages = Seq(pkiRequiredOid)
+        )
+
+        val certChain = CertChain(caCert, Seq.empty, userCert)
+
+        algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe
+          Left(PKIError(s"Root certificate (DN=${aliceCert.getSubjectX500Principal}) is not trusted"))
+
+      }
+
+      "verification error when invalid cert chain path" in {
+        val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
+
+        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+
+        val userKeyPair        = bobRealKeypair.internal
+        val userGostPrivateKey = bobRealKeypair.getPrivate
+        val userSubject        = "CN=bob"
+
+        val data      = sampleBytesGenerator.sample.get
+        val signature = algorithms.sign(userGostPrivateKey, data)
+
+        val userCert = buildCert(
+          issuerKeyPair = caKeyPair,
+          issuer = "CN=InvalidIssuer",
+          publicKey = userKeyPair.getPublic,
+          subject = userSubject,
+          keyUsages = Seq(JCPRequest.KeyUsage.DIGITAL_SIGNATURE),
+          extKeyUsages = Seq(pkiRequiredOid)
+        )
+
+        val certChain = CertChain(caCert, Seq.empty, userCert)
+        val result    = algorithms.verify(signature, data, certChain, System.currentTimeMillis())
+        result shouldBe 'left
+        result.left.get.toString should include("unable to find valid certification path to requested target")
       }
     }
   }
@@ -58,59 +205,64 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
   "Crypto operations" - {
     "encrypt & decrypt for single recipient" - {
       "with session (ephemeral) keys" in {
-        val bytes = sampleBytesGenerator.sample.get
+        val algorithms = buildGostCrypto()
+        val bytes      = sampleBytesGenerator.sample.get
 
-        val alice = gostCrypto.generateSessionKey()
-        val bob   = gostCrypto.generateSessionKey()
+        val alice = algorithms.generateSessionKey()
+        val bob   = algorithms.generateSessionKey()
 
-        val encryptedDataWithWrappedKey = gostCrypto.encrypt(bytes, alice.getPrivate, bob.getPublic).explicitGet()
-        val decryptedResult             = gostCrypto.decrypt(encryptedDataWithWrappedKey, bob.getPrivate, alice.getPublic).explicitGet()
+        val encryptedDataWithWrappedKey = algorithms.encrypt(bytes, alice.getPrivate, bob.getPublic).explicitGet()
+        val decryptedResult             = algorithms.decrypt(encryptedDataWithWrappedKey, bob.getPrivate, alice.getPublic).explicitGet()
 
         decryptedResult should contain theSameElementsAs bytes
       }
       "with real keys (using testing gost_keystore)" in {
-        val bytes = sampleBytesGenerator.sample.get
+        val algorithms = buildGostCrypto()
+        val bytes      = sampleBytesGenerator.sample.get
 
-        val encryptedDataWithWrappedKey = gostCrypto.encrypt(bytes, aliceRealKeypair.getPrivate, bobRealKeypair.getPublic).explicitGet()
-        val decryptedResult             = gostCrypto.decrypt(encryptedDataWithWrappedKey, bobRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
+        val encryptedDataWithWrappedKey = algorithms.encrypt(bytes, aliceRealKeypair.getPrivate, bobRealKeypair.getPublic).explicitGet()
+        val decryptedResult             = algorithms.decrypt(encryptedDataWithWrappedKey, bobRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
 
         decryptedResult should contain theSameElementsAs bytes
       }
     }
     "encrypt & decrypt for self" - {
       "with session (ephemeral) keys" in {
-        val senderKeyPair = gostCrypto.generateSessionKey()
+        val algorithms    = buildGostCrypto()
+        val senderKeyPair = algorithms.generateSessionKey()
         val data          = sampleBytesGenerator.sample.get
 
-        val encryptedStuff  = gostCrypto.encrypt(data, senderKeyPair.getPrivate, senderKeyPair.getPublic).explicitGet()
-        val decryptedResult = gostCrypto.decrypt(encryptedStuff, senderKeyPair.getPrivate, senderKeyPair.getPublic).explicitGet()
+        val encryptedStuff  = algorithms.encrypt(data, senderKeyPair.getPrivate, senderKeyPair.getPublic).explicitGet()
+        val decryptedResult = algorithms.decrypt(encryptedStuff, senderKeyPair.getPrivate, senderKeyPair.getPublic).explicitGet()
 
         decryptedResult should contain theSameElementsAs data
       }
       "with real keys (using testing gost_keystore)" in {
-        val data = sampleBytesGenerator.sample.get
+        val algorithms = buildGostCrypto()
+        val data       = sampleBytesGenerator.sample.get
 
-        val encryptedStuff  = gostCrypto.encrypt(data, aliceRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
-        val decryptedResult = gostCrypto.decrypt(encryptedStuff, aliceRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
+        val encryptedStuff  = algorithms.encrypt(data, aliceRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
+        val decryptedResult = algorithms.decrypt(encryptedStuff, aliceRealKeypair.getPrivate, aliceRealKeypair.getPublic).explicitGet()
 
         decryptedResult should contain theSameElementsAs data
       }
     }
     "encryptForMany & decrypt each" - {
       "with session (ephemeral) keys" in {
-        val recipientPublicToPrivate = List.fill(3)(gostCrypto.generateSessionKey()).map(keyPair => keyPair.getPublic -> keyPair.getPrivate).toMap
+        val algorithms               = buildGostCrypto()
+        val recipientPublicToPrivate = List.fill(3)(algorithms.generateSessionKey()).map(keyPair => keyPair.getPublic -> keyPair.getPrivate).toMap
         val recipientAddressToPrivate: Map[Address, GostPrivateKey] = recipientPublicToPrivate.map {
           case (publicKey, privateKey) => Address.fromPublicKey(publicKey.getEncoded) -> privateKey
         }
-        val senderDummyKeyPair = gostCrypto.generateSessionKey()
+        val senderDummyKeyPair = algorithms.generateSessionKey()
         val data               = sampleBytesGenerator.sample.get
 
-        val encrypted = gostCrypto.encryptForMany(data, senderDummyKeyPair.getPrivate, recipientPublicToPrivate.keys.toSeq).explicitGet()
+        val encrypted = algorithms.encryptForMany(data, senderDummyKeyPair.getPrivate, recipientPublicToPrivate.keys.toSeq).explicitGet()
 
         encrypted.recipientPubKeyToWrappedKey.foreach {
           case (publicKey, wrappedStructure) =>
             val recipientPrivateKey = recipientAddressToPrivate(Address.fromPublicKey(publicKey.getEncoded))
-            val decryptedData = gostCrypto
+            val decryptedData = algorithms
               .decrypt(EncryptedForSingle(encrypted.encryptedData, wrappedStructure), recipientPrivateKey, senderDummyKeyPair.getPublic)
               .explicitGet()
 
@@ -118,6 +270,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
         }
       }
       "with real keys (using testing gost_keystore)" in {
+        val algorithms = buildGostCrypto()
         val recipientPublicToPrivate = List(aliceRealKeypair, bobRealKeypair, charlesRealKeypair)
           .map(keyPair => keyPair.getPublic -> keyPair.getPrivate)
           .toMap
@@ -127,12 +280,12 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
         }
         val data = sampleBytesGenerator.sample.get
 
-        val encrypted = gostCrypto.encryptForMany(data, aliceRealKeypair.getPrivate, recipientPublicToPrivate.keys.toSeq).explicitGet()
+        val encrypted = algorithms.encryptForMany(data, aliceRealKeypair.getPrivate, recipientPublicToPrivate.keys.toSeq).explicitGet()
 
         encrypted.recipientPubKeyToWrappedKey.foreach {
           case (publicKey, wrappedStructure) =>
             val recipientPrivateKey = recipientAddressToPrivate(Address.fromPublicKey(publicKey.getEncoded))
-            val decryptedData = gostCrypto
+            val decryptedData = algorithms
               .decrypt(EncryptedForSingle(encrypted.encryptedData, wrappedStructure), recipientPrivateKey, aliceRealKeypair.getPublic)
               .explicitGet()
 
@@ -143,6 +296,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
   }
 
   "Stream encrypt and decrypt" in {
+    val algorithms = buildGostCrypto()
     val genSomeBytes: Gen[(Array[Byte], Int)] = for {
       length    <- Gen.choose(32 * 1024, 1 * 1024 * 1024)
       chunkSize <- Gen.choose(1, length)
@@ -152,10 +306,10 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
 
     forAll(genSomeBytes) {
       case (data, chunkSize) =>
-        val sender    = gostCrypto.generateSessionKey()
-        val recipient = gostCrypto.generateSessionKey()
+        val sender    = algorithms.generateSessionKey()
+        val recipient = algorithms.generateSessionKey()
 
-        val (encryptedKey, encryptor) = gostCrypto.buildEncryptor(sender.getPrivate, recipient.getPublic, chunkSize).explicitGet()
+        val (encryptedKey, encryptor) = algorithms.buildEncryptor(sender.getPrivate, recipient.getPublic, chunkSize).explicitGet()
         val dataStream                = new ByteArrayInputStream(data)
 
         val encryptedChunks = ArrayBuffer[Byte]()
@@ -168,7 +322,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
 
         val finalEncrypted = EncryptedForSingle(encryptedChunks.toArray, encryptedKey)
 
-        val decryptor           = gostCrypto.buildDecryptor(finalEncrypted.wrappedStructure, recipient.getPrivate, sender.getPublic, chunkSize).explicitGet()
+        val decryptor           = algorithms.buildDecryptor(finalEncrypted.wrappedStructure, recipient.getPrivate, sender.getPublic, chunkSize).explicitGet()
         val encryptedDataStream = new ByteArrayInputStream(finalEncrypted.encryptedData)
         val resultDecrypted     = ArrayBuffer[Byte]()
 
@@ -182,4 +336,61 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
         assertResult(data)(resultDecrypted.toArray)
     }
   }
+
+  private def buildCert(issuerKeyPair: JavaKeyPair,
+                        issuer: String,
+                        publicKey: JavaPublicKey,
+                        subject: String,
+                        keyUsages: Seq[Int] = Seq(JCPRequest.KeyUsage.NOT_SET),
+                        extKeyUsages: Seq[Array[Int]] = Seq.empty) = {
+    val certRequest = generateCertificateRequest(
+      keyUsages = keyUsages,
+      extKeyUsages = extKeyUsages
+    )
+
+    val certBytes = certRequest.generateCert(issuerKeyPair.getPrivate, publicKey, subject, issuer)
+
+    CertificateFactory
+      .getInstance(JCP.CERTIFICATE_FACTORY_NAME)
+      .generateCertificate(new ByteArrayInputStream(certBytes))
+      .asInstanceOf[X509Certificate]
+  }
+
+  private def generateCertificateRequest(keyUsages: Seq[Int] = Seq.empty, extKeyUsages: Seq[Array[Int]] = Seq.empty): GostCertificateRequest = {
+    val request = new GostCertificateRequest(JCSP.PROVIDER_NAME)
+
+    if (keyUsages.nonEmpty) {
+      val keyUsageComposition = keyUsages.reduceLeft(_ | _)
+      request.setKeyUsage(keyUsageComposition)
+    }
+
+    extKeyUsages.foreach { extendedKeyUsage =>
+      request.addExtKeyUsage(extendedKeyUsage)
+    }
+
+    request
+  }
+
+  private def buildCaSetup(): (JavaKeyPair, X509Certificate, Coeval[JavaKeyStore]) = {
+    val caKeyPair = aliceRealKeypair.internal
+
+    val caCert = buildCert(
+      issuerKeyPair = caKeyPair,
+      issuer = aliceCert.getSubjectX500Principal.toString,
+      publicKey = caKeyPair.getPublic,
+      subject = aliceCert.getSubjectX500Principal.toString,
+      keyUsages = Seq(JCPRequest.KeyUsage.KEY_CERT_SIGN),
+    )
+
+    val trustedCertsKeyStoreProvider: Coeval[JavaKeyStore] = Coeval.evalOnce {
+      val store = JavaKeyStore.getInstance("PKCS12")
+      store.load(null, "qwerty".toCharArray)
+      val entry = new JavaKeyStore.TrustedCertificateEntry(caCert)
+      store.setEntry("cert-entry", entry, None.orNull)
+      store
+    }
+
+    (caKeyPair, caCert, trustedCertsKeyStoreProvider)
+  }
+
 }
