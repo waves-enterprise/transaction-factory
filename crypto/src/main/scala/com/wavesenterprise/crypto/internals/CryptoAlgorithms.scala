@@ -192,7 +192,10 @@ object CryptoAlgorithms {
     Either.cond(
       requiredOids.isEmpty || foundOids.nonEmpty,
       (),
-      PKIError(s"One of required oid [${requiredOids.mkString(",")}] not found in certificate (DN=${cert.getSubjectX500Principal})")
+      PKIError(
+        s"ExtendedKeyUsage of DN='${cert.getSubjectX500Principal}' does not contain any of the following expected OIDs: " +
+          s"[${requiredOids.mkString(",")}]"
+      )
     )
   }
 
