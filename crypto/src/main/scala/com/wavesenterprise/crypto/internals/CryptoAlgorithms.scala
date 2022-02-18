@@ -188,10 +188,12 @@ object CryptoAlgorithms {
   }
 
   private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[String]): Either[CryptoError, Unit] = {
-    val missingOids = requiredOids diff Option(cert.getExtendedKeyUsage).map(_.asScala.toSet).orEmpty
-    Either.cond(missingOids.isEmpty,
-                (),
-                PKIError(s"Required oids [${requiredOids.mkString(",")}] not found in certificate (DN=${cert.getSubjectX500Principal})"))
+    def foundOids: Set[String] = requiredOids intersect Option(cert.getExtendedKeyUsage).map(_.asScala.toSet).orEmpty
+    Either.cond(
+      requiredOids.isEmpty || foundOids.nonEmpty,
+      (),
+      PKIError(s"One of required oid [${requiredOids.mkString(",")}] not found in certificate (DN=${cert.getSubjectX500Principal})")
+    )
   }
 
   /** According to java-csp-5.0.42119-A/samples-sources/userSamples/CRLValidateCert.java */
