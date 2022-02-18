@@ -132,11 +132,11 @@ private[gost] abstract class JcspKeyStore(algorithms: GostAlgorithms, generatorK
   }
 }
 
-abstract class GostCryptoContext() extends CryptoContext with ScorexLogging { self =>
+abstract class GostCryptoContext(pkiRequiredOids: Set[String], crlCheckIsEnabled: Boolean) extends CryptoContext with ScorexLogging { self =>
 
   override type KeyPair0 = GostKeyPair
   override val isGost     = true
-  override val algorithms = new GostAlgorithms
+  override val algorithms = new GostAlgorithms(pkiRequiredOids, crlCheckIsEnabled)
 
   def toAlias(keyPair: GostKeyPair): String
 

@@ -39,7 +39,7 @@ object GostKeystoreSpec {
   val keyStoreDirName      = "/gost_keystore"
   val keyStorePassword     = "test keystore password"
   val testingChainId: Byte = 'T'.toByte
-  val gostContext: GostCryptoContext = new GostCryptoContext() {
+  val gostContext: GostCryptoContext = new GostCryptoContext(Set.empty, false) {
     override def toAlias(keyPair: GostKeyPair): String =
       Address.fromPublicKey(keyPair.getPublic.getEncoded, chainId = testingChainId).address
   }

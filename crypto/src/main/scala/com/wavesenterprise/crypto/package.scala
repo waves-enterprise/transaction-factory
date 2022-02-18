@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import com.wavesenterprise.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.crypto.internals._
 import com.wavesenterprise.crypto.internals.gost.{GostCryptoContext, GostKeyPair}
+import com.wavesenterprise.pki.CertChain
 import com.wavesenterprise.settings.CryptoSettings
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
@@ -71,7 +72,7 @@ package object crypto {
   lazy val context: CryptoContext = {
     cryptoSettings match {
       case CryptoSettings.GostCryptoSettings =>
-        new GostCryptoContext() {
+        new GostCryptoContext(Set.empty, false) { // TODO: use params from settings
           override def toAlias(keyPair: GostKeyPair): String =
             Address.fromPublicKey(keyPair.getPublic.getEncoded).address
         }
@@ -140,6 +141,12 @@ package object crypto {
 
   def verify(signature: Array[Byte], message: MessageToSign, publicKey: PublicKey): Boolean =
     algorithms.verify(Signature(signature), message, publicKey)
+
+  def verify(signature: Array[Byte], message: Array[Byte], certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
+    algorithms.verify(signature, message, certChain, timestamp)
+
+  def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
+    algorithms.validateCertChain(certChain, timestamp)
 
   def encrypt(data: Array[Byte], senderPrivateKey: PrivateKey, recipientPublicKey: PublicKey): Either[CryptoError, EncryptedForSingle] =
     context.algorithms.encrypt(data, senderPrivateKey, recipientPublicKey)

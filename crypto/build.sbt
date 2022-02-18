@@ -6,6 +6,8 @@ inConfig(Compile)(Seq(sourceGenerators += gostCryptoVersionSource))
 
 scalacOptions += "-Yresolve-term-conflict:object"
 
+libraryDependencies ++= Dependencies.commonsLang
+
 lazy val gostCryptoVersionSource = Def.task {
   val gostCryptoVersionFile: File = (sourceManaged in Compile).value / "com" / "wavesenterprise" / "CryptoVersion.scala"
 

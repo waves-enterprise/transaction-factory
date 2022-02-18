@@ -1,15 +1,22 @@
 package com.wavesenterprise.crypto.internals
 
-import java.security.{Provider, SecureRandom}
-import java.util
-import scorex.util.encode.Base58
+import cats.implicits._
+import com.wavesenterprise.pki.CertChain
+import monix.eval.Coeval
+import org.slf4j.{Logger, LoggerFactory}
 import scorex.crypto.hash.{Blake2b256, Keccak256}
 import scorex.crypto.signatures.{Curve25519, PrivateKey => PrivateKeyS, PublicKey => PublicKeyS, Signature => SignatureS}
+import scorex.util.encode.Base58
 
+import java.security.cert._
+import java.security.{Provider, SecureRandom, KeyStore => JavaKeyStore, PublicKey => JavaPublicKey}
+import java.time.Instant
+import java.util
+import java.util.{Collections, Date}
+import javax.net.ssl.{TrustManagerFactory, X509TrustManager}
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
 import scala.util.Try
-import cats.syntax.either._
-import org.slf4j.{Logger, LoggerFactory}
 
 trait CryptoAlgorithms[KP <: KeyPair] {
   type KeyPair0    = KP
@@ -24,11 +31,23 @@ trait CryptoAlgorithms[KP <: KeyPair] {
 
   protected val log: Logger = LoggerFactory.getLogger(this.getClass)
 
+  def pkiRequiredOids: Set[String]                             = Set.empty
+  def crlCheckIsEnabled: Boolean                               = false
+  def maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None
+
+  private val trustManagerFactoryProvider: Coeval[TrustManagerFactory] = Coeval.evalOnce {
+    val factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
+    factory.init(maybeTrustKeyStoreProvider.map(_.value()).orNull)
+    factory
+  }
+
   def generateKeyPair(): KeyPair0
 
   def generateSessionKey(): KeyPair0
 
   def publicKeyFromBytes(bytes: Array[Byte]): PublicKey0
+
+  def wrapPublicKey(publicKey: JavaPublicKey): PublicKey0
 
   def sessionKeyFromBytes(bytes: Array[Byte]): PublicKey0
 
@@ -40,9 +59,18 @@ trait CryptoAlgorithms[KP <: KeyPair] {
 
   def verify(signature: Array[Byte], message: Array[Byte], publicKey: PublicKey0): Boolean
 
-  def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte]): Boolean = {
+  def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte]): Boolean =
     verify(signature, message, publicKeyFromBytes(publicKey))
-  }
+
+  def verify(signature: Array[Byte], message: Array[Byte], certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
+    validateCertChain(certChain, timestamp) >> {
+      val publicKey        = wrapPublicKey(certChain.userCert.getPublicKey)
+      val signatureIsValid = verify(signature, message, publicKey)
+      Either.cond(signatureIsValid, (), PKIError(s"Invalid signature '${Base58.encode(signature)}'"))
+    }
+
+  def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
+    CryptoAlgorithms.validateCertChain(certChain, timestamp, pkiRequiredOids, crlCheckIsEnabled, trustManagerFactoryProvider.value())
 
   def buildEncryptor(senderPrivateKey: PrivateKey0,
                      recipientPublicKey: PublicKey0,
@@ -120,6 +148,84 @@ case class EncryptedForMany(encryptedData: Array[Byte], recipientPubKeyToWrapped
   }
 }
 
+object CryptoAlgorithms {
+
+  def validateCertChain(certChain: CertChain,
+                        timestamp: Long,
+                        requiredOids: Set[String],
+                        withCRLCheck: Boolean,
+                        trustManagerFactory: TrustManagerFactory): Either[CryptoError, Unit] =
+    for {
+      _ <- ensureDigitalSignatureKeyUsage(certChain.userCert)
+      _ <- checkRequiredCertOids(certChain.userCert, requiredOids)
+      _ <- certIsTrusted(certChain.caCert, trustManagerFactory)
+      _ <- validateCertPath(certChain, timestamp, withCRLCheck)
+    } yield ()
+
+  private def certIsTrusted(cert: X509Certificate, trustManagerFactory: TrustManagerFactory): Either[CryptoError, Unit] = {
+    val isTrusted = trustManagerFactory.getTrustManagers.exists {
+      case manager: X509TrustManager => manager.getAcceptedIssuers.contains(cert)
+    }
+
+    Either.cond(
+      isTrusted,
+      (),
+      PKIError(s"Root certificate (DN=${cert.getSubjectX500Principal}) is not trusted")
+    )
+  }
+
+  private def ensureDigitalSignatureKeyUsage(cert: X509Certificate): Either[CryptoError, Unit] = {
+    // digitalSignature is in first place in the returned array of booleans, so we check the head element
+    cert.getKeyUsage.headOption match {
+      case Some(true) =>
+        Right(())
+      case _ =>
+        Left(
+          PKIError(
+            s"Signature validation failed: 'digitalSignature' is not present in 'keyUsage' extension" +
+              s" of signer's certificate (DN=${cert.getSubjectX500Principal})"))
+    }
+  }
+
+  private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[String]): Either[CryptoError, Unit] = {
+    def foundOids: Set[String] = requiredOids intersect Option(cert.getExtendedKeyUsage).map(_.asScala.toSet).orEmpty
+    Either.cond(
+      requiredOids.isEmpty || foundOids.nonEmpty,
+      (),
+      PKIError(s"One of required oid [${requiredOids.mkString(",")}] not found in certificate (DN=${cert.getSubjectX500Principal})")
+    )
+  }
+
+  /** According to java-csp-5.0.42119-A/samples-sources/userSamples/CRLValidateCert.java */
+  private def validateCertPath(certChain: CertChain,
+                               timestamp: Long,
+                               withCRLCheck: Boolean,
+                               algorithm: String = "PKIX"): Either[CryptoError, Unit] = {
+    val fullChain   = certChain.userCert +: certChain.intermediateCerts :+ certChain.caCert
+    val store       = CertStore.getInstance("Collection", new CollectionCertStoreParameters(fullChain.asJavaCollection))
+    val trustAnchor = new TrustAnchor(certChain.caCert, None.orNull)
+    val params      = new PKIXBuilderParameters(Collections.singleton(trustAnchor), null)
+    params.setRevocationEnabled(false) // Must be enabled after cert path built
+    params.setDate(Date.from(Instant.ofEpochMilli(timestamp)))
+    params.addCertStore(store)
+    val selector = new X509CertSelector
+    selector.setCertificate(certChain.userCert)
+    params.setTargetCertConstraints(selector)
+
+    Either
+      .catchNonFatal {
+        val builderResult = CertPathBuilder.getInstance(algorithm).build(params)
+        val certPath      = builderResult.getCertPath
+        params.setRevocationEnabled(withCRLCheck)
+        CertPathValidator.getInstance(algorithm).validate(certPath, params)
+      }
+      .leftMap { error =>
+        PKIError(s"Certificate path validation error: $error")
+      }
+      .void
+  }
+}
+
 object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
   override val DigestSize: Int        = 32
   override val SignatureLength: Int   = 64
@@ -137,6 +243,9 @@ object WavesAlgorithms extends CryptoAlgorithms[WavesKeyPair] {
   override def generateSessionKey(): WavesKeyPair = generateKeyPair()
 
   override def publicKeyFromBytes(bytes: Array[Byte]): WavesPublicKey = WavesPublicKey(bytes)
+
+  override def wrapPublicKey(publicKey: JavaPublicKey): WavesPublicKey =
+    publicKeyFromBytes(publicKey.getEncoded)
 
   override def sessionKeyFromBytes(bytes: Array[Byte]): PublicKey0 = publicKeyFromBytes(bytes)
 

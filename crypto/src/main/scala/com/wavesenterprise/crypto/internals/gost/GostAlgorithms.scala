@@ -2,6 +2,7 @@ package com.wavesenterprise.crypto.internals.gost
 
 import cats.syntax.either._
 import com.wavesenterprise.crypto.internals._
+import monix.eval.Coeval
 import ru.CryptoPro.Crypto.CryptoProvider
 import ru.CryptoPro.JCP.JCP
 import ru.CryptoPro.JCP.params.{CryptDhAllowedSpec, CryptParamsSpec, Kexp15ParamsSpec}
@@ -15,8 +16,12 @@ import java.security.{PublicKey => _, _}
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.{Cipher, KeyAgreement, KeyGenerator}
 import scala.util.Try
+import java.security.{SecureRandom, KeyStore => JavaKeyStore}
 
-class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
+class GostAlgorithms(override val pkiRequiredOids: Set[String],
+                     override val crlCheckIsEnabled: Boolean,
+                     override val maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None)
+    extends CryptoAlgorithms[GostKeyPair] {
 
   Security.addProvider(new JCSP())
   Security.addProvider(new RevCheck())
@@ -98,6 +103,8 @@ class GostAlgorithms extends CryptoAlgorithms[GostKeyPair] {
   }
 
   override def publicKeyFromBytes(bytes: Array[Byte]): GostPublicKey = GostPublicKey.withAsn1(bytes)
+
+  override def wrapPublicKey(publicKey: security.PublicKey): GostPublicKey = GostPublicKey(publicKey)
 
   private def messageDigestInstance() = MessageDigest.getInstance(JCP.GOST_DIGEST_2012_256_NAME, ProviderName)
   private def cspSignatureInstance()  = Signature.getInstance(JCP.GOST_SIGN_2012_256_NAME, ProviderName)

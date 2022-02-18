@@ -50,7 +50,7 @@ object Global extends CommonGlobal {
 
 object GostGlobal extends CommonGlobal {
 
-  val algorithms = new GostAlgorithms
+  val algorithms = new GostAlgorithms(Set.empty, false) // TODO: use params from settings
 
   def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean = {
     Try(algorithms.verify(sig, message, pub)).getOrElse(false)
