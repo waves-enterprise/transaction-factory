@@ -142,7 +142,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
         val certChain = CertChain(caCert, Seq.empty, userCert)
 
         algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe
-          Left(PKIError(s"One of required oid [$pkiRequiredOidStr] not found in certificate (DN=$userSubject)"))
+          Left(PKIError(s"ExtendedKeyUsage of DN='$userSubject' does not contain any of the following expected OIDs: [${pkiRequiredOidStr}]"))
       }
 
       "verification error when root cert is not trusted" in {
