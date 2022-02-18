@@ -156,7 +156,7 @@ object CryptoAlgorithms {
                         withCRLCheck: Boolean,
                         trustManagerFactory: TrustManagerFactory): Either[CryptoError, Unit] =
     for {
-      _ <- checkKeyUsage(certChain.userCert)
+      _ <- ensureDigitalSignatureKeyUsage(certChain.userCert)
       _ <- checkRequiredCertOids(certChain.userCert, requiredOids)
       _ <- certIsTrusted(certChain.caCert, trustManagerFactory)
       _ <- validateCertPath(certChain, timestamp, withCRLCheck)
@@ -174,7 +174,8 @@ object CryptoAlgorithms {
     )
   }
 
-  private def checkKeyUsage(cert: X509Certificate): Either[CryptoError, Unit] =
+  private def ensureDigitalSignatureKeyUsage(cert: X509Certificate): Either[CryptoError, Unit] = {
+    // digitalSignature is in first place in the returned array of booleans, so we check the head element
     cert.getKeyUsage.headOption match {
       case Some(true) =>
         Right(())
@@ -184,6 +185,7 @@ object CryptoAlgorithms {
             s"Signature validation failed: 'digitalSignature' is not present in 'keyUsage' extension" +
               s" of signer's certificate (DN=${cert.getSubjectX500Principal})"))
     }
+  }
 
   private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[String]): Either[CryptoError, Unit] = {
     val missingOids = requiredOids diff Option(cert.getExtendedKeyUsage).map(_.asScala.toSet).orEmpty
