@@ -2,7 +2,7 @@ package com.wavesenterprise.crypto.internals.pki
 
 import enumeratum.{Enum, EnumEntry}
 import enumeratum.EnumEntry.{Uncapitalised, Uppercase}
-import pureconfig.{ConfigFieldMapping, ConfigReader}
+import pureconfig.ConfigReader
 import pureconfig._
 import pureconfig.generic.auto._
 import pureconfig.generic.ProductHint
