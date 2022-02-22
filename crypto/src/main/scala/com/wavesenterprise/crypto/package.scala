@@ -152,8 +152,7 @@ package object crypto {
 
   def validateCertChains(certChains: List[CertChain], timestamp: Long): Either[CryptoError, Unit] =
     certChains
-      .map(chain => algorithms.validateCertChain(chain, timestamp))
-      .sequence
+      .traverse(chain => algorithms.validateCertChain(chain, timestamp))
       .void
 
   def encrypt(data: Array[Byte], senderPrivateKey: PrivateKey, recipientPublicKey: PublicKey): Either[CryptoError, EncryptedForSingle] =

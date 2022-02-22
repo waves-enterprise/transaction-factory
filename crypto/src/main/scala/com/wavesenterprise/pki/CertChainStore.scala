@@ -58,7 +58,7 @@ class CertChainStore private (
   }
 
   def getCertChains: Either[CryptoError, List[CertChain]] =
-    clientCerts.map(cert => getCertChain(cert)).toList.sequence
+    clientCerts.toList.traverse(cert => getCertChain(cert))
 
   @tailrec
   private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): Seq[X509Certificate] = {

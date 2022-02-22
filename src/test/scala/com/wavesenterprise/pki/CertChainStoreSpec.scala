@@ -120,10 +120,8 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
     }
 
     "get cert chains" in {
-      val allCertsChains = certStore.clientCertificates
-        .map(cert => certStore.getCertChain(cert))
-        .toList
-        .sequence
+      val allCertsChains = certStore.clientCertificates.toList
+        .traverse(cert => certStore.getCertChain(cert))
         .right
         .get
 
