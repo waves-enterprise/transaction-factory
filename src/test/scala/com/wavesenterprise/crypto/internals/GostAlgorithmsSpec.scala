@@ -356,7 +356,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       .asInstanceOf[X509Certificate]
   }
 
-  private def generateCertificateRequest(keyUsages: Seq[Int] = Seq.empty, extKeyUsages: Seq[Array[Int]] = Seq.empty): GostCertificateRequest = {
+  private def generateCertificateRequest(keyUsages: Seq[Int], extKeyUsages: Seq[Array[Int]]): GostCertificateRequest = {
     val request = new GostCertificateRequest(JCSP.PROVIDER_NAME)
 
     if (keyUsages.nonEmpty) {
