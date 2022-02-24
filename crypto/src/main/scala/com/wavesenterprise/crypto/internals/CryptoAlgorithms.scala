@@ -69,6 +69,21 @@ trait CryptoAlgorithms[KP <: KeyPair] {
       Either.cond(signatureIsValid, (), PKIError(s"Invalid signature '${Base58.encode(signature)}'"))
     }
 
+  def getCaCerts(fingerprints: List[String]): List[X509Certificate] =
+    trustManagerFactoryProvider
+      .value()
+      .getTrustManagers
+      .flatMap {
+        case manager: X509TrustManager =>
+          manager.getAcceptedIssuers.filter { caCert =>
+            import org.apache.commons.codec.digest.DigestUtils
+            val caCertFingerprint = DigestUtils.sha1Hex(caCert.getEncoded)
+
+            fingerprints.contains(caCertFingerprint)
+          }
+      }
+      .toList
+
   def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     CryptoAlgorithms.validateCertChain(certChain, timestamp, pkiRequiredOids, crlCheckIsEnabled, trustManagerFactoryProvider.value())
 

@@ -12,6 +12,7 @@ import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKe
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.Provider
+import java.security.cert.X509Certificate
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
@@ -144,6 +145,9 @@ package object crypto {
 
   def verify(signature: Array[Byte], message: Array[Byte], certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     algorithms.verify(signature, message, certChain, timestamp)
+
+  def getCaCerts(fingerprints: List[String]): List[X509Certificate] =
+    algorithms.getCaCerts(fingerprints: List[String])
 
   def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     algorithms.validateCertChain(certChain, timestamp)
