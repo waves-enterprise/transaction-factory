@@ -2,14 +2,13 @@ package com.wavesenterprise.crypto.internals.pki
 
 import enumeratum.{Enum, EnumEntry}
 import enumeratum.EnumEntry.{Uncapitalised, Uppercase}
-import pureconfig.ConfigReader
 import pureconfig._
+import pureconfig.ConfigReader
 import pureconfig.generic.auto._
 import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
 import ru.CryptoPro.JCPRequest
-import ru.CryptoPro.reprov.x509.{DNSName, GeneralName, GeneralNameInterface, IPAddressName, X500Name}
-import pureconfig.module.enumeratum._
+import ru.CryptoPro.reprov.x509._
 
 import scala.collection.immutable
 
