@@ -169,6 +169,7 @@ object FieldType extends Enum[FieldType] {
         scalaImports = Set(
           "com.wavesenterprise.transaction.smart.script.Script",
           "com.wavesenterprise.serialization.BinarySerializer",
+          "com.wavesenterprise.serialization.ModelsBinarySerializer",
           "com.wavesenterprise.transaction.smart.script.ScriptReader",
           ProtoAdapterImport
         ),
@@ -182,7 +183,7 @@ object FieldType extends Enum[FieldType] {
     }
 
     override val binaryReader: BinaryReader = { c =>
-      s"val (${c.field}, ${c.field}End) = BinarySerializer.parseScript(${c.bytes}, ${c.offset})"
+      s"val (${c.field}, ${c.field}End) = ModelsBinarySerializer.parseScript(${c.bytes}, ${c.offset})"
     }
 
     override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
@@ -890,6 +891,7 @@ object FieldType extends Enum[FieldType] {
         scalaImports = Set(
           "com.wavesenterprise.transaction.transfer.ParsedTransfer",
           "com.wavesenterprise.serialization.BinarySerializer",
+          "com.wavesenterprise.serialization.ModelsBinarySerializer",
           ProtoAdapterImport,
           "cats.implicits._"
         ),
@@ -901,11 +903,11 @@ object FieldType extends Enum[FieldType] {
       with ProtoCompatibleType {
 
     override val binaryWriter: BinaryWriter = { c =>
-      s"BinarySerializer.writeTransferBatch(${c.field}, ${c.output})"
+      s"ModelsBinarySerializer.writeTransferBatch(${c.field}, ${c.output})"
     }
 
     override val binaryReader: BinaryReader = { c =>
-      s"val (${c.field}, ${c.field}End) = BinarySerializer.parseTransferBatch(${c.bytes}, ${c.offset})"
+      s"val (${c.field}, ${c.field}End) = ModelsBinarySerializer.parseTransferBatch(${c.bytes}, ${c.offset})"
     }
 
     override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
@@ -990,7 +992,7 @@ object FieldType extends Enum[FieldType] {
       extends FieldType(
         scalaType = "AtomicBadge",
         protoType = "AtomicBadge",
-        scalaImports = Set("com.wavesenterprise.transaction.AtomicBadge", "com.wavesenterprise.serialization.BinarySerializer", ProtoAdapterImport),
+        scalaImports = Set("com.wavesenterprise.transaction.AtomicBadge", "com.wavesenterprise.serialization.BinarySerializer", "com.wavesenterprise.serialization.ModelsBinarySerializer", ProtoAdapterImport),
         protoImports = Set("atomic_badge.proto"),
         isMessageProtoType = true,
         typeScriptType = Some("AtomicBadge")
@@ -999,11 +1001,11 @@ object FieldType extends Enum[FieldType] {
       with ProtoCompatibleType {
 
     override val binaryWriter: BinaryWriter = { c =>
-      s"BinarySerializer.writeAtomicBadge(${c.field}, ${c.output})"
+      s"ModelsBinarySerializer.writeAtomicBadge(${c.field}, ${c.output})"
     }
 
     override val binaryReader: BinaryReader = { c =>
-      s"val (${c.field}, ${c.field}End) = BinarySerializer.parseAtomicBadge(${c.bytes}, ${c.offset})"
+      s"val (${c.field}, ${c.field}End) = ModelsBinarySerializer.parseAtomicBadge(${c.bytes}, ${c.offset})"
     }
 
     override val protoToVanillaAdapter: Option[ProtoAdapter] = Some { c =>
