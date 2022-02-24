@@ -16,6 +16,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
 
+import cats.implicits._
+
 package crypto {
   object CryptoInitializer {
     private[crypto] val cryptoSettingsPromise: Promise[CryptoSettings] = Promise()
@@ -147,6 +149,11 @@ package object crypto {
 
   def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     algorithms.validateCertChain(certChain, timestamp)
+
+  def validateCertChains(certChains: List[CertChain], timestamp: Long): Either[CryptoError, Unit] =
+    certChains
+      .traverse(chain => algorithms.validateCertChain(chain, timestamp))
+      .void
 
   def encrypt(data: Array[Byte], senderPrivateKey: PrivateKey, recipientPublicKey: PublicKey): Either[CryptoError, EncryptedForSingle] =
     context.algorithms.encrypt(data, senderPrivateKey, recipientPublicKey)

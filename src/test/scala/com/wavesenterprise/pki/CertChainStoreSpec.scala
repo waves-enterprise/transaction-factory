@@ -17,6 +17,8 @@ import java.util.Calendar
 import scala.collection.mutable
 import scala.util.Random
 
+import cats.implicits._
+
 class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks {
   private val keypairGenerator: KeyPairGenerator = {
     val kpGen = KeyPairGenerator.getInstance("RSA")
@@ -115,6 +117,15 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
 
     "validate certificates" in {
       certStore.toSet should contain theSameElementsAs certsByDN.values.toSet
+    }
+
+    "get cert chains" in {
+      val allCertsChains = certStore.clientCertificates.toList
+        .traverse(cert => certStore.getCertChain(cert))
+        .right
+        .get
+
+      certStore.getCertChains.right.get should contain theSameElementsAs allCertsChains
     }
   }
 
