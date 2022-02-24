@@ -1,16 +1,16 @@
 package com.wavesenterprise
 
-import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
 import com.wavesenterprise.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.crypto.internals._
 import com.wavesenterprise.crypto.internals.gost.{GostCryptoContext, GostKeyPair}
 import com.wavesenterprise.pki.CertChain
-import com.wavesenterprise.settings.CryptoSettings
+import com.wavesenterprise.settings.{CryptoSettings, CryptoType}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKeyBytes}
 
+import java.io.File
+import java.nio.charset.StandardCharsets.UTF_8
 import java.security.Provider
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
@@ -23,7 +23,7 @@ package crypto {
     def init(cryptoSettings: CryptoSettings): Either[CryptoError, Unit] = {
       for {
         _ <- Either.cond(!cryptoSettingsPromise.isCompleted, (), GenericError("Initialization error: Crypto was already initialized!"))
-        isGostCryptoExpected = cryptoSettings.isInstanceOf[CryptoSettings.GostCryptoSettings.type]
+        isGostCryptoExpected = cryptoSettings.isInstanceOf[CryptoSettings.GostCryptoSettings]
         _ <- CheckEnvironment.checkCryptoEnv(isGostCryptoExpected)
       } yield {
         if (isGostCryptoExpected) Try(java.awt.Toolkit.getDefaultToolkit) // CryptoPro fix. Entropy filling does not work on macOS without this.
@@ -38,19 +38,17 @@ package object crypto {
     .getOrElse(Await.result(CryptoInitializer.cryptoSettingsPromise.future, 7.seconds))
 
   def readEnvForCryptoSettings(): Option[CryptoSettings] = {
-    val wavesCryptoSettingKey = "node.waves-crypto"
-    val positiveValues        = List("yes", "true").map(_.toUpperCase)
-    val negativeValues        = List("no", "false").map(_.toUpperCase)
+    val wavesCryptoSettingKey = "node.crypto.type"
 
-    Option(System.getProperty(wavesCryptoSettingKey)).flatMap {
-      case wavesCryptoSettingValue if negativeValues.contains(wavesCryptoSettingValue.toUpperCase) =>
-        Some(CryptoSettings.GostCryptoSettings)
-
-      case wavesCryptoSettingValue if positiveValues.contains(wavesCryptoSettingValue.toUpperCase) =>
-        Some(CryptoSettings.WavesCryptoSettings)
-
-      case unsupportedValue =>
-        throw new IllegalArgumentException(s"Unacceptable value for parameter '$wavesCryptoSettingKey': '$unsupportedValue'")
+    Option(System.getProperty(wavesCryptoSettingKey)).map { str =>
+      CryptoType
+        .fromStr(str)
+        .fold {
+          throw new IllegalArgumentException(s"Unacceptable value for parameter '$wavesCryptoSettingKey': '$str'")
+        } {
+          case CryptoType.GOST  => CryptoSettings.GostCryptoSettings()
+          case CryptoType.WAVES => CryptoSettings.WavesCryptoSettings
+        }
     }
   }
 
@@ -71,7 +69,7 @@ package object crypto {
 
   lazy val context: CryptoContext = {
     cryptoSettings match {
-      case CryptoSettings.GostCryptoSettings =>
+      case _: CryptoSettings.GostCryptoSettings =>
         new GostCryptoContext(Set.empty, false) { // TODO: use params from settings
           override def toAlias(keyPair: GostKeyPair): String =
             Address.fromPublicKey(keyPair.getPublic.getEncoded).address
