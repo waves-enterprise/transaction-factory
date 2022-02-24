@@ -165,7 +165,7 @@ Test / fork := true
 Test / javaOptions ++= Seq(
   "-XX:+IgnoreUnrecognizedVMOptions",
   "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
-  "-Dnode.waves-crypto=true"
+  "-Dnode.crypto.type=WAVES"
 )
 Test / parallelExecution := true
 

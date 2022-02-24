@@ -1,6 +1,6 @@
 package com.wavesenterprise.pki
 
-import cats.implicits.{catsStdInstancesForEither, catsSyntaxFlatMapOps}
+import cats.implicits._
 import com.google.common.io.ByteStreams.newDataOutput
 import com.wavesenterprise.crypto.internals.{CryptoError, PKIError}
 import com.wavesenterprise.serialization.BinarySerializer
@@ -35,11 +35,7 @@ class CertChainStore private (
     */
   def toSet: Set[X509Certificate] = readLock(certsByDN.values.toSet)
 
-  /**
-    * @return Certificates chain ordered from client to CA certificate.
-    */
-  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] = {
-    val subject = userCert.getSubjectX500Principal
+  private def getCertChainBySubject(subject: X500Principal): Either[CryptoError, CertChain] = {
     readLock {
       if (clientCerts.contains(subject)) {
         val chain = buildChain(subject)
@@ -51,6 +47,21 @@ class CertChainStore private (
       }
     }
   }
+
+  /**
+    * @return Certificates chain ordered from client to CA certificate.
+    */
+  def getCertChain(userCert: X509Certificate): Either[CryptoError, CertChain] = {
+    val subject = userCert.getSubjectX500Principal
+    getCertChainBySubject(subject)
+  }
+
+  def getCertChain(certDn: X500Principal): Either[CryptoError, CertChain] = {
+    getCertChainBySubject(certDn)
+  }
+
+  def getCertChains: Either[CryptoError, List[CertChain]] =
+    clientCerts.toList.traverse(cert => getCertChain(cert))
 
   @tailrec
   private def buildChain(certDn: X500Principal, acc: List[X509Certificate] = List.empty): Seq[X509Certificate] = {
