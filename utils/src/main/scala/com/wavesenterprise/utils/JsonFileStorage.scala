@@ -81,18 +81,18 @@ object JsonFileStorage {
 
   def load[T](path: String, key: Option[SecretKeySpec] = None)(implicit r: Reads[T]): Either[String, T] =
     ResourceUtils.withResource(Source.fromFile(path)) { file =>
-      val data = file.mkString
+      val data = file.mkString.trim
 
       key
         .fold[Either[String, String]](Right(data)) { k =>
           ScorexBase64
             .decode(data)
             .toEither
-            .leftMap(_ => "Failed to decode Base64 data: file may be corrupted")
+            .leftMap(err => s"Failed to decode Base64 data: ${err.getMessage}")
             .flatMap(decrypt(k, _))
         }
         .flatMap { jsonStr =>
-          Try(Json.parse(jsonStr).as[T]).toEither.leftMap(_ => "Failed to parse JSON")
+          Try(Json.parse(jsonStr).as[T]).toEither.leftMap(err => s"Failed to parse JSON: ${err.getMessage}")
         }
     }
 
