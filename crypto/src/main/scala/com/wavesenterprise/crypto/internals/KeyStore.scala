@@ -12,6 +12,7 @@ abstract class KeyStore[KeyPair0 <: KeyPair](storageFolder: Option[File], passwo
   def generateAndStore(pwd: Option[Array[Char]]): Option[KeyPair0#PublicKey0]
   def aliases(): Seq[String]
   def containsAlias(alias: String): Either[CryptoError, Boolean]
+  def additionalStorageValidation(): Unit
 }
 
 trait KeyStoreProvider[KeyPair0 <: KeyPair] {
