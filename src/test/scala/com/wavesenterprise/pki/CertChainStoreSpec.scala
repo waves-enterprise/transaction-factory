@@ -50,6 +50,21 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
 
     val certStore = maybeCertStore.right.get
 
+    "from bytes" in {
+      val bytes         = certStore.bytes
+      val parsingResult = CertChainStore.fromBytes(bytes)
+      parsingResult shouldBe 'right
+
+      val Right((parsedChain, offset)) = parsingResult
+      parsedChain shouldBe certStore
+      offset shouldBe bytes.length
+
+      val (parsedChain2, offset2) = CertChainStore.fromBytesUnsafe(bytes)
+
+      parsedChain shouldBe parsedChain2
+      offset shouldBe offset2
+    }
+
     "with valid chains" in {
       val certFChain = certStore.getCertChain(certsByDN("CN=cF"))
       val certBChain = certStore.getCertChain(certsByDN("CN=cB"))
