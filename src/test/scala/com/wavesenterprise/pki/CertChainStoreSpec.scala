@@ -1,32 +1,36 @@
 package com.wavesenterprise.pki
 
+import cats.implicits._
 import com.wavesenterprise.crypto.internals.PKIError
 import org.bouncycastle.asn1.x500.X500Name
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.cert.X509v3CertificateBuilder
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.scalatest.{FreeSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-import java.math.BigInteger
 import java.security._
 import java.security.cert.X509Certificate
-import java.util.Calendar
 import scala.collection.mutable
 import scala.util.Random
 
-import cats.implicits._
+class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks with CertChainStoreGen {
 
-class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks {
-  private val keypairGenerator: KeyPairGenerator = {
-    val kpGen = KeyPairGenerator.getInstance("RSA")
-    kpGen.initialize(512, new SecureRandom())
-    kpGen
+  "CertStore" - {
+    "serialization round trip" in {
+      forAll(chainGen) { chain =>
+        val bytes         = chain.bytes
+        val parsingResult = CertChainStore.fromBytes(bytes)
+        parsingResult shouldBe 'right
+
+        val Right((parsedChain, offset)) = parsingResult
+        parsedChain shouldBe chain
+        offset shouldBe bytes.length
+
+        val (parsedChain2, offset2) = CertChainStore.fromBytesUnsafe(bytes)
+
+        parsedChain shouldBe parsedChain2
+        offset shouldBe offset2
+      }
+    }
   }
-
-  private val provider = new BouncyCastleProvider()
 
   "build CertStore" - {
     val caKeyPair                               = keypairGenerator.generateKeyPair()
@@ -49,21 +53,6 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
     }.toMap
 
     val certStore = maybeCertStore.right.get
-
-    "from bytes" in {
-      val bytes         = certStore.bytes
-      val parsingResult = CertChainStore.fromBytes(bytes)
-      parsingResult shouldBe 'right
-
-      val Right((parsedChain, offset)) = parsingResult
-      parsedChain shouldBe certStore
-      offset shouldBe bytes.length
-
-      val (parsedChain2, offset2) = CertChainStore.fromBytesUnsafe(bytes)
-
-      parsedChain shouldBe parsedChain2
-      offset shouldBe offset2
-    }
 
     "with valid chains" in {
       val certFChain = certStore.getCertChain(certsByDN("CN=cF"))
@@ -164,48 +153,5 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
     val certF   = generateCert(new X500Name(certE.getSubjectX500Principal.getName), clientKeyPair.getPrivate, clientKeyPair.getPublic, "cF")
 
     (List(caCertA, caCertB), List(certA, certC, certE), List(certB, certD, certF))
-  }
-
-  private def generateSelfSignedCert(keyPair: KeyPair, dn: String): X509Certificate = {
-    val subject = new X500Name(s"CN=$dn")
-    val serial  = Random.nextInt(Short.MaxValue)
-    val endTime = Calendar.getInstance()
-    endTime.add(Calendar.YEAR, 10)
-    val builder = new X509v3CertificateBuilder(
-      subject,
-      BigInteger.valueOf(serial),
-      Calendar.getInstance().getTime,
-      endTime.getTime,
-      subject,
-      SubjectPublicKeyInfo.getInstance(keyPair.getPublic.getEncoded)
-    )
-    val contentSigner         = new JcaContentSignerBuilder("SHA1withRSA").build(keyPair.getPrivate)
-    val x509CertificateHolder = builder.build(contentSigner)
-
-    new JcaX509CertificateConverter().setProvider(provider).getCertificate(x509CertificateHolder)
-  }
-
-  private def generateCert(
-      issuer: X500Name,
-      issuerPrivateKey: PrivateKey,
-      subjectPublicKey: PublicKey,
-      dn: String
-  ): X509Certificate = {
-    val subject = new X500Name(s"CN=$dn")
-    val serial  = Random.nextInt(Short.MaxValue)
-    val endTime = Calendar.getInstance()
-    endTime.add(Calendar.YEAR, 10)
-    val builder = new X509v3CertificateBuilder(
-      issuer,
-      BigInteger.valueOf(serial),
-      Calendar.getInstance().getTime,
-      endTime.getTime,
-      subject,
-      SubjectPublicKeyInfo.getInstance(subjectPublicKey.getEncoded)
-    )
-    val contentSigner         = new JcaContentSignerBuilder("SHA1withRSA").build(issuerPrivateKey)
-    val x509CertificateHolder = builder.build(contentSigner)
-
-    new JcaX509CertificateConverter().setProvider(provider).getCertificate(x509CertificateHolder)
   }
 }
