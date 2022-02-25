@@ -128,6 +128,8 @@ class WavesKeyStore(storageFolder: Option[File], password: Array[Char], chainId:
       acc.publicKey
     }
   }
+
+  override def additionalStorageValidation(): Unit = require(walletData.entries.nonEmpty, "Wallet can't be empty for Waves cryptography")
 }
 
 object WavesKeyStore {

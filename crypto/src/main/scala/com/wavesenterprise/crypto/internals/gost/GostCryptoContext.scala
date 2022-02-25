@@ -148,6 +148,7 @@ abstract class GostCryptoContext() extends CryptoContext with ScorexLogging { se
 
     new JcspKeyStore(algorithms, file, password) {
       override def toAlias(keyPair: GostKeyPair): String = self.toAlias(keyPair)
+      override def additionalStorageValidation(): Unit   = ()
     }
   }
 }
