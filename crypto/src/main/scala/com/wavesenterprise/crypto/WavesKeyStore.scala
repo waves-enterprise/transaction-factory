@@ -76,12 +76,15 @@ class WavesKeyStore(storageFolder: Option[File], password: Array[Char], chainId:
     } { file =>
       Either.cond(file.exists(), (), "File doesn't exist") >>
         Either.cond(Files.isReadable(file.toPath), (), "File has no read access rights") >>
-        Either.cond(file.length() > 0, (), "File is empty") >>
-        (try {
-          JsonFileStorage.load[WalletFileData](file.getCanonicalPath, Some(key))
-        } catch {
-          case NonFatal(cause) => throw new RuntimeException(s"Unexpected error while reading wallet file '$file'", cause)
-        }) match {
+        (if (file.length() > 0) {
+           try {
+             JsonFileStorage.load[WalletFileData](file.getCanonicalPath, Some(key))
+           } catch {
+             case NonFatal(cause) => throw new RuntimeException(s"Unexpected error while reading wallet file '$file'", cause)
+           }
+         } else {
+           Right(WalletFileData(Seq.empty))
+         }) match {
         case Right(data) => data
         case Left(err)   => throw new IllegalStateException(s"Failed to read wallet file '$file': $err")
       }
