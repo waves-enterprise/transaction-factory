@@ -2,7 +2,9 @@ package com.wavesenterprise.crypto.internals
 
 import cats.implicits._
 import com.wavesenterprise.pki.CertChain
+import com.wavesenterprise.utils.Base64
 import monix.eval.Coeval
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.{Logger, LoggerFactory}
 import scorex.crypto.hash.{Blake2b256, Keccak256}
 import scorex.crypto.signatures.{Curve25519, PrivateKey => PrivateKeyS, PublicKey => PublicKeyS, Signature => SignatureS}
@@ -16,7 +18,8 @@ import java.util.{Collections, Date}
 import javax.net.ssl.{TrustManagerFactory, X509TrustManager}
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+import scala.util.chaining._
 
 trait CryptoAlgorithms[KP <: KeyPair] {
   type KeyPair0    = KP
@@ -69,20 +72,26 @@ trait CryptoAlgorithms[KP <: KeyPair] {
       Either.cond(signatureIsValid, (), PKIError(s"Invalid signature '${Base58.encode(signature)}'"))
     }
 
-  def getCaCerts(fingerprints: List[String]): List[X509Certificate] =
-    trustManagerFactoryProvider
-      .value()
-      .getTrustManagers
-      .flatMap {
-        case manager: X509TrustManager =>
-          manager.getAcceptedIssuers.filter { caCert =>
-            import org.apache.commons.codec.digest.DigestUtils
-            val caCertFingerprint = DigestUtils.sha1Hex(caCert.getEncoded)
-
-            fingerprints.contains(caCertFingerprint)
-          }
+  def getCaCerts(fingerprints: List[String]): Either[CryptoError, List[X509Certificate]] = {
+    for {
+      decodedFingerprints <- fingerprints.traverse(f => Base64.decode(f)) match {
+        case Failure(ex)      => Left(GenericError(s"Failed decrypt CA certs fingerprints from Base64, cause: ${ex.getMessage}"))
+        case Success(decoded) => Right(decoded)
       }
-      .toList
+
+      caCerts = trustManagerFactoryProvider
+        .value()
+        .getTrustManagers
+        .flatMap {
+          case manager: X509TrustManager =>
+            manager.getAcceptedIssuers.filter { caCert =>
+              val caCertFingerprint = DigestUtils.sha1Hex(caCert.getEncoded)
+              decodedFingerprints.contains(caCertFingerprint.getBytes)
+            }
+        }
+        .toList
+    } yield caCerts
+  }
 
   def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     CryptoAlgorithms.validateCertChain(certChain, timestamp, pkiRequiredOids, crlCheckIsEnabled, trustManagerFactoryProvider.value())
