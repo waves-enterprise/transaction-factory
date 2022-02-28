@@ -146,7 +146,7 @@ package object crypto {
   def verify(signature: Array[Byte], message: Array[Byte], certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
     algorithms.verify(signature, message, certChain, timestamp)
 
-  def getCaCerts(fingerprints: List[String]): List[X509Certificate] =
+  def getCaCerts(fingerprints: List[String]): Either[CryptoError, List[X509Certificate]] =
     algorithms.getCaCerts(fingerprints: List[String])
 
   def validateCertChain(certChain: CertChain, timestamp: Long): Either[CryptoError, Unit] =
