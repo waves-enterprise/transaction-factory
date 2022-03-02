@@ -85,8 +85,8 @@ trait CryptoAlgorithms[KP <: KeyPair] {
         .flatMap {
           case manager: X509TrustManager =>
             manager.getAcceptedIssuers.filter { caCert =>
-              val caCertFingerprint = DigestUtils.sha1Hex(caCert.getEncoded)
-              decodedFingerprints.contains(caCertFingerprint.getBytes)
+              val caCertFingerprint = DigestUtils.sha1(caCert.getEncoded)
+              decodedFingerprints.contains(caCertFingerprint)
             }
         }
         .toList
