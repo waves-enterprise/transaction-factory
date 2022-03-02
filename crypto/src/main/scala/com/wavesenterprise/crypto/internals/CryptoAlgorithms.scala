@@ -19,7 +19,6 @@ import javax.net.ssl.{TrustManagerFactory, X509TrustManager}
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-import scala.util.chaining._
 
 trait CryptoAlgorithms[KP <: KeyPair] {
   type KeyPair0    = KP
