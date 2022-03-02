@@ -1,7 +1,10 @@
 package com.wavesenterprise.pki
 
 import cats.implicits._
+import com.google.common.io.ByteStreams.newDataOutput
 import com.wavesenterprise.crypto.internals.{CryptoError, PKIError}
+import com.wavesenterprise.serialization.BinarySerializer
+import com.wavesenterprise.utils.EitherUtils.EitherExt
 import com.wavesenterprise.utils.ReadWriteLocking
 
 import java.security.cert.X509Certificate
@@ -166,13 +169,39 @@ class CertChainStore private (
       case (root, neighbours) => this.certsGraph.getOrElseUpdate(root, mutable.Set.empty) ++= neighbours
     }
   }
+
+  def bytes: Array[Byte] = {
+    //noinspection UnstableApiUsage
+    val output = newDataOutput()
+    BinarySerializer.writeBigIterable(certsByDN.values, BinarySerializer.writeX509Cert, output)
+    output.toByteArray
+  }
+
+  override def equals(other: Any): Boolean =
+    other match {
+      case that: CertChainStore =>
+        eq(that) || certsByDN == that.certsByDN
+      case _ => false
+    }
+
+  override def hashCode(): Int =
+    certsByDN.hashCode()
 }
 
 object CertChainStore {
+
   def fromCertificates(certs: Seq[X509Certificate]): Either[CryptoError, CertChainStore] = {
     val certsByDN = mutable.HashMap.empty[X500Principal, X509Certificate]
     buildCertStore(certs, certsByDN)
   }
+
+  def fromBytes(bytes: Array[Byte], position: Int = 0): Either[CryptoError, (CertChainStore, Int)] = {
+    val (certs, end) = BinarySerializer.parseBigList(bytes, BinarySerializer.parseX509Cert, position)
+    fromCertificates(certs).map(_ -> end)
+  }
+
+  def fromBytesUnsafe(bytes: Array[Byte], position: Int = 0): (CertChainStore, Int) =
+    fromBytes(bytes, position).explicitGet()
 
   private def buildCertStore(
       newCerts: Seq[X509Certificate],
