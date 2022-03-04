@@ -25,6 +25,8 @@ message NodeConfigResponse {
   int32 max_transactions_in_micro_block = 7;
   google.protobuf.Duration min_micro_block_age = 8;
   google.protobuf.Duration micro_block_interval = 9;
+  PkiMode pki_mode = 10;
+  repeated string required_oids = 11;
   oneof block_timing {
     PoaRoundInfo poa_round_info = 101;
     PosRoundInfo pos_round_info = 102;
