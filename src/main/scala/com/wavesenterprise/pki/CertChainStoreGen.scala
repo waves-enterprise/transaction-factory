@@ -39,10 +39,10 @@ trait CertChainStoreGen extends TestCertBuilder {
       Gen.sequence {
         (1 to num).map { chainId =>
           for {
-            deep <- Gen.chooseNum(1, 5)
-            name <- Gen.alphaStr.filter(_.nonEmpty)
+            depth <- Gen.chooseNum(1, 5)
+            name  <- Gen.alphaStr.filter(_.nonEmpty)
           } yield {
-            buildChain(name, chainId, deep)
+            buildChain(name, chainId, depth)
           }
         }
       }
