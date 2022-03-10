@@ -190,6 +190,8 @@ class CertChainStore private (
 
 object CertChainStore {
 
+  def empty = new CertChainStore(mutable.Set.empty, mutable.Set.empty, mutable.Map.empty, mutable.Map.empty)
+
   def fromCertificates(certs: Seq[X509Certificate]): Either[CryptoError, CertChainStore] = {
     val certsByDN = mutable.HashMap.empty[X500Principal, X509Certificate]
     buildCertStore(certs, certsByDN)
