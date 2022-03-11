@@ -24,3 +24,10 @@ enum ConsensusType {
   POS = 2;
   CFT = 3;
 }
+
+enum PkiMode {
+  UNKNOWN_PKI_MODE = 0;
+  ON = 1;
+  OFF = 2;
+  TEST = 3;
+}
