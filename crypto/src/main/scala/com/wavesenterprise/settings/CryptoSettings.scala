@@ -41,16 +41,19 @@ object CryptoSettings extends ScorexLogging {
           s"Usage of 'node.waves-crypto = yes | no' is deprecated since v1.9.0, use 'node.crypto.type = WAVES | GOST' instead. Refer to the docs for additional info: https://docs.wavesenterprise.com/en/latest/changelog.html"
         }
         deprecatedCursor.asBoolean.flatMap { isWavesCrypto =>
+          val maybeCryptoCursor = objectCursor.atKeyOrUndefined("crypto")
           if (isWavesCrypto) {
-            for {
-              cryptoCursor <- objectCursor.atKey("crypto").flatMap(_.asObjectCursor)
-              _            <- validatePkiConfigForWaves(cryptoCursor)
-            } yield WavesCryptoSettings
+            if (maybeCryptoCursor.isUndefined) {
+              Right(WavesCryptoSettings)
+            } else {
+              maybeCryptoCursor.asObjectCursor.flatMap(validatePkiConfigForWaves).map(_ => WavesCryptoSettings)
+            }
           } else {
-            for {
-              cryptoCursor <- objectCursor.atKey("crypto").flatMap(_.asObjectCursor)
-              gostSettings <- parseGostCryptoSettings(cryptoCursor)
-            } yield gostSettings
+            if (maybeCryptoCursor.isUndefined) {
+              Right(GostCryptoSettings(DisabledPkiSettings))
+            } else {
+              maybeCryptoCursor.asObjectCursor.flatMap(parseGostCryptoSettings)
+            }
           }
         }
       }
