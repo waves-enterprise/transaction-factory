@@ -148,6 +148,7 @@ abstract class GostCryptoContext(pkiRequiredOids: Set[String], crlCheckIsEnabled
 
     new JcspKeyStore(algorithms, file, password) {
       override def toAlias(keyPair: GostKeyPair): String = self.toAlias(keyPair)
+      override def additionalStorageValidation(): Unit   = ()
     }
   }
 }

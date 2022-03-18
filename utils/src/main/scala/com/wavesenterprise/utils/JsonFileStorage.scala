@@ -1,13 +1,16 @@
 package com.wavesenterprise.utils
 
+import cats.implicits.{catsStdBitraverseForEither, toBifunctorOps}
 import play.api.libs.json.{Json, Reads, Writes}
 import scorex.util.encode.{Base64 => ScorexBase64}
 
 import java.io.{File, PrintWriter}
 import java.nio.charset.StandardCharsets
+import java.security.InvalidKeyException
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 import scala.io.Source
+import scala.util.Try
 
 object JsonFileStorage {
   private val encoding          = "UTF-8"
@@ -44,10 +47,16 @@ object JsonFileStorage {
     ScorexBase64.encode(cipher.doFinal(value.getBytes(encoding)))
   }
 
-  private def decrypt(key: SecretKeySpec, encryptedValue: Array[Byte]): String = {
+  private def decrypt(key: SecretKeySpec, encryptedValue: Array[Byte]): Either[String, String] = {
     val cipher: Cipher = Cipher.getInstance(algorithm)
-    cipher.init(Cipher.DECRYPT_MODE, key)
-    new String(cipher.doFinal(encryptedValue), StandardCharsets.UTF_8)
+    Try(cipher.init(Cipher.DECRYPT_MODE, key)).toEither
+      .leftMap {
+        case _: InvalidKeyException => "Incorrect password"
+        case unexpected             => throw unexpected
+      }
+      .map { _ =>
+        new String(cipher.doFinal(encryptedValue), StandardCharsets.UTF_8)
+      }
   }
 
   def save[T](value: T, path: String, key: Option[SecretKeySpec])(implicit w: Writes[T]): Unit = {
@@ -70,16 +79,23 @@ object JsonFileStorage {
   def save[T](value: T, path: String)(implicit w: Writes[T]): Unit =
     save(value, path, None)
 
-  def load[T](path: String, key: Option[SecretKeySpec] = None)(implicit r: Reads[T]): T =
+  def load[T](path: String, key: Option[SecretKeySpec] = None)(implicit r: Reads[T]): Either[String, T] =
     ResourceUtils.withResource(Source.fromFile(path)) { file =>
-      val data = file.mkString
-      val jsonStr = key.fold(data) { k =>
-        val dataDecoded = ScorexBase64.decode(data).getOrElse(throw new RuntimeException("Failed to decode wallet data: file may be corrupted"))
-        decrypt(k, dataDecoded)
-      }
-      Json.parse(jsonStr).as[T]
+      val data = file.mkString.trim
+
+      key
+        .fold[Either[String, String]](Right(data)) { k =>
+          ScorexBase64
+            .decode(data)
+            .toEither
+            .leftMap(err => s"Failed to decode Base64 data: ${err.getMessage}")
+            .flatMap(decrypt(k, _))
+        }
+        .flatMap { jsonStr =>
+          Try(Json.parse(jsonStr).as[T]).toEither.leftMap(err => s"Failed to parse JSON: ${err.getMessage}")
+        }
     }
 
-  def load[T](path: String)(implicit r: Reads[T]): T =
+  def load[T](path: String)(implicit r: Reads[T]): Either[String, T] =
     load(path, None)
 }
