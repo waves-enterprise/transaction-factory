@@ -126,12 +126,18 @@ object CryptoSettings extends ScorexLogging {
 
 }
 
-sealed trait PkiCryptoSettings
+sealed abstract class PkiCryptoSettings(val isPkiActive: Boolean) { self =>
+  def getPkiMode: PkiMode = self match {
+    case PkiCryptoSettings.DisabledPkiSettings   => PkiMode.OFF
+    case PkiCryptoSettings.EnabledPkiSettings(_) => PkiMode.ON
+    case PkiCryptoSettings.TestPkiSettings(_)    => PkiMode.TEST
+  }
+}
 
 object PkiCryptoSettings {
-  case object DisabledPkiSettings                          extends PkiCryptoSettings
-  case class EnabledPkiSettings(requiredOIds: Set[String]) extends PkiCryptoSettings
-  case class TestPkiSettings(requiredOIds: Set[String])    extends PkiCryptoSettings
+  case object DisabledPkiSettings                          extends PkiCryptoSettings(isPkiActive = false)
+  case class EnabledPkiSettings(requiredOIds: Set[String]) extends PkiCryptoSettings(isPkiActive = true)
+  case class TestPkiSettings(requiredOIds: Set[String])    extends PkiCryptoSettings(isPkiActive = true)
 
   implicit val toPrintable: Show[PkiCryptoSettings] = {
     case DisabledPkiSettings => "mode: OFF"
