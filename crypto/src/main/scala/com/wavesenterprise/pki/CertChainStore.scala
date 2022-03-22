@@ -35,6 +35,8 @@ class CertChainStore private (
     */
   def toSet: Set[X509Certificate] = readLock(certsByDN.values.toSet)
 
+  def isEmpty: Boolean = readLock(certsByDN.isEmpty)
+
   private def getCertChainBySubject(subject: X500Principal): Either[CryptoError, CertChain] = {
     readLock {
       if (clientCerts.contains(subject)) {
