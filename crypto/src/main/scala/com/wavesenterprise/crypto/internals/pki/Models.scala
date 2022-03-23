@@ -9,6 +9,7 @@ import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
 import ru.CryptoPro.JCPRequest
 import ru.CryptoPro.reprov.x509._
+import pureconfig.module.enumeratum._
 
 import scala.collection.immutable
 
