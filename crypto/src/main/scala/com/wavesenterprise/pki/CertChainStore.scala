@@ -316,4 +316,6 @@ object CertChainStore {
   }
 }
 
-case class CertChain(caCert: X509Certificate, intermediateCerts: Seq[X509Certificate], userCert: X509Certificate)
+case class CertChain(caCert: X509Certificate, intermediateCerts: Seq[X509Certificate], userCert: X509Certificate) {
+  def toSet: Set[X509Certificate] = (caCert :: userCert :: intermediateCerts.toList).toSet
+}
