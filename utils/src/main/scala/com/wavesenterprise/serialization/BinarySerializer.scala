@@ -139,9 +139,13 @@ object BinarySerializer {
 
   def parseX509Cert(bytes: Array[Byte], offset: Offset = 0): (X509Certificate, Offset) = {
     val (certBytes, end) = parseShortByteArray(bytes, offset)
-    val factory          = CertificateFactory.getInstance("X.509")
-    val cert             = factory.generateCertificate(new ByteArrayInputStream(certBytes))
-    cert.asInstanceOf[X509Certificate] -> end
+    x509CertFromBytes(certBytes) -> end
+  }
+
+  def x509CertFromBytes(certBytes: Array[Byte]): X509Certificate = {
+    val factory = CertificateFactory.getInstance("X.509")
+    val cert    = factory.generateCertificate(new ByteArrayInputStream(certBytes))
+    cert.asInstanceOf[X509Certificate]
   }
 
   private[serialization] def byteCountWriter(count: Int, output: ByteArrayDataOutput): Unit = {
