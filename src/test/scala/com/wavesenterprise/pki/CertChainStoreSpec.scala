@@ -15,7 +15,7 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
 
   "CertStore" - {
     "serialization round trip" in {
-      forAll(chainGen) { chain =>
+      forAll(certChainStoreGen) { chain =>
         val bytes         = chain.bytes
         val parsingResult = CertChainStore.fromBytes(bytes)
         parsingResult shouldBe 'right

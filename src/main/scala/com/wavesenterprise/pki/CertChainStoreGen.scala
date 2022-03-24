@@ -34,17 +34,19 @@ trait CertChainStoreGen extends TestCertBuilder {
     buildChain(name, chainId, deep, caCert, caKeyPair.getPrivate, List(caCert))
   }
 
-  protected val chainGen: Gen[CertChainStore] =
+  protected def certsForChainGen(chainId: Int = 1): Gen[List[X509Certificate]] = {
+    for {
+      depth <- Gen.chooseNum(1, 5)
+      name  <- Gen.alphaStr.filter(_.nonEmpty)
+    } yield {
+      buildChain(name, chainId, depth)
+    }
+  }
+
+  protected val certChainStoreGen: Gen[CertChainStore] =
     Gen.chooseNum(0, 7).flatMap { num =>
       Gen.sequence {
-        (1 to num).map { chainId =>
-          for {
-            depth <- Gen.chooseNum(1, 5)
-            name  <- Gen.alphaStr.filter(_.nonEmpty)
-          } yield {
-            buildChain(name, chainId, depth)
-          }
-        }
+        (1 to num).map(certsForChainGen)
       }
     } map { certs =>
       CertChainStore.fromCertificates(certs.asScala.flatten).explicitGet()
