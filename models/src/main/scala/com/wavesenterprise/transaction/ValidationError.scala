@@ -19,6 +19,7 @@ import com.wavesenterprise.transaction.assets.exchange.Order
 import com.wavesenterprise.transaction.docker.{ExecutableTransaction, UpdateContractTransaction}
 import com.wavesenterprise.utils.StringUtilites.ValidateAsciiAndRussian.{mapToString, stringToMap}
 
+import java.security.PublicKey
 import scala.util.Either
 
 trait ValidationError
@@ -45,26 +46,29 @@ object ValidationError {
     override def toString: String =
       s"BlockFromFuture(rejected block timestamp is '$rejectedBlockTs', but current timestamp is '$currentTimestamp')"
   }
-  case class ScriptParseError(message: String)                              extends ValidationError
-  case class AlreadyInProcessing(txId: ByteStr)                             extends ValidationError
-  case class AlreadyInTheState(txId: ByteStr, txHeight: Int)                extends ValidationError
-  case class AccountBalanceError(errs: Map[Address, String])                extends ValidationError
-  case class AliasDoesNotExist(a: Alias)                                    extends ValidationError
-  case class AliasIsDisabled(a: Alias)                                      extends ValidationError
-  case class OrderValidationError(order: Order, err: String)                extends ValidationError
-  case class Mistiming(err: String)                                         extends ValidationError
-  case class ActivationError(err: String)                                   extends ValidationError
-  case class UnsupportedVersion(version: Int)                               extends ValidationError
-  case class GenericError(err: String)                                      extends ValidationError
-  case class PermissionError(err: String)                                   extends ValidationError
-  case class WrongHandshake(err: String)                                    extends ValidationError
-  case class InvalidSender(err: String)                                     extends ValidationError
-  case class ParticipantNotRegistered(address: Address)                     extends ValidationError
-  case class PolicyDataTooBig(policySize: Long, maxSize: Long)              extends ValidationError
-  case class AddressIsLastOfRole(address: Address, role: NonEmptyRole)      extends ValidationError
-  case class InvalidAssetId(err: String)                                    extends ValidationError
-  case class UnsupportedContractApiVersion(contractId: String, err: String) extends ValidationError
-  case class InvalidContractApiVersion(err: String)                         extends ValidationError
+  case class ScriptParseError(message: String)                               extends ValidationError
+  case class AlreadyInProcessing(txId: ByteStr)                              extends ValidationError
+  case class AlreadyInTheState(txId: ByteStr, txHeight: Int)                 extends ValidationError
+  case class AccountBalanceError(errs: Map[Address, String])                 extends ValidationError
+  case class AliasDoesNotExist(a: Alias)                                     extends ValidationError
+  case class AliasIsDisabled(a: Alias)                                       extends ValidationError
+  case class OrderValidationError(order: Order, err: String)                 extends ValidationError
+  case class Mistiming(err: String)                                          extends ValidationError
+  case class ActivationError(err: String)                                    extends ValidationError
+  case class UnsupportedVersion(version: Int)                                extends ValidationError
+  case class GenericError(err: String)                                       extends ValidationError
+  case class PermissionError(err: String)                                    extends ValidationError
+  case class WrongHandshake(err: String)                                     extends ValidationError
+  case class InvalidSender(err: String)                                      extends ValidationError
+  case class ParticipantNotRegistered(address: Address)                      extends ValidationError
+  case class PolicyDataTooBig(policySize: Long, maxSize: Long)               extends ValidationError
+  case class AddressIsLastOfRole(address: Address, role: NonEmptyRole)       extends ValidationError
+  case class InvalidAssetId(err: String)                                     extends ValidationError
+  case class UnsupportedContractApiVersion(contractId: String, err: String)  extends ValidationError
+  case class InvalidContractApiVersion(err: String)                          extends ValidationError
+  case class CertificateNotFound(publicKey: PublicKey)                       extends ValidationError
+  case class CertificatePathBuildError(publicKey: PublicKey, reason: String) extends ValidationError
+  case class CertificateParseError(reason: String)                           extends ValidationError
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))
