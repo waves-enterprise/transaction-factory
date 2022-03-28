@@ -10,7 +10,8 @@ import "managed/transaction.proto";
 import "util/util_transaction_service.proto";
 
 service TransactionPublicService {
-  rpc Broadcast (TransactionWithCertChain) returns (Transaction);
+  rpc Broadcast (Transaction) returns (Transaction);
+  rpc BroadcastWithCerts (TransactionWithCertChain) returns (Transaction);
   rpc UtxInfo (google.protobuf.Empty) returns (stream UtxSize);
   rpc TransactionInfo (TransactionInfoRequest) returns (TransactionInfoResponse);
   rpc UnconfirmedTransactionInfo (TransactionInfoRequest) returns (Transaction);
