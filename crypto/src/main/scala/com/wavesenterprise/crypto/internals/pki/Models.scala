@@ -4,6 +4,8 @@ import enumeratum.{Enum, EnumEntry}
 import enumeratum.EnumEntry.{Uncapitalised, Uppercase}
 import pureconfig._
 import pureconfig.ConfigReader
+import pureconfig.ConfigReader.Result
+import pureconfig.error.ConfigReaderFailures
 import pureconfig.generic.auto._
 import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
@@ -38,7 +40,23 @@ object Models {
       case "extensions"         => "extensions"
     }
 
-    implicit val configReader: ConfigReader[CertRequestContent] = deriveReader
+    val baseConfigReader: ConfigReader[CertRequestContent] = deriveReader
+
+    implicit val configReader = new ConfigReader[CertRequestContent] {
+      def withValidation(conf: CertRequestContent): Result[CertRequestContent] = {
+        val mustBeNonEmptyStrs = Seq(conf.stateOrProvince, conf.country, conf.locality, conf.commonName, conf.organization, conf.organizationalUnit)
+
+        if (mustBeNonEmptyStrs.forall(!_.isBlank)) {
+          Right(conf)
+        } else {
+          Left(ConfigReaderFailures(pureconfig.error.CannotParse("Mandatory fields 'CN', 'OU', 'O', 'C', 'L', 'S' must be non-empty", None)))
+        }
+      }
+
+      override def from(cur: ConfigCursor): Result[CertRequestContent] = {
+        baseConfigReader.from(cur).flatMap(withValidation)
+      }
+    }
   }
 
   case class Extensions(
