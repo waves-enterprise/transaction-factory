@@ -46,10 +46,10 @@ object Models {
       def withValidation(conf: CertRequestContent): Result[CertRequestContent] = {
         val mustBeNonEmptyStrs = Seq(conf.stateOrProvince, conf.country, conf.locality, conf.commonName, conf.organization, conf.organizationalUnit)
 
-        if (mustBeNonEmptyStrs.forall(_.nonEmpty)) {
+        if (mustBeNonEmptyStrs.forall(!_.isBlank)) {
           Right(conf)
         } else {
-          Left(ConfigReaderFailures(pureconfig.error.CannotParse("Mandatory fields 'CN', 'OU', 'O', 'C', 'L', 'S' must not be empty", None)))
+          Left(ConfigReaderFailures(pureconfig.error.CannotParse("Mandatory fields 'CN', 'OU', 'O', 'C', 'L', 'S' must be non-empty", None)))
         }
       }
 
