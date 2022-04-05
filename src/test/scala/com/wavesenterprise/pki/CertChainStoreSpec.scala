@@ -64,6 +64,11 @@ class CertChainStoreSpec extends FreeSpec with Matchers with ScalaCheckPropertyC
       certDChain shouldBe Right(CertChain(certsByDN("CN=caA"), List("CN=cC", "CN=cA").map(certsByDN(_)), certsByDN("CN=cD")))
     }
 
+    "ignore duplicated DNs" in {
+      val certs = List(certsByDN("CN=cE"), certsByDN("CN=caB"), certsByDN("CN=cE"))
+      CertChainStore.fromCertificates(certs) shouldBe Left(PKIError(s"Unable to build cert chain. Input certificates contain duplicated DNs"))
+    }
+
     "fail on building chain starting intermediate cert" in {
       certStore.getCertChain(certsByDN("CN=cA")) shouldBe Left(PKIError(s"Unable to build cert chain starting from the intermediate cert 'CN=cA'"))
     }
