@@ -293,7 +293,11 @@ object CertChainStore {
           val failedCerts = inDegree.collect {
             case (dn, hasInDegree) if hasInDegree => dn
           }
-          PKIError(s"Unable to build cert chain for the following certificates: [${failedCerts.mkString(", ")}]")
+          if (failedCerts.isEmpty) {
+            PKIError(s"Unable to build cert chain. Input certificates contain duplicated DNs")
+          } else {
+            PKIError(s"Unable to build cert chain for the following certificates: [${failedCerts.mkString(", ")}]")
+          }
         }
       )
     }
