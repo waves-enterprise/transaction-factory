@@ -1,5 +1,6 @@
 package com.wavesenterprise.crypto.settings
 
+import com.wavesenterprise.crypto.internals.pki.Models.{CustomExtendedKeyUsage, ExtendedKeyUsage}
 import com.wavesenterprise.settings.CryptoSettings
 import com.wavesenterprise.settings.CryptoSettings.GostCryptoSettings
 import com.wavesenterprise.settings.PkiCryptoSettings.{DisabledPkiSettings, EnabledPkiSettings}
@@ -15,13 +16,22 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = GOST
         |  pki {
         |    mode = ON
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
     }
 
-    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(Set("1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0")))
+    val expectedEkus: Set[ExtendedKeyUsage] = Set(
+      CustomExtendedKeyUsage(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)),
+      CustomExtendedKeyUsage(Array(192, 168, 0, 1, 255, 255, 255, 0)),
+      CustomExtendedKeyUsage(Array(3)),
+      ExtendedKeyUsage.CodeSigning,
+      ExtendedKeyUsage.EmailProtection
+    )
+
+    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(expectedEkus, crlChecksEnabled = false))
   }
 
   "should ignore crypto.type when waves-crypto is used" in {
@@ -32,13 +42,21 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = WAVES
         |  pki {
         |    mode = ON
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = yes
         |  }
         |}
         |""".stripMargin
     }
 
-    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(Set("1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0")))
+    val expectedEkus: Set[ExtendedKeyUsage] = Set(
+      CustomExtendedKeyUsage(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)),
+      CustomExtendedKeyUsage(Array(192, 168, 0, 1, 255, 255, 255, 0)),
+      ExtendedKeyUsage.CodeSigning,
+      ExtendedKeyUsage.EmailProtection
+    )
+
+    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(expectedEkus, crlChecksEnabled = true))
   }
 
   "should ignore required-oids when pki is disabled" in {
@@ -48,7 +66,8 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = GOST
         |  pki {
         |    mode = OFF
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
@@ -64,7 +83,8 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = WAVES
         |  pki {
         |    mode = ON
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
@@ -82,7 +102,8 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = WAVES
         |  pki {
         |    mode = TEST
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
@@ -102,7 +123,8 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = GOST
         |  pki {
         |    mode = ENABLED
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
@@ -122,7 +144,8 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = AES
         |  pki {
         |    mode = ENABLED
-        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0"]
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
@@ -142,16 +165,18 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  type = GOST
         |  pki {
         |    mode = ON
-        |    required-oids = ["1a", "2b"]
+        |    required-oids = ["1a", "blabla"]
+        |    crl-checks-enabled = no
         |  }
         |}
         |""".stripMargin
     }
 
-    (the[ConfigReaderException[_]] thrownBy {
+    val errorMessage = (the[ConfigReaderException[_]] thrownBy {
       config.loadOrThrow[CryptoSettings]
-    }).getMessage should include {
-      "Unable to parse the configuration: Wrong OID format in configuration field 'crypto.pki.required-oids': 1a"
-    }
+    }).getMessage
+
+    errorMessage should include("Extended key usage '1a' mismatch OID pattern")
+    errorMessage should include("Extended key usage 'blabla' mismatch OID pattern")
   }
 }

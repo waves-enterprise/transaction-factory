@@ -2,6 +2,7 @@ package com.wavesenterprise.crypto.internals.gost
 
 import cats.syntax.either._
 import com.wavesenterprise.crypto.internals._
+import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 import monix.eval.Coeval
 import ru.CryptoPro.Crypto.CryptoProvider
 import ru.CryptoPro.JCP.JCP
@@ -18,7 +19,7 @@ import javax.crypto.{Cipher, KeyAgreement, KeyGenerator}
 import scala.util.Try
 import java.security.{SecureRandom, KeyStore => JavaKeyStore}
 
-class GostAlgorithms(override val pkiRequiredOids: Set[String],
+class GostAlgorithms(override val pkiRequiredOids: Set[ExtendedKeyUsage],
                      override val crlCheckIsEnabled: Boolean,
                      override val maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None)
     extends CryptoAlgorithms[GostKeyPair] {

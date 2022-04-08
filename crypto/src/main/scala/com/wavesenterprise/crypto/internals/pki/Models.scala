@@ -1,17 +1,17 @@
 package com.wavesenterprise.crypto.internals.pki
 
-import enumeratum.{Enum, EnumEntry}
+import cats.data.{NonEmptyList, Validated}
+import cats.implicits._
+import com.wavesenterprise.crypto.internals.{CryptoError, PKIError}
 import enumeratum.EnumEntry.{Uncapitalised, Uppercase}
-import pureconfig._
-import pureconfig.ConfigReader
+import enumeratum.{Enum, EnumEntry}
 import pureconfig.ConfigReader.Result
-import pureconfig.error.ConfigReaderFailures
-import pureconfig.generic.auto._
+import pureconfig._
+import pureconfig.error.{CannotConvert, ConfigReaderFailures}
 import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
 import ru.CryptoPro.JCPRequest
 import ru.CryptoPro.reprov.x509._
-import pureconfig.module.enumeratum._
 
 import scala.collection.immutable
 
@@ -30,6 +30,8 @@ object Models {
   }
 
   object CertRequestContent {
+    import pureconfig.generic.auto._
+
     implicit val productHint: ProductHint[CertRequestContent] = ProductHint[CertRequestContent] {
       case "commonName"         => "CN"
       case "organizationalUnit" => "OU"
@@ -42,7 +44,7 @@ object Models {
 
     val baseConfigReader: ConfigReader[CertRequestContent] = deriveReader
 
-    implicit val configReader = new ConfigReader[CertRequestContent] {
+    implicit val configReader: ConfigReader[CertRequestContent] = new ConfigReader[CertRequestContent] {
       def withValidation(conf: CertRequestContent): Result[CertRequestContent] = {
         val mustBeNonEmptyStrs = Seq(conf.stateOrProvince, conf.country, conf.locality, conf.commonName, conf.organization, conf.organizationalUnit)
 
@@ -68,6 +70,8 @@ object Models {
   sealed abstract class KeyUsage(val jcspValue: Int) extends EnumEntry with Uncapitalised
 
   object KeyUsage extends Enum[KeyUsage] {
+    import pureconfig.generic.auto._
+
     case object DigitalSignature  extends KeyUsage(JCPRequest.KeyUsage.DIGITAL_SIGNATURE)
     case object ContentCommitment extends KeyUsage(JCPRequest.KeyUsage.NON_REPUDIATION)
     case object KeyEncipherment   extends KeyUsage(JCPRequest.KeyUsage.KEY_ENCIPHERMENT)
@@ -80,9 +84,25 @@ object Models {
 
     val values: immutable.IndexedSeq[KeyUsage] = findValues
 
+    implicit val configReader: ConfigReader[KeyUsage] = deriveReader
   }
 
-  sealed abstract class ExtendedKeyUsage(val jcspValue: Array[Int]) extends EnumEntry with Uncapitalised
+  sealed abstract class ExtendedKeyUsage(val jcspValue: Array[Int]) extends EnumEntry with Uncapitalised {
+    private val oidStr: String = jcspValue.mkString(".")
+
+    def strRepr: String = ExtendedKeyUsage.oidToValue.get(oidStr).fold(oidStr)(_.entryName)
+
+    def canEqual(other: Any): Boolean = other.isInstanceOf[ExtendedKeyUsage]
+
+    override def equals(other: Any): Boolean = other match {
+      case that: ExtendedKeyUsage => (that canEqual this) && oidStr == that.oidStr
+      case _                      => false
+    }
+
+    override def hashCode(): Int = oidStr.hashCode
+  }
+
+  case class CustomExtendedKeyUsage(oid: Array[Int]) extends ExtendedKeyUsage(oid)
 
   object ExtendedKeyUsage extends Enum[ExtendedKeyUsage] {
     case object ServerAuth      extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_SERVER_AUTH)
@@ -92,8 +112,49 @@ object Models {
     case object TimeStamping    extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_TIME_STAMPING)
     case object OCSPSigning     extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_OCSP_SIGNING)
 
-    override val values: scala.collection.immutable.IndexedSeq[ExtendedKeyUsage] = findValues
+    override val values: immutable.IndexedSeq[ExtendedKeyUsage] = findValues
 
+    private val nameToValue = values.map(e => e.entryName.toUpperCase -> e).toMap
+    private val oidToValue  = values.map(e => e.oidStr                -> e).toMap
+
+    private val extendedKeyUsagePattern = """^(\d+\.)*\d+$"""
+
+    def parseString(str: String): Either[CryptoError, ExtendedKeyUsage] = {
+      nameToValue.get(str.toUpperCase) match {
+        case Some(eku) => Right(eku)
+        case None =>
+          Either
+            .cond(str.matches(extendedKeyUsagePattern), str, PKIError(s"Extended key usage '$str' mismatch OID pattern"))
+            .flatMap { validStr =>
+              oidToValue.get(str) match {
+                case Some(eku) => Right(eku)
+                case None =>
+                  Either
+                    .catchOnly[NumberFormatException](validStr.split("""\.""").map(_.toInt))
+                    .leftMap(err => PKIError(s"Unable to parse Integer from OID value: ${err.getMessage}"))
+                    .map(CustomExtendedKeyUsage)
+              }
+            }
+      }
+    }
+
+    def parseStrings(str: String*): Either[CryptoError, List[ExtendedKeyUsage]] = {
+      str.toList
+        .traverse { eku =>
+          Validated.fromEither(parseString(eku).leftMap(_ => NonEmptyList.of(eku)))
+        }
+        .toEither
+        .leftMap { invalidKeyUsages =>
+          PKIError(s"The following extended key usages mismatch OID pattern: [${invalidKeyUsages.toList.mkString(", ")}]")
+        }
+    }
+
+    implicit val configReader: ConfigReader[ExtendedKeyUsage] = ConfigReader.fromString { str =>
+      parseString(str)
+        .leftMap { err =>
+          CannotConvert(str, ExtendedKeyUsage.getClass.getSimpleName, err.message)
+        }
+    }
   }
 
   sealed abstract class SubjectAlternativeNameItemType(jscpMapper: String => GeneralNameInterface) extends EnumEntry with Uppercase {

@@ -27,6 +27,7 @@ message NodeConfigResponse {
   google.protobuf.Duration micro_block_interval = 9;
   PkiMode pki_mode = 10;
   repeated string required_oids = 11;
+  bool crl_check_enabled = 12;
   oneof block_timing {
     PoaRoundInfo poa_round_info = 101;
     PosRoundInfo pos_round_info = 102;

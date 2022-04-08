@@ -4,6 +4,7 @@ import com.wavesenterprise.NoShrink
 import com.wavesenterprise.account.Address
 import com.wavesenterprise.crypto.GostKeystoreSpec
 import com.wavesenterprise.crypto.internals.gost._
+import com.wavesenterprise.crypto.internals.pki.Models.{CustomExtendedKeyUsage, ExtendedKeyUsage}
 import com.wavesenterprise.pki.CertChain
 import com.wavesenterprise.utils.EitherUtils.EitherExt
 import monix.eval.Coeval
@@ -22,10 +23,9 @@ import scala.collection.mutable.ArrayBuffer
 
 class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with ScalaCheckPropertyChecks {
 
-  val pkiRequiredOid: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7)
-  val pkiRequiredOidStr: String  = pkiRequiredOid.mkString(".")
+  val pkiRequiredOid: ExtendedKeyUsage = CustomExtendedKeyUsage(Array(1, 2, 3, 4, 5, 6, 7))
 
-  def buildGostCrypto(pkiRequiredOids: Set[String] = Set.empty, maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None) =
+  def buildGostCrypto(pkiRequiredOids: Set[ExtendedKeyUsage] = Set.empty, maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None) =
     new GostAlgorithms(pkiRequiredOids, crlCheckIsEnabled = false, maybeTrustKeyStoreProvider)
 
   val oneKilobyteInBytes: Int = 1024
@@ -61,7 +61,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       "successful sign & verify complex chain" in {
         val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
 
-        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+        val algorithms = buildGostCrypto(Set(pkiRequiredOid), Some(trustedCertsKeyStoreProvider))
 
         val intermediateKeyPair = charlesRealKeypair.internal
         val intermediateCert = buildCert(
@@ -94,7 +94,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       "verification error when DIGITAL_SIGNATURE key usage is not specified" in {
         val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
 
-        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+        val algorithms = buildGostCrypto(Set(pkiRequiredOid), Some(trustedCertsKeyStoreProvider))
 
         val userKeyPair        = bobRealKeypair.internal
         val userGostPrivateKey = bobRealKeypair.getPrivate
@@ -122,7 +122,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       "verification error when required oid is not specified" in {
         val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
 
-        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+        val algorithms = buildGostCrypto(Set(pkiRequiredOid), Some(trustedCertsKeyStoreProvider))
 
         val userKeyPair        = bobRealKeypair.internal
         val userGostPrivateKey = bobRealKeypair.getPrivate
@@ -142,13 +142,13 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
         val certChain = CertChain(caCert, Seq.empty, userCert)
 
         algorithms.verify(signature, data, certChain, System.currentTimeMillis()) shouldBe
-          Left(PKIError(s"ExtendedKeyUsage of DN='$userSubject' does not contain any of the following expected OIDs: [${pkiRequiredOidStr}]"))
+          Left(PKIError(s"Missing the following required EKUs for the certificate '$userSubject': [${pkiRequiredOid.strRepr}]"))
       }
 
       "verification error when root cert is not trusted" in {
         val (caKeyPair, caCert, _) = buildCaSetup()
 
-        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), None)
+        val algorithms = buildGostCrypto(Set(pkiRequiredOid), None)
 
         val userKeyPair        = bobRealKeypair.internal
         val userGostPrivateKey = bobRealKeypair.getPrivate
@@ -176,7 +176,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       "verification error when invalid cert chain path" in {
         val (caKeyPair, caCert, trustedCertsKeyStoreProvider) = buildCaSetup()
 
-        val algorithms = buildGostCrypto(Set(pkiRequiredOidStr), Some(trustedCertsKeyStoreProvider))
+        val algorithms = buildGostCrypto(Set(pkiRequiredOid), Some(trustedCertsKeyStoreProvider))
 
         val userKeyPair        = bobRealKeypair.internal
         val userGostPrivateKey = bobRealKeypair.getPrivate
@@ -342,7 +342,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
                         publicKey: JavaPublicKey,
                         subject: String,
                         keyUsages: Seq[Int] = Seq(JCPRequest.KeyUsage.NOT_SET),
-                        extKeyUsages: Seq[Array[Int]] = Seq.empty) = {
+                        extKeyUsages: Seq[ExtendedKeyUsage] = Seq.empty) = {
     val certRequest = generateCertificateRequest(
       keyUsages = keyUsages,
       extKeyUsages = extKeyUsages
@@ -356,7 +356,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
       .asInstanceOf[X509Certificate]
   }
 
-  private def generateCertificateRequest(keyUsages: Seq[Int], extKeyUsages: Seq[Array[Int]]): GostCertificateRequest = {
+  private def generateCertificateRequest(keyUsages: Seq[Int], extKeyUsages: Seq[ExtendedKeyUsage]): GostCertificateRequest = {
     val request = new GostCertificateRequest(JCSP.PROVIDER_NAME)
 
     if (keyUsages.nonEmpty) {
@@ -365,7 +365,7 @@ class GostAlgorithmsSpec extends FreeSpec with Matchers with NoShrink with Scala
     }
 
     extKeyUsages.foreach { extendedKeyUsage =>
-      request.addExtKeyUsage(extendedKeyUsage)
+      request.addExtKeyUsage(extendedKeyUsage.jcspValue)
     }
 
     request

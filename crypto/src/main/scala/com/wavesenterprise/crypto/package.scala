@@ -4,7 +4,7 @@ import com.wavesenterprise.account.{Address, PrivateKeyAccount, PublicKeyAccount
 import com.wavesenterprise.crypto.internals._
 import com.wavesenterprise.crypto.internals.gost.{GostCryptoContext, GostKeyPair}
 import com.wavesenterprise.pki.CertChain
-import com.wavesenterprise.settings.{CryptoSettings, CryptoType}
+import com.wavesenterprise.settings.{CryptoSettings, CryptoType, PkiCryptoSettings}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKeyBytes}
@@ -16,8 +16,8 @@ import java.security.cert.X509Certificate
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 import scala.util.Try
-
 import cats.implicits._
+import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 
 package crypto {
   object CryptoInitializer {
@@ -72,8 +72,13 @@ package object crypto {
 
   lazy val context: CryptoContext = {
     cryptoSettings match {
-      case _: CryptoSettings.GostCryptoSettings =>
-        new GostCryptoContext(Set.empty, false) { // TODO: use params from settings
+      case gostSettings: CryptoSettings.GostCryptoSettings =>
+        val (requiredOids, crlChecksEnabled) = gostSettings.pkiSettings match {
+          case PkiCryptoSettings.EnabledPkiSettings(reqOids, crlCheck) => reqOids                     -> crlCheck
+          case PkiCryptoSettings.TestPkiSettings(reqOids, crlCheck)    => reqOids                     -> crlCheck
+          case _                                                       => Set.empty[ExtendedKeyUsage] -> false
+        }
+        new GostCryptoContext(requiredOids, crlChecksEnabled) {
           override def toAlias(keyPair: GostKeyPair): String =
             Address.fromPublicKey(keyPair.getPublic.getEncoded).address
         }
