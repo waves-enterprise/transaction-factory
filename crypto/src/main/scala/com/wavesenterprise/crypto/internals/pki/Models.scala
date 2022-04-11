@@ -92,10 +92,8 @@ object Models {
 
     def strRepr: String = ExtendedKeyUsage.oidToValue.get(oidStr).fold(oidStr)(_.entryName)
 
-    def canEqual(other: Any): Boolean = other.isInstanceOf[ExtendedKeyUsage]
-
     override def equals(other: Any): Boolean = other match {
-      case that: ExtendedKeyUsage => (that canEqual this) && oidStr == that.oidStr
+      case that: ExtendedKeyUsage => oidStr == that.oidStr
       case _                      => false
     }
 

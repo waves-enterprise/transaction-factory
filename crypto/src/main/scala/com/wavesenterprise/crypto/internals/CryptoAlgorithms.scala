@@ -217,20 +217,19 @@ object CryptoAlgorithms {
     if (requiredOids.isEmpty) {
       Right(())
     } else {
-      val certOids = Option(cert.getExtendedKeyUsage).map(_.asScala.toList).orEmpty
-      ExtendedKeyUsage.parseStrings(certOids: _*).flatMap { certEkus =>
-        val commonEkus = certEkus.toSet.intersect(requiredOids)
+      val certOidsStr = Option(cert.getExtendedKeyUsage).map(_.asScala.toList).orEmpty
+      ExtendedKeyUsage.parseStrings(certOidsStr: _*).flatMap { parsedOids =>
+        val foundOids = (requiredOids intersect parsedOids.toSet)
         Either.cond(
-          commonEkus == requiredOids,
+          foundOids.nonEmpty,
           (),
           PKIError(
-            s"Missing the following required EKUs for the certificate '${cert.getSubjectX500Principal}': " +
-              s"[${(requiredOids -- commonEkus).map(_.strRepr).mkString(", ")}]"
+            s"ExtendedKeyUsage of DN='${cert.getSubjectX500Principal}' does not contain any of the following expected OIDs: " +
+              s"[${requiredOids.map(_.strRepr).mkString(",")}]"
           )
         )
       }
     }
-
   }
 
   /** According to java-csp-5.0.42119-A/samples-sources/userSamples/CRLValidateCert.java */
