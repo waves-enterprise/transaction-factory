@@ -2,11 +2,12 @@ package com.wavesenterprise.settings
 
 import cats.Show
 import cats.implicits._
+import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 import com.wavesenterprise.settings.PkiCryptoSettings.{DisabledPkiSettings, EnabledPkiSettings, TestPkiSettings}
 import com.wavesenterprise.utils.ScorexLogging
 import enumeratum.EnumEntry
 import enumeratum.EnumEntry.Uppercase
-import pureconfig.error.{CannotConvert, CannotParse, ConfigReaderFailures, ThrowableFailure}
+import pureconfig.error.{CannotConvert, ConfigReaderFailures, ThrowableFailure}
 import pureconfig.{ConfigObjectCursor, ConfigReader}
 
 import scala.collection.immutable
@@ -65,7 +66,7 @@ object CryptoSettings extends ScorexLogging {
     case GostCryptoSettings(pkiSettings) =>
       s"""
          |type: GOST
-         |pki: 
+         |pki:
          |  ${show"$pkiSettings".replace("\n", "\n--")}
          """.stripMargin
   }
@@ -95,61 +96,62 @@ object CryptoSettings extends ScorexLogging {
       pkiMode   <- pkiCursor.atKey("mode").flatMap(PkiMode.configReader.from)
       pkiSettings <- pkiMode match {
         case PkiMode.OFF => Right(DisabledPkiSettings)
-        case PkiMode.ON  => parseRequiredOIds(pkiCursor).map(EnabledPkiSettings)
+        case PkiMode.ON =>
+          for {
+            crlChecksEnabled <- parseCrlChecks(pkiCursor)
+            requiredOids     <- parseRequiredOIds(pkiCursor)
+          } yield EnabledPkiSettings(requiredOids, crlChecksEnabled)
         case PkiMode.TEST =>
-          parseRequiredOIds(pkiCursor).map { requiredOIds =>
+          for {
+            crlChecksEnabled <- parseCrlChecks(pkiCursor)
+            requiredOids     <- parseRequiredOIds(pkiCursor)
+          } yield {
             log.warn("WARNING: 'node.crypto.pki.mode' is set to 'TEST'. PKI functionality is running in a testing mode.")
-            TestPkiSettings(requiredOIds)
+            TestPkiSettings(requiredOids, crlChecksEnabled)
           }
       }
     } yield GostCryptoSettings(pkiSettings)
   }
 
   private def parseRequiredOIds(cursor: ConfigObjectCursor) = {
-    val oidReg = """^\d+(?:\.\d+)*$"""
     cursor
       .atKey("required-oids")
-      .flatMap { requiredOIdsCursor =>
-        requiredOIdsCursor.asList.flatMap { listCursor =>
-          listCursor
-            .traverse(_.asString.flatMap { oid =>
-              Either.cond(
-                oid matches oidReg,
-                oid,
-                ConfigReaderFailures(CannotParse(s"Wrong OID format in configuration field 'crypto.pki.required-oids': $oid", None))
-              )
-            })
-            .map(_.toSet)
-        }
+      .flatMap { requiredOidsCursor =>
+        ConfigReader[List[ExtendedKeyUsage]].from(requiredOidsCursor).map(_.toSet)
       }
   }
 
+  private def parseCrlChecks(cursor: ConfigObjectCursor) = {
+    cursor.atKey("crl-checks-enabled").flatMap(ConfigReader[Boolean].from)
+  }
 }
 
 sealed abstract class PkiCryptoSettings(val isPkiActive: Boolean) { self =>
   def getPkiMode: PkiMode = self match {
     case PkiCryptoSettings.DisabledPkiSettings   => PkiMode.OFF
-    case PkiCryptoSettings.EnabledPkiSettings(_) => PkiMode.ON
-    case PkiCryptoSettings.TestPkiSettings(_)    => PkiMode.TEST
+    case _: PkiCryptoSettings.EnabledPkiSettings => PkiMode.ON
+    case _: PkiCryptoSettings.TestPkiSettings    => PkiMode.TEST
   }
 }
 
 object PkiCryptoSettings {
-  case object DisabledPkiSettings                          extends PkiCryptoSettings(isPkiActive = false)
-  case class EnabledPkiSettings(requiredOIds: Set[String]) extends PkiCryptoSettings(isPkiActive = true)
-  case class TestPkiSettings(requiredOIds: Set[String])    extends PkiCryptoSettings(isPkiActive = true)
+  case object DisabledPkiSettings                                                               extends PkiCryptoSettings(isPkiActive = false)
+  case class EnabledPkiSettings(requiredOids: Set[ExtendedKeyUsage], crlChecksEnabled: Boolean) extends PkiCryptoSettings(isPkiActive = true)
+  case class TestPkiSettings(requiredOids: Set[ExtendedKeyUsage], crlChecksEnabled: Boolean)    extends PkiCryptoSettings(isPkiActive = true)
 
   implicit val toPrintable: Show[PkiCryptoSettings] = {
     case DisabledPkiSettings => "mode: OFF"
-    case EnabledPkiSettings(requiredOIds) =>
+    case EnabledPkiSettings(requiredOids, crlChecksEnabled) =>
       s"""
          |mode: ON
-         |requiredOIds: [${requiredOIds.mkString(", ")}]
+         |requiredOids: [${requiredOids.mkString(", ")}]
+         |crlChecksEnabled: $crlChecksEnabled
        """.stripMargin
-    case TestPkiSettings(requiredOIds) =>
+    case TestPkiSettings(requiredOids, crlChecksEnabled) =>
       s"""
          |mode: TEST
-         |requiredOIds: [${requiredOIds.mkString(", ")}]
+         |requiredOids: [${requiredOids.mkString(", ")}]
+         |crlChecksEnabled: $crlChecksEnabled
        """.stripMargin
   }
 }

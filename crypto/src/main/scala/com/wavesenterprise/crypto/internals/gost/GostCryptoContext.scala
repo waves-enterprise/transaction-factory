@@ -1,6 +1,7 @@
 package com.wavesenterprise.crypto.internals.gost
 
 import cats.syntax.either._
+import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 import com.wavesenterprise.crypto.internals.{CryptoContext, CryptoError, GenericError, KeyStore}
 import org.slf4j.{Logger, LoggerFactory}
 import ru.CryptoPro.JCP.JCP
@@ -132,7 +133,8 @@ private[gost] abstract class JcspKeyStore(algorithms: GostAlgorithms, generatorK
   }
 }
 
-abstract class GostCryptoContext(pkiRequiredOids: Set[String], crlCheckIsEnabled: Boolean) extends CryptoContext with ScorexLogging { self =>
+abstract class GostCryptoContext(pkiRequiredOids: Set[ExtendedKeyUsage], crlCheckIsEnabled: Boolean) extends CryptoContext with ScorexLogging {
+  self =>
 
   override type KeyPair0 = GostKeyPair
   override val isGost     = true

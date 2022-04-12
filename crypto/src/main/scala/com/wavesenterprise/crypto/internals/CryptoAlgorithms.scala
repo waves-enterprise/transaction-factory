@@ -1,6 +1,7 @@
 package com.wavesenterprise.crypto.internals
 
 import cats.implicits._
+import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 import com.wavesenterprise.pki.CertChain
 import com.wavesenterprise.utils.Base64
 import monix.eval.Coeval
@@ -33,7 +34,7 @@ trait CryptoAlgorithms[KP <: KeyPair] {
 
   protected val log: Logger = LoggerFactory.getLogger(this.getClass)
 
-  def pkiRequiredOids: Set[String]                             = Set.empty
+  def pkiRequiredOids: Set[ExtendedKeyUsage]                   = Set.empty
   def crlCheckIsEnabled: Boolean                               = false
   def maybeTrustKeyStoreProvider: Option[Coeval[JavaKeyStore]] = None
 
@@ -173,11 +174,13 @@ case class EncryptedForMany(encryptedData: Array[Byte], recipientPubKeyToWrapped
 
 object CryptoAlgorithms {
 
-  def validateCertChain(certChain: CertChain,
-                        timestamp: Long,
-                        requiredOids: Set[String],
-                        withCRLCheck: Boolean,
-                        trustManagerFactory: TrustManagerFactory): Either[CryptoError, Unit] =
+  def validateCertChain(
+      certChain: CertChain,
+      timestamp: Long,
+      requiredOids: Set[ExtendedKeyUsage],
+      withCRLCheck: Boolean,
+      trustManagerFactory: TrustManagerFactory
+  ): Either[CryptoError, Unit] =
     for {
       _ <- ensureDigitalSignatureKeyUsage(certChain.userCert)
       _ <- checkRequiredCertOids(certChain.userCert, requiredOids)
@@ -210,16 +213,23 @@ object CryptoAlgorithms {
     }
   }
 
-  private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[String]): Either[CryptoError, Unit] = {
-    def foundOids: Set[String] = requiredOids intersect Option(cert.getExtendedKeyUsage).map(_.asScala.toSet).orEmpty
-    Either.cond(
-      requiredOids.isEmpty || foundOids.nonEmpty,
-      (),
-      PKIError(
-        s"ExtendedKeyUsage of DN='${cert.getSubjectX500Principal}' does not contain any of the following expected OIDs: " +
-          s"[${requiredOids.mkString(",")}]"
-      )
-    )
+  private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[ExtendedKeyUsage]): Either[CryptoError, Unit] = {
+    if (requiredOids.isEmpty) {
+      Right(())
+    } else {
+      val certOidsStr = Option(cert.getExtendedKeyUsage).map(_.asScala.toList).orEmpty
+      ExtendedKeyUsage.parseStrings(certOidsStr: _*).flatMap { parsedOids =>
+        val foundOids = (requiredOids intersect parsedOids.toSet)
+        Either.cond(
+          foundOids.nonEmpty,
+          (),
+          PKIError(
+            s"ExtendedKeyUsage of DN='${cert.getSubjectX500Principal}' does not contain any of the following expected OIDs: " +
+              s"[${requiredOids.map(_.strRepr).mkString(",")}]"
+          )
+        )
+      }
+    }
   }
 
   /** According to java-csp-5.0.42119-A/samples-sources/userSamples/CRLValidateCert.java */
