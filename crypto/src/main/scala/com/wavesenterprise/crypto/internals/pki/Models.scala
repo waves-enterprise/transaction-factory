@@ -12,7 +12,6 @@ import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
 import ru.CryptoPro.JCPRequest
 import ru.CryptoPro.reprov.x509._
-import pureconfig.module.enumeratum._
 
 import scala.collection.immutable
 
@@ -45,7 +44,7 @@ object Models {
 
     val baseConfigReader: ConfigReader[CertRequestContent] = deriveReader
 
-    implicit val configReader: ConfigReader[CertRequestContent] = new ConfigReader[CertRequestContent] {
+    implicit val configReader: ConfigReader[CertRequestContent] = ConfigReader.fromCursor { cur =>
       def withValidation(conf: CertRequestContent): Result[CertRequestContent] = {
         val mustBeNonEmptyStrs = Seq(conf.stateOrProvince, conf.country, conf.locality, conf.commonName, conf.organization, conf.organizationalUnit)
 
@@ -56,9 +55,7 @@ object Models {
         }
       }
 
-      override def from(cur: ConfigCursor): Result[CertRequestContent] = {
-        baseConfigReader.from(cur).flatMap(withValidation)
-      }
+      baseConfigReader.from(cur).flatMap(withValidation)
     }
   }
 
@@ -71,8 +68,6 @@ object Models {
   sealed abstract class KeyUsage(val jcspValue: Int) extends EnumEntry with Uncapitalised
 
   object KeyUsage extends Enum[KeyUsage] {
-    import pureconfig.generic.auto._
-
     case object DigitalSignature  extends KeyUsage(JCPRequest.KeyUsage.DIGITAL_SIGNATURE)
     case object ContentCommitment extends KeyUsage(JCPRequest.KeyUsage.NON_REPUDIATION)
     case object KeyEncipherment   extends KeyUsage(JCPRequest.KeyUsage.KEY_ENCIPHERMENT)
@@ -85,7 +80,9 @@ object Models {
 
     val values: immutable.IndexedSeq[KeyUsage] = findValues
 
-    implicit val configReader: ConfigReader[KeyUsage] = deriveReader
+    private val valueByName = values.map(e => e.entryName -> e).toMap
+
+    implicit val configReader: ConfigReader[KeyUsage] = ConfigReader.fromStringOpt(valueByName.get)
   }
 
   sealed abstract class ExtendedKeyUsage(val jcspValue: Array[Int]) extends EnumEntry with Uncapitalised {
