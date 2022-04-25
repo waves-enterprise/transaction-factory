@@ -213,7 +213,7 @@ object CryptoAlgorithms {
     }
   }
 
-  private def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[ExtendedKeyUsage]): Either[CryptoError, Unit] = {
+  def checkRequiredCertOids(cert: X509Certificate, requiredOids: Set[ExtendedKeyUsage]): Either[CryptoError, Unit] = {
     if (requiredOids.isEmpty) {
       Right(())
     } else {
