@@ -144,13 +144,13 @@ object PkiCryptoSettings {
     case EnabledPkiSettings(requiredOids, crlChecksEnabled) =>
       s"""
          |mode: ON
-         |requiredOids: [${requiredOids.mkString(", ")}]
+         |requiredOids: [${requiredOids.map(_.strRepr).mkString(", ")}]
          |crlChecksEnabled: $crlChecksEnabled
        """.stripMargin
     case TestPkiSettings(requiredOids, crlChecksEnabled) =>
       s"""
          |mode: TEST
-         |requiredOids: [${requiredOids.mkString(", ")}]
+         |requiredOids: [${requiredOids.map(_.strRepr).mkString(", ")}]
          |crlChecksEnabled: $crlChecksEnabled
        """.stripMargin
   }
