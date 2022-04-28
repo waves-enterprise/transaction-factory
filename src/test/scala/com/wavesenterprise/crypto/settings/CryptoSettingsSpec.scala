@@ -166,7 +166,7 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  pki {
         |    mode = ON
         |    required-oids = ["1a", "blabla"]
-        |    crl-checks-enabled = no
+        |    crl-checks-enabled = yes
         |  }
         |}
         |""".stripMargin
