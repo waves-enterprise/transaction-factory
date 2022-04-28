@@ -98,14 +98,14 @@ object CryptoSettings extends ScorexLogging {
         case PkiMode.OFF => Right(DisabledPkiSettings)
         case PkiMode.ON =>
           for {
-            crlChecksEnabled <- parseCrlChecks(pkiCursor).flatMap {
-              case true =>
-                Right(true)
-              case false =>
-                Left(ConfigReaderFailures {
-                  ThrowableFailure(new IllegalStateException("Setting 'crl-checks-enabled = false' is forbidden for 'pki.mode = ON'"), None)
-                })
-            }
+            crlChecksEnabled <- parseCrlChecks(pkiCursor)
+            _ <- Either.cond(
+              crlChecksEnabled,
+              Unit,
+              ConfigReaderFailures {
+                ThrowableFailure(new IllegalStateException("Setting 'crl-checks-enabled = false' is forbidden for 'pki.mode = ON'"), None)
+              }
+            )
             requiredOids <- parseRequiredOIds(pkiCursor)
           } yield EnabledPkiSettings(requiredOids, crlChecksEnabled)
         case PkiMode.TEST =>
