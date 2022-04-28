@@ -17,7 +17,7 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
         |  pki {
         |    mode = ON
         |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "3", "EmailProtection"]
-        |    crl-checks-enabled = no
+        |    crl-checks-enabled = yes
         |  }
         |}
         |""".stripMargin
@@ -31,7 +31,7 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
       ExtendedKeyUsage.EmailProtection
     )
 
-    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(expectedEkus, crlChecksEnabled = false))
+    config.loadOrThrow[CryptoSettings] shouldBe GostCryptoSettings(EnabledPkiSettings(expectedEkus, crlChecksEnabled = true))
   }
 
   "should ignore crypto.type when waves-crypto is used" in {
@@ -178,5 +178,26 @@ class CryptoSettingsSpec extends FreeSpec with Matchers {
 
     errorMessage should include("Extended key usage '1a' mismatch OID pattern")
     errorMessage should include("Extended key usage 'blabla' mismatch OID pattern")
+  }
+
+  "returns exception upon disabling CRL checks for 'pki.mode = ON'" in {
+    val config = ConfigSource.string {
+      """
+        |crypto {
+        |  type = GOST
+        |  pki {
+        |    mode = ON
+        |    required-oids = ["1.2.3.4.5.6.7.8.9", "192.168.0.1.255.255.255.0", "1.3.6.1.5.5.7.3.3", "EmailProtection"]
+        |    crl-checks-enabled = no
+        |  }
+        |}
+        |""".stripMargin
+    }
+
+    (the[ConfigReaderException[_]] thrownBy {
+      config.loadOrThrow[CryptoSettings]
+    }).getMessage should include {
+      "Setting 'crl-checks-enabled = false' is forbidden for 'pki.mode = ON'"
+    }
   }
 }
