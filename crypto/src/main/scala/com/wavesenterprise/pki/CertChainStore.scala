@@ -5,7 +5,8 @@ import com.google.common.io.ByteStreams.newDataOutput
 import com.wavesenterprise.crypto.internals.{CryptoError, PKIError}
 import com.wavesenterprise.serialization.BinarySerializer
 import com.wavesenterprise.utils.EitherUtils.EitherExt
-import com.wavesenterprise.utils.ReadWriteLocking
+import com.wavesenterprise.utils.{Base58, ReadWriteLocking}
+import org.apache.commons.codec.digest.DigestUtils
 
 import java.security.cert.X509Certificate
 import java.util.concurrent.locks.{ReadWriteLock, ReentrantReadWriteLock}
@@ -188,6 +189,13 @@ class CertChainStore private (
 
   override def hashCode(): Int =
     certsByDN.hashCode()
+
+  override def toString: String = {
+    getCertChains match {
+      case Left(err)     => s"CorruptedCertChainStore($err)"
+      case Right(chains) => chains.mkString("CertChainStore(", ", ", ")")
+    }
+  }
 }
 
 object CertChainStore {
@@ -320,6 +328,24 @@ object CertChainStore {
   }
 }
 
-case class CertChain(caCert: X509Certificate, intermediateCerts: Seq[X509Certificate], userCert: X509Certificate) {
-  def toSet: Set[X509Certificate] = (caCert :: userCert :: intermediateCerts.toList).toSet
+sealed trait X509Chain {
+  def caCert: X509Certificate
+  def intermediateCerts: Seq[X509Certificate]
+  def userCert: X509Certificate
+
+  lazy val toSet: Set[X509Certificate] = (caCert :: userCert :: intermediateCerts.toList).toSet
+
+  override val toString: String = {
+    val intermediateStr = intermediateCerts.map(trimmedFingerPrint) match {
+      case Nil  => ""
+      case list => list.mkString(" ->", ", ", "")
+    }
+    s"""[${trimmedFingerPrint(userCert)}$intermediateStr -> ${trimmedFingerPrint(caCert)}]"""
+  }
+
+  private def trimmedFingerPrint(cert: X509Certificate): String = {
+    Base58.encode(DigestUtils.sha1(cert.getEncoded)).take(7) + "..."
+  }
 }
+
+case class CertChain(caCert: X509Certificate, intermediateCerts: Seq[X509Certificate], userCert: X509Certificate) extends X509Chain
