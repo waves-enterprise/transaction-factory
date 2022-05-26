@@ -29,7 +29,7 @@ object PkiTools {
   val HdImageType = "HDIMAGE"
 
   private val ProviderName           = JCSP.PROVIDER_NAME
-  private val Algorithm              = JCP.GOST_DH_2012_256_NAME
+  private val Algorithm              = JCP.GOST_EL_2012_256_NAME
   private val SignAlgorithm          = JCP.GOST_SIGN_2012_256_NAME
   private val CertificateFactoryName = JCP.CERTIFICATE_FACTORY_NAME
   private val DefaultExtensions      = Extensions(List(KeyUsage.DigitalSignature))
