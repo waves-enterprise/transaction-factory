@@ -36,13 +36,31 @@ object PkiTools {
   private val DefaultCertReqConfig =
     CertRequestContent("Waves Enterprise CA", "IT Business", "Waves Enterprise", "RU", "Moscow", "Moscow", DefaultExtensions)
 
-  case class PrivateKeyEntry(privateKey: PrivateKey, certificate: Certificate) {
-    def asJcsp = new JCPPrivateKeyEntry(privateKey, Array(certificate))
+  trait KeystoreEntry {
+    def privateKey: PrivateKey
+    def asJcsp: JCPPrivateKeyEntry
   }
 
-  object PrivateKeyEntry {
-    def fromJcsp(jcpPrivKeyEntry: JCPPrivateKeyEntry): PrivateKeyEntry =
-      PrivateKeyEntry(jcpPrivKeyEntry.getPrivateKey, jcpPrivKeyEntry.getCertificate)
+  object KeystoreEntry {
+    case class UncertifiedKey(privateKey: PrivateKey) extends KeystoreEntry {
+      override def asJcsp: JCPPrivateKeyEntry =
+        new JCPPrivateKeyEntry(privateKey, null, true /* allowEmptyChain parameter */ )
+    }
+
+    case class CertifiedKey(privateKey: PrivateKey, certificate: Certificate) extends KeystoreEntry {
+      val publicKey: PublicKey = certificate.getPublicKey
+
+      override def asJcsp: JCPPrivateKeyEntry =
+        new JCPPrivateKeyEntry(privateKey, Array(certificate)) //TODO: we should put a certificate chain here
+    }
+
+    def fromJcsp(jcpPrivateKeyEntry: JCPPrivateKeyEntry): KeystoreEntry = {
+      val privateKey = jcpPrivateKeyEntry.getPrivateKey
+      Option(jcpPrivateKeyEntry.getCertificate) match {
+        case Some(cert) => KeystoreEntry.CertifiedKey(privateKey, cert)
+        case None       => KeystoreEntry.UncertifiedKey(privateKey)
+      }
+    }
   }
 
   def init(): Unit = {
@@ -58,13 +76,8 @@ object PkiTools {
     keyPairGen.generateKeyPair()
   }
 
-  def generatePrivateKeyEntry(certificateConfig: CertRequestContent): PrivateKeyEntry = {
-    val keyPair   = generateKeyPair()
-    val certBytes = generateAndEncodeCertificate(keyPair, certificateConfig)
-    val cert      = certificateFromBytes(certBytes)
-
-    PrivateKeyEntry(keyPair.getPrivate, cert)
-  }
+  def generatePrivateKeyEntry(): KeystoreEntry =
+    KeystoreEntry.UncertifiedKey(generateKeyPair().getPrivate)
 
   def generateCertificateRequest(publicKey: PublicKey, subjectName: X500Name, extensions: Extensions): GostCertificateRequest = {
     val request = new GostCertificateRequest(ProviderName)
@@ -122,7 +135,7 @@ object PkiTools {
     request.addExtension(sanExtension)
   }
 
-  def saveKeyEntry(id: String, entry: PrivateKeyEntry, keyStore: KeyStore, password: Array[Char]): Unit = {
+  def saveKeyEntry(id: String, entry: KeystoreEntry, keyStore: KeyStore, password: Array[Char]): Unit = {
     val protection = new KeyStore.PasswordProtection(password)
     keyStore.setEntry(id, entry.asJcsp, protection)
   }
@@ -133,9 +146,10 @@ object PkiTools {
     keyStore
   }
 
-  def getEntryFromKeyStore(keyStore: KeyStore, id: String, password: Array[Char]): PrivateKeyEntry = {
+  def getEntryFromKeyStore(keyStore: KeyStore, id: String, password: Array[Char]): KeystoreEntry = {
     val protection = new KeyStore.PasswordProtection(password)
-    PrivateKeyEntry.fromJcsp(keyStore.getEntry(id, protection).asInstanceOf[JCPPrivateKeyEntry])
+    val jcpEntry   = keyStore.getEntry(id, protection).asInstanceOf[JCPPrivateKeyEntry]
+    KeystoreEntry.fromJcsp(jcpEntry)
   }
 
   def getIssuer(cert: Certificate): X500Name = {
@@ -250,12 +264,18 @@ object PkiTools {
 
   def generateCertificateFromRequest(
       request: GostCertificateRequest,
-      caPrivateKeyEntry: PrivateKeyEntry,
+      caPrivateKeyEntry: KeystoreEntry,
       publicKey: PublicKey,
       subjectName: X500Name
   ): Array[Byte] = {
-    val issuer = PkiTools.getIssuer(caPrivateKeyEntry.certificate)
-    request.generateCert(caPrivateKeyEntry.privateKey, publicKey, subjectName, issuer, null)
+    caPrivateKeyEntry match {
+      case KeystoreEntry.UncertifiedKey(_) =>
+        throw new RuntimeException("Couldn't find a certificate for the issuer in the Keystore")
+
+      case KeystoreEntry.CertifiedKey(issuerKey, issuerCertificate) =>
+        val issuer = PkiTools.getIssuer(issuerCertificate)
+        request.generateCert(issuerKey, publicKey, subjectName, issuer, null)
+    }
   }
 
   def charsToBytes(chars: Array[Char], charset: String = "UTF-8"): Array[Byte] = {
