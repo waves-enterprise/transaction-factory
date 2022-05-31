@@ -16,7 +16,7 @@ stages:
 ### Anchors
 .jcsp-install-script: &jcsp-install-script
   # Install csp
-  - tar zxf lib/csp-linux-amd64-deb-5.0.11823.tgz -C lib/
+  - tar zxf lib/csp-linux-amd64-deb-5.0R2.tgz -C lib/
   - lib/linux-amd64_deb/install.sh
   # Install jscp
   - mkdir lib/java-csp && tar zxf lib/java-csp-5.0.42119-A.tgz -C lib/java-csp
@@ -83,7 +83,7 @@ download-crypto:
     - nexusPassword=$(sed -n 's/^password=//p' $SBT_CREDENTIALS)
     - mkdir lib/
     - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/java-csp-5.0.42119-A.tgz --output lib/java-csp-5.0.42119-A.tgz
-    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5.0.11823.tgz --output lib/csp-linux-amd64-deb-5.0.11823.tgz
+    - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5.0R2.tgz --output lib/csp-linux-amd64-deb-5.0R2.tgz
     - curl -u ${nexusUser}:${nexusPassword} https://artifacts.wavesenterprise.com/repository/we-deps/crypto/csp-linux-amd64-deb-5R2-RC7.tgz --output lib/csp-linux-amd64-deb-5R2-RC7.tgz
   artifacts:
     paths:

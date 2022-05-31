@@ -3,7 +3,7 @@ import sbt._
 
 object Dependencies {
 
-  val supportedCspVersion             = "5.0.11823"
+  val supportedCspVersion             = "5.0R2"
   val supportedJcspVersion            = "5.0.42119-A"
   val supportedExperimentalCspVersion = "5R2-RC7"
 
