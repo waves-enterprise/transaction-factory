@@ -41,6 +41,12 @@ object PkiTools {
     def asJcsp: JCPPrivateKeyEntry
   }
 
+  /**
+    * [[KeystoreEntry]] can have two states:
+    *   * [[KeystoreEntry.UncertifiedKey]] — for a freshly generated key, which only has the Private part
+    *   * [[KeystoreEntry.CertifiedKey]] — for a keypair, that has an issued certificate,
+    *       which in turn has the Public key part contained
+    */
   object KeystoreEntry {
     case class UncertifiedKey(privateKey: PrivateKey) extends KeystoreEntry {
       override def asJcsp: JCPPrivateKeyEntry =
@@ -51,7 +57,7 @@ object PkiTools {
       val publicKey: PublicKey = certificate.getPublicKey
 
       override def asJcsp: JCPPrivateKeyEntry =
-        new JCPPrivateKeyEntry(privateKey, Array(certificate)) //TODO: we should put a certificate chain here
+        new JCPPrivateKeyEntry(privateKey, Array(certificate))
     }
 
     def fromJcsp(jcpPrivateKeyEntry: JCPPrivateKeyEntry): KeystoreEntry = {
@@ -75,9 +81,6 @@ object PkiTools {
     keyPairGen.initialize(new CryptDhAllowedSpec())
     keyPairGen.generateKeyPair()
   }
-
-  def generatePrivateKeyEntry(): KeystoreEntry =
-    KeystoreEntry.UncertifiedKey(generateKeyPair().getPrivate)
 
   def generateCertificateRequest(publicKey: PublicKey, subjectName: X500Name, extensions: Extensions): GostCertificateRequest = {
     val request = new GostCertificateRequest(ProviderName)
