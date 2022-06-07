@@ -18,6 +18,48 @@ fork in run := true
 
 name := "we-core"
 
+inThisBuild(
+  Seq(
+    scalaVersion := "2.12.10",
+    organization := "com.wavesenterprise",
+    organizationName := "wavesenterprise",
+    organizationHomepage := Some(url("https://wavesenterprise.com")),
+    description := "Library for Waves Enterprise blockchain platform",
+    homepage := Some(url("https://github.com/waves-enterprise/we-core")),
+    pomIncludeRepository := { _ =>
+      false
+    },
+    publishMavenStyle := true,
+    licenses ++= Seq(
+      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+    ),
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/waves-enterprise/we-core"),
+        "scm:git@github.com:waves-enterprise/we-core.git"
+      )
+    ),
+    developers ++= List(
+      Developer("vaan", "Vadim Anufriev", "vanufriev@web3tech.ru", url("https://vaan.io/")),
+      Developer("squadgazzz", "Ilia Zhavoronkov", "izhavoronkov89@list.ru", url("https://www.linkedin.com/in/ilya-zhavoronkov/")),
+      Developer("sathembite", "Anton Mazur", "sathembite@gmail.com", url("https://github.com/AntonMazur")),
+      Developer("kantefier", "Kirill Nebogin", "kinebogin@gmail.com", url("https://github.com/kantefier")),
+      Developer("gamzaliev", "Ruslan Gamzaliev", "gamzaliev.ruslan.94@gmail.com", url("https://github.com/gamzaliev")),
+      Developer("1estart", "Artemiy Pospelov", "artemiywaves@gmail.com", url("https://github.com/1estart")),
+    ),
+    crossPaths := false,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-Ywarn-unused:-implicits",
+      "-Xlint",
+      "-Ypartial-unification"
+    )
+  )
+)
+
 /**
   * You have to put your credentials in a local file ~/.sbt/.credentials
   * File structure:
@@ -42,6 +84,8 @@ credentials += {
       Credentials(localCredentialsFile)
   }
 }
+
+credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credentials")
 
 excludeDependencies ++= Seq(
   // workaround for https://github.com/sbt/sbt/issues/3618
@@ -119,20 +163,6 @@ scalacOptions ++= Seq(
   "-Ypartial-unification",
   "-language:postfixOps"
 )
-
-inThisBuild(
-  Seq(
-    scalaVersion := "2.12.10",
-    organization := "com.wavesenterprise",
-    crossPaths := false,
-    scalacOptions ++= Seq("-feature",
-                          "-deprecation",
-                          "-language:higherKinds",
-                          "-language:implicitConversions",
-                          "-Ywarn-unused:-implicits",
-                          "-Xlint",
-                          "-Ypartial-unification")
-  ))
 
 scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true)))
 
