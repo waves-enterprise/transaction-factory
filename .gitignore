@@ -7,19 +7,12 @@
 target
 *.tgz
 *.jar
-!third-party/yourkit/yjp-controller-api-redist.jar
 jars
 artifacts
 
 # auto-generated proto files
 transaction-protobuf/src/main/protobuf/managed
 grpc-protobuf/src/main/protobuf/managed
-
-# npm generated files
-transactions-factory/node_modules
-
-# TypeScript transactions artifact
-we-transaction_typescript_*.zip
 
 # Protobuf artifact
 we_protobuf_*.zip
@@ -41,9 +34,7 @@ local.conf
 *.ods
 *.csv
 *.dat
-!/api-testing/*.dat
 *.sc
-
 
 # logs
 *.log
@@ -52,21 +43,11 @@ package
 !src/package
 native
 
-# add csp
-!lib/csp-linux-amd64-deb-*.tgz
-!lib/java-csp-*.tgz
-
 # Jenkins build
 envfile
 
 .metals/
 .bloop/
-
-src/main/resources/licensees/*.pub
-src/test/resources/licensees/*.pub
-
-# State migration app
-!state-migration/migration.jar
 
 # vscode
 .vscode

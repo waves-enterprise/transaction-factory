@@ -61,7 +61,6 @@ class DataTransactionV2Specification
         val bytes      = tx.bytes()
         val entryCount = Shorts.fromByteArray(bytes.drop(67))
         if (entryCount > 0) {
-          //TODO: wtf is with this test? Commented version before merging
           /*val key1Length = Shorts.fromByteArray(bytes.drop(69))
           val p          = 71 + key1Length
           bytes(p) = badTypeId.toByte*/
