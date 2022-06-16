@@ -107,17 +107,6 @@ version in ThisBuild := {
     .getOrElse(git.formattedDateVersion.value)
 }
 
-lazy val checkJCSP = taskKey[Unit]("check JCSP installed in JRE")
-
-checkJCSP := Def
-  .sequential(
-    Def.task {
-      CheckJCSP.run()
-    },
-    printMessageTask("JCSP checked successfully")
-  )
-  .value
-
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
@@ -470,7 +459,7 @@ lazy val typescriptArchives = (project in file("we-transaction-typescript"))
 
 addCommandAlias(
   "compileAll",
-  "; cleanAll; checkJCSP; transactionProtobuf/compile; compile; test:compile"
+  "; cleanAll; transactionProtobuf/compile; compile; test:compile"
 )
 
 lazy val isSnapshotVersion: Def.Initialize[Boolean] = version(_ endsWith "-SNAPSHOT")

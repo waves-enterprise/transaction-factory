@@ -10,24 +10,20 @@ import pureconfig._
 import pureconfig.error.{CannotConvert, ConfigReaderFailures}
 import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
-import ru.CryptoPro.JCPRequest
-import ru.CryptoPro.reprov.x509._
 
 import scala.collection.immutable
 
 object Models {
 
   case class CertRequestContent(
-      commonName: String, //CN
-      organizationalUnit: String, //OU
-      organization: String, //O
-      country: String, //C
-      stateOrProvince: String, //S
-      locality: String, //L
-      extensions: Extensions //X.509 v3 Extensions
-  ) {
-    def toX500Name: X500Name = new X500Name(commonName, organizationalUnit, organization, locality, stateOrProvince, country)
-  }
+      commonName: String, // CN
+      organizationalUnit: String, // OU
+      organization: String, // O
+      country: String, // C
+      stateOrProvince: String, // S
+      locality: String, // L
+      extensions: Extensions // X.509 v3 Extensions
+  )
 
   object CertRequestContent {
     import pureconfig.generic.auto._
@@ -65,18 +61,18 @@ object Models {
       subjectAlternativeName: SubjectAlternativeName = SubjectAlternativeName.empty
   )
 
-  sealed abstract class KeyUsage(val jcspValue: Int) extends EnumEntry with Uncapitalised
+  sealed abstract class KeyUsage(val id: Int) extends EnumEntry with Uncapitalised
 
   object KeyUsage extends Enum[KeyUsage] {
-    case object DigitalSignature  extends KeyUsage(JCPRequest.KeyUsage.DIGITAL_SIGNATURE)
-    case object ContentCommitment extends KeyUsage(JCPRequest.KeyUsage.NON_REPUDIATION)
-    case object KeyEncipherment   extends KeyUsage(JCPRequest.KeyUsage.KEY_ENCIPHERMENT)
-    case object DataEncipherment  extends KeyUsage(JCPRequest.KeyUsage.DATA_ENCIPHERMENT)
-    case object KeyAgreement      extends KeyUsage(JCPRequest.KeyUsage.KEY_AGREEMENT)
-    case object KeyCertSign       extends KeyUsage(JCPRequest.KeyUsage.KEY_CERT_SIGN)
-    case object CRLSign           extends KeyUsage(JCPRequest.KeyUsage.CRL_SIGN)
-    case object EncipherOnly      extends KeyUsage(JCPRequest.KeyUsage.ENCIPHER_ONLY)
-    case object DecipherOnly      extends KeyUsage(JCPRequest.KeyUsage.DECIPHER_ONLY)
+    case object DigitalSignature  extends KeyUsage(1)
+    case object ContentCommitment extends KeyUsage(2)
+    case object KeyEncipherment   extends KeyUsage(4)
+    case object DataEncipherment  extends KeyUsage(8)
+    case object KeyAgreement      extends KeyUsage(16)
+    case object KeyCertSign       extends KeyUsage(32)
+    case object CRLSign           extends KeyUsage(64)
+    case object EncipherOnly      extends KeyUsage(128)
+    case object DecipherOnly      extends KeyUsage(256)
 
     val values: immutable.IndexedSeq[KeyUsage] = findValues
 
@@ -85,8 +81,8 @@ object Models {
     implicit val configReader: ConfigReader[KeyUsage] = ConfigReader.fromStringOpt(valueByName.get)
   }
 
-  sealed abstract class ExtendedKeyUsage(val jcspValue: Array[Int]) extends EnumEntry with Uncapitalised {
-    private val oidStr: String = jcspValue.mkString(".")
+  sealed abstract class ExtendedKeyUsage(val ids: Array[Int]) extends EnumEntry with Uncapitalised {
+    private val oidStr: String = ids.mkString(".")
 
     def strRepr: String = ExtendedKeyUsage.oidToValue.get(oidStr).fold(oidStr)(_.entryName)
 
@@ -101,12 +97,12 @@ object Models {
   case class CustomExtendedKeyUsage(oid: Array[Int]) extends ExtendedKeyUsage(oid)
 
   object ExtendedKeyUsage extends Enum[ExtendedKeyUsage] {
-    case object ServerAuth      extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_SERVER_AUTH)
-    case object ClientAuth      extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_CLIENT_AUTH)
-    case object CodeSigning     extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_CODE_SIGNING)
-    case object EmailProtection extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_EMAIL_PROTECTION)
-    case object TimeStamping    extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_TIME_STAMPING)
-    case object OCSPSigning     extends ExtendedKeyUsage(JCPRequest.KeyUsage.INTS_PKIX_OCSP_SIGNING)
+    case object ServerAuth      extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 1))
+    case object ClientAuth      extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 2))
+    case object CodeSigning     extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 3))
+    case object EmailProtection extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 4))
+    case object TimeStamping    extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 8))
+    case object OCSPSigning     extends ExtendedKeyUsage(Array(1, 3, 6, 1, 5, 5, 7, 3, 9))
 
     override val values: immutable.IndexedSeq[ExtendedKeyUsage] = findValues
 
@@ -153,20 +149,16 @@ object Models {
     }
   }
 
-  sealed abstract class SubjectAlternativeNameItemType(jscpMapper: String => GeneralNameInterface) extends EnumEntry with Uppercase {
-    def toJcspGeneralName(value: String): GeneralName = new GeneralName(jscpMapper(value))
-  }
+  sealed trait SubjectAlternativeNameItemType extends EnumEntry with Uppercase
 
   object SubjectAlternativeNameItemType extends Enum[SubjectAlternativeNameItemType] {
-    case object Dns extends SubjectAlternativeNameItemType(new DNSName(_))
-    case object Ip  extends SubjectAlternativeNameItemType(new IPAddressName(_))
+    case object Dns extends SubjectAlternativeNameItemType
+    case object Ip  extends SubjectAlternativeNameItemType
 
     override val values: scala.collection.immutable.IndexedSeq[SubjectAlternativeNameItemType] = findValues
   }
 
-  case class SubjectAlternativeNameItem(itemType: SubjectAlternativeNameItemType, value: String) {
-    def toJscpGeneralName: GeneralName = itemType.toJcspGeneralName(value)
-  }
+  case class SubjectAlternativeNameItem(itemType: SubjectAlternativeNameItemType, value: String)
 
   case class SubjectAlternativeName(value: List[SubjectAlternativeNameItem])
 

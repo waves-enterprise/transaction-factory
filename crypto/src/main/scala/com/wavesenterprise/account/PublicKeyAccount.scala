@@ -27,9 +27,6 @@ object PublicKeyAccount {
 
   def apply(publicKey: PublicKey): PublicKeyAccount = PublicKeyAccountImpl(publicKey)
 
-  /**
-    * Warning: could be unsafe for Gost crypto, expect exceptions from PublicKey.apply
-    */
   def apply(publicKey: Array[Byte]): PublicKeyAccount =
     PublicKeyAccount(PublicKey(publicKey))
 
