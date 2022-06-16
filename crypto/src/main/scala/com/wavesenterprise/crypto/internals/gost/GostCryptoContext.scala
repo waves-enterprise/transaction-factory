@@ -137,7 +137,6 @@ abstract class GostCryptoContext(pkiRequiredOids: Set[ExtendedKeyUsage], crlChec
   self =>
 
   override type KeyPair0 = GostKeyPair
-  override val isGost     = true
   override val algorithms = new GostAlgorithms(pkiRequiredOids, crlCheckIsEnabled)
 
   def toAlias(keyPair: GostKeyPair): String

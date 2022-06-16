@@ -161,7 +161,7 @@ class ParserTest extends PropSpec with ScalaCheckPropertyChecks with Matchers wi
   }
 
   property("literal too long") {
-    import Global.MaxLiteralLength
+    import WavesGlobal.MaxLiteralLength
     val longLiteral = "A" * (MaxLiteralLength + 1)
     val to          = 8 + MaxLiteralLength
     parse(s"base58'$longLiteral'") shouldBe

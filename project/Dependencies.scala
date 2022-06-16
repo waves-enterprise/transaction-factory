@@ -67,4 +67,6 @@ object Dependencies {
   )
 
   lazy val protobuf = Seq("com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf")
+
+  lazy val reflections= Seq("org.reflections" % "reflections" % "0.10.2")
 }

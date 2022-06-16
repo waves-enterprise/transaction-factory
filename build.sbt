@@ -324,7 +324,8 @@ lazy val crypto: Project = project
       Dependencies.enumeratum,
       Dependencies.bouncyCastle,
       Dependencies.serialization,
-      Dependencies.scalaCollectionCompat
+      Dependencies.scalaCollectionCompat,
+      Dependencies.reflections
     ).flatten,
     publishTo := wePublishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),

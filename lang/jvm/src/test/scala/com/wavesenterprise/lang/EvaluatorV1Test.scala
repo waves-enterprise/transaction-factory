@@ -33,7 +33,7 @@ import scala.util.Try
 
 class EvaluatorV1Test extends PropSpec with ScalaCheckPropertyChecks with Matchers with ScriptGen with NoShrink {
 
-  val global     = Global
+  val global     = WavesGlobal
   val algorithms = WavesAlgorithms
   def generateTestKeyPair() = {
     val kp = algorithms.generateSessionKey()
@@ -423,7 +423,7 @@ class EvaluatorV1Test extends PropSpec with ScalaCheckPropertyChecks with Matche
 
   property("fromBase58String(String) works as the native one") {
     val gen = for {
-      len <- Gen.choose(0, Global.MaxBase58Bytes)
+      len <- Gen.choose(0, WavesGlobal.MaxBase58Bytes)
       xs  <- Gen.containerOfN[Array, Byte](len, Arbitrary.arbByte.arbitrary)
     } yield Base58.encode(xs)
 
@@ -435,7 +435,7 @@ class EvaluatorV1Test extends PropSpec with ScalaCheckPropertyChecks with Matche
   }
 
   property("fromBase58String(String) input is 100 chars max") {
-    import Global.{MaxBase58String => Max}
+    import WavesGlobal.{MaxBase58String => Max}
     val gen = for {
       len <- Gen.choose(Max + 1, Max * 2)
       xs  <- Gen.containerOfN[Array, Byte](len, Arbitrary.arbByte.arbitrary)

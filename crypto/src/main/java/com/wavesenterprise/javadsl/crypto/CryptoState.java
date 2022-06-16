@@ -39,10 +39,6 @@ public class CryptoState {
         return package$.MODULE$.calcCheckSum(withoutChecksum, checksumLength);
     }
 
-    public static boolean isGost() {
-        return package$.MODULE$.isGost();
-    }
-
     public static KeyStore<KeyPair> keyStore(Optional<File> file, char[] password) {
         return new KeyStore<>(package$.MODULE$.keyStore(file.map(Option::apply).orElseGet(Option::empty), password));
     }

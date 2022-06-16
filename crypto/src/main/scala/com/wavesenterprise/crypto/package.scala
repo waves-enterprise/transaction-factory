@@ -1,10 +1,11 @@
 package com.wavesenterprise
 
-import com.wavesenterprise.account.{Address, PrivateKeyAccount, PublicKeyAccount}
+import cats.implicits._
+import com.wavesenterprise.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.wavesenterprise.crypto.internals._
-import com.wavesenterprise.crypto.internals.gost.{GostCryptoContext, GostKeyPair}
+import com.wavesenterprise.lang.v1.BaseGlobal
 import com.wavesenterprise.pki.CertChain
-import com.wavesenterprise.settings.{CryptoSettings, CryptoType, PkiCryptoSettings}
+import com.wavesenterprise.settings.{CryptoSettings, PkiCryptoSettings}
 import com.wavesenterprise.state.ByteStr
 import com.wavesenterprise.utils.Constants.base58Length
 import scorex.crypto.signatures.{MessageToSign, Signature, PublicKey => PublicKeyBytes}
@@ -15,9 +16,6 @@ import java.security.Provider
 import java.security.cert.X509Certificate
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
-import scala.util.Try
-import cats.implicits._
-import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
 
 package crypto {
   object CryptoInitializer {
@@ -26,10 +24,8 @@ package crypto {
     def init(cryptoSettings: CryptoSettings): Either[CryptoError, Unit] = {
       for {
         _ <- Either.cond(!cryptoSettingsPromise.isCompleted, (), GenericError("Initialization error: Crypto was already initialized!"))
-        isGostCryptoExpected = cryptoSettings.isInstanceOf[CryptoSettings.GostCryptoSettings]
-        _ <- CheckEnvironment.checkCryptoEnv(isGostCryptoExpected)
+        _ <- cryptoSettings.checkEnvironment
       } yield {
-        if (isGostCryptoExpected) Try(java.awt.Toolkit.getDefaultToolkit) // CryptoPro fix. Entropy filling does not work on macOS without this.
         cryptoSettingsPromise.success(cryptoSettings)
       }
     }
@@ -41,18 +37,11 @@ package object crypto {
     .getOrElse(Await.result(CryptoInitializer.cryptoSettingsPromise.future, 7.seconds))
 
   def readEnvForCryptoSettings(): Option[CryptoSettings] = {
-    val wavesCryptoSettingKey = "node.crypto.type"
+    val cryptoSettingKey = "node.crypto.type"
 
-    Option(System.getProperty(wavesCryptoSettingKey)).map { str =>
-      CryptoType
-        .fromStr(str)
-        .fold {
-          throw new IllegalArgumentException(s"Unacceptable value for parameter '$wavesCryptoSettingKey': '$str'")
-        } {
-          case CryptoType.GOST  => CryptoSettings.GostCryptoSettings()
-          case CryptoType.WAVES => CryptoSettings.WavesCryptoSettings
-        }
-    }
+    Option(System.getProperty(cryptoSettingKey))
+      .flatMap(CryptoSettings.findImplementation)
+      .map(settings => CryptoSettings.instantiateSettings(settings, PkiCryptoSettings.DisabledPkiSettings))
   }
 
   def toAlias(keyPair: com.wavesenterprise.crypto.internals.KeyPair,
@@ -70,29 +59,14 @@ package object crypto {
     algorithms.secureHash(withoutChecksum).take(checksumLength)
   }
 
-  lazy val context: CryptoContext = {
-    cryptoSettings match {
-      case gostSettings: CryptoSettings.GostCryptoSettings =>
-        val (requiredOids, crlChecksEnabled) = gostSettings.pkiSettings match {
-          case PkiCryptoSettings.EnabledPkiSettings(reqOids, crlCheck) => reqOids                     -> crlCheck
-          case PkiCryptoSettings.TestPkiSettings(reqOids, crlCheck)    => reqOids                     -> crlCheck
-          case _                                                       => Set.empty[ExtendedKeyUsage] -> false
-        }
-        new GostCryptoContext(requiredOids, crlChecksEnabled) {
-          override def toAlias(keyPair: GostKeyPair): String =
-            Address.fromPublicKey(keyPair.getPublic.getEncoded).address
-        }
-      case CryptoSettings.WavesCryptoSettings => new WavesCryptoContext
-    }
-  }
-
-  def isGost: Boolean = context.isGost
+  lazy val context: CryptoContext = cryptoSettings.cryptoContext
+  def rideContext: BaseGlobal     = cryptoSettings.rideContext
 
   type KeyPair    = context.KeyPair0
   type PublicKey  = context.PublicKey0
   type PrivateKey = context.PrivateKey0
 
-  val algorithms = context.algorithms
+  def algorithms = context.algorithms
 
   def keyStore(file: Option[File], password: Array[Char]): KeyStore[KeyPair] =
     context.keyStore(file, password)
