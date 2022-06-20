@@ -5,7 +5,6 @@ import com.wavesenterprise.lang.v1.BaseGlobal
 import com.wavesenterprise.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
-import com.wavesenterprise.crypto.internals.gost.{GostAlgorithms, GostPrivateKey, GostPublicKey}
 
 import scala.util.Try
 
@@ -30,7 +29,7 @@ trait CommonGlobal extends BaseGlobal {
   def sha256(message: Array[Byte]): Array[Byte] = Sha256.hash(message)
 }
 
-object Global extends CommonGlobal {
+object WavesGlobal extends CommonGlobal {
   def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean = Curve25519.verify(Signature(sig), message, PublicKey(pub))
 
   def keccak256(message: Array[Byte]): Array[Byte]  = Keccak256.hash(message)
@@ -46,25 +45,4 @@ object Global extends CommonGlobal {
     Try(WavesAlgorithms.verify(signature, message, publicKey)).getOrElse(false)
   }
 
-}
-
-object GostGlobal extends CommonGlobal {
-
-  val algorithms = new GostAlgorithms(Set.empty, false) // TODO: use params from settings
-
-  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean = {
-    Try(algorithms.verify(sig, message, pub)).getOrElse(false)
-  }
-
-  def sign(pk: GostPrivateKey, message: Array[Byte]): Array[Byte] = {
-    algorithms.sign(pk, message)
-  }
-
-  def verify(signature: Array[Byte], message: Array[Byte], publicKey: GostPublicKey): Boolean = {
-    Try(algorithms.verify(signature, message, publicKey)).getOrElse(false)
-  }
-
-  def keccak256(message: Array[Byte]): Array[Byte]  = algorithms.fastHash(message)
-  def blake2b256(message: Array[Byte]): Array[Byte] = algorithms.fastHash(message)
-  def secureHash(a: Array[Byte]): Array[Byte]       = algorithms.fastHash(a)
 }

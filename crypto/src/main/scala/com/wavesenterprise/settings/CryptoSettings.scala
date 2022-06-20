@@ -2,95 +2,90 @@ package com.wavesenterprise.settings
 
 import cats.Show
 import cats.implicits._
+import com.wavesenterprise.crypto.internals.{CryptoContext, CryptoError}
 import com.wavesenterprise.crypto.internals.pki.Models.ExtendedKeyUsage
+import com.wavesenterprise.lang.v1.BaseGlobal
 import com.wavesenterprise.settings.PkiCryptoSettings.{DisabledPkiSettings, EnabledPkiSettings, TestPkiSettings}
 import com.wavesenterprise.utils.ScorexLogging
 import enumeratum.EnumEntry
 import enumeratum.EnumEntry.Uppercase
+import org.reflections.Reflections
 import pureconfig.error.{CannotConvert, ConfigReaderFailures, ThrowableFailure}
 import pureconfig.{ConfigObjectCursor, ConfigReader}
+import com.wavesenterprise.utils.StringUtilites._
+import scala.util.chaining.scalaUtilChainingOps
 
+import scala.collection.JavaConverters._
 import scala.collection.immutable
 
-sealed trait CryptoSettings
+trait CryptoSettings {
+  def cryptoContext: CryptoContext
+  def rideContext: BaseGlobal
+
+  def pkiSettings: PkiCryptoSettings
+  def allowedPkiModes: Set[PkiMode]
+  def checkEnvironment: Either[CryptoError, Unit]
+}
 
 object CryptoSettings extends ScorexLogging {
 
-  case class GostCryptoSettings(pkiSettings: PkiCryptoSettings) extends CryptoSettings
+  private[this] lazy val reflectedSettingsClasses =
+    new Reflections(this.getClass.getPackage.getName)
+      .getSubTypesOf(classOf[CryptoSettings])
+      .asScala
 
-  object GostCryptoSettings {
-    def apply(): GostCryptoSettings = GostCryptoSettings(DisabledPkiSettings)
+  def allImplementations: Set[String] = reflectedSettingsClasses.view.map(_.getSimpleName).toSet
+
+  def findImplementation(cryptoType: String): Option[Class[_ <: CryptoSettings]] = {
+    def predicate(settingsClass: Class[_ <: CryptoSettings]): Boolean = {
+      val target = cryptoType.toUpperCase
+      val current = settingsClass.getSimpleName
+        .replace("$", "") // Scala object sign
+        .toUpperCase
+
+      current === target
+    }
+
+    reflectedSettingsClasses find predicate
   }
 
-  case object WavesCryptoSettings extends CryptoSettings
+  def instantiateSettings(settingsClass: Class[_ <: CryptoSettings], pkiSettings: PkiCryptoSettings): CryptoSettings = {
+    val constructor = settingsClass.getDeclaredConstructor(classOf[PkiCryptoSettings])
+    constructor.setAccessible(true)
+    constructor.newInstance(pkiSettings)
+  }
 
   implicit val configReader: ConfigReader[CryptoSettings] = ConfigReader.fromCursor { cursor =>
     for {
       objectCursor <- cursor.asObjectCursor
-      deprecatedCursor = objectCursor.atKeyOrUndefined("waves-crypto")
-      cryptoSettings <- if (deprecatedCursor.isUndefined) {
-        for {
-          cryptoCursor <- objectCursor.atKey("crypto").flatMap(_.asObjectCursor)
-          cryptoType   <- cryptoCursor.atKey("type").flatMap(CryptoType.configReader.from)
-          settings <- cryptoType match {
-            case CryptoType.WAVES => validatePkiConfigForWaves(cryptoCursor).map(_ => WavesCryptoSettings)
-            case CryptoType.GOST  => parseGostCryptoSettings(cryptoCursor)
-          }
-        } yield settings
-      } else {
-        log.warn {
-          s"Usage of 'node.waves-crypto = yes | no' is deprecated since v1.9.0, use 'node.crypto.type = WAVES | GOST' instead. Refer to the docs for additional info: https://docs.wavesenterprise.com/en/latest/changelog.html"
-        }
-        deprecatedCursor.asBoolean.flatMap { isWavesCrypto =>
-          val maybeCryptoCursor = objectCursor.atKeyOrUndefined("crypto")
-          if (isWavesCrypto) {
-            if (maybeCryptoCursor.isUndefined) {
-              Right(WavesCryptoSettings)
-            } else {
-              maybeCryptoCursor.asObjectCursor.flatMap(validatePkiConfigForWaves).map(_ => WavesCryptoSettings)
-            }
-          } else {
-            if (maybeCryptoCursor.isUndefined) {
-              Right(GostCryptoSettings(DisabledPkiSettings))
-            } else {
-              maybeCryptoCursor.asObjectCursor.flatMap(parseGostCryptoSettings)
-            }
+      cryptoCursor <- objectCursor.atKey("crypto").flatMap(_.asObjectCursor)
+      cryptoType   <- cryptoCursor.atKey("type").flatMap(_.asString)
+      cryptoSettingsClass <- findImplementation(cryptoType)
+        .toRight {
+          ConfigReaderFailures {
+            ThrowableFailure(
+              throwable = new NotImplementedError(
+                s"Cannot convert '$cryptoType' to CryptoType: possible values are: [${CryptoSettings.allImplementations.mkString(", ")}]"
+              ),
+              location = cryptoCursor.location
+            )
           }
         }
-      }
+      pkiSettings <- parsePkiSettings(cryptoCursor)
+      cryptoSettings = instantiateSettings(cryptoSettingsClass, pkiSettings)
+      _ <- validatePkiConfig(cryptoSettings)
     } yield cryptoSettings
   }
 
-  implicit val toPrintable: Show[CryptoSettings] = {
-    case WavesCryptoSettings => "type: WAVES"
-    case GostCryptoSettings(pkiSettings) =>
-      s"""
-         |type: GOST
-         |pki:
-         |  ${show"$pkiSettings".replace("\n", "\n--")}
+  implicit val toPrintable: Show[CryptoSettings] = { settings =>
+    s"""
+         |type: ${settings.getClass.getSimpleName}
+         |PKI:
+         |  ${settings.pkiSettings.show pipe dashes}
          """.stripMargin
   }
 
-  private def validatePkiConfigForWaves(cryptoCursor: ConfigObjectCursor) = {
-    val maybePkiCursor = cryptoCursor.atKeyOrUndefined("pki")
-    if (maybePkiCursor.isUndefined) {
-      Right(())
-    } else {
-      for {
-        pkiCursor <- maybePkiCursor.asObjectCursor
-        pkiMode   <- pkiCursor.atKey("mode").flatMap(PkiMode.configReader.from)
-        _ <- pkiMode match {
-          case PkiMode.OFF => Right(())
-          case PkiMode.ON | PkiMode.TEST =>
-            Left(ConfigReaderFailures {
-              ThrowableFailure(new IllegalStateException("Usage of 'node.crypto.pki = ON | TEST' is forbidden for 'node.crypto.type = WAVES'"), None)
-            })
-        }
-      } yield ()
-    }
-  }
-
-  private def parseGostCryptoSettings(cryptoCursor: ConfigObjectCursor) = {
+  private def parsePkiSettings(cryptoCursor: ConfigObjectCursor): Either[ConfigReaderFailures, PkiCryptoSettings] = {
     for {
       pkiCursor <- cryptoCursor.atKey("pki").flatMap(_.asObjectCursor)
       pkiMode   <- pkiCursor.atKey("mode").flatMap(PkiMode.configReader.from)
@@ -117,20 +112,31 @@ object CryptoSettings extends ScorexLogging {
             TestPkiSettings(requiredOids, crlChecksEnabled)
           }
       }
-    } yield GostCryptoSettings(pkiSettings)
+    } yield pkiSettings
   }
 
-  private def parseRequiredOIds(cursor: ConfigObjectCursor) = {
+  private def parseRequiredOIds(cursor: ConfigObjectCursor): Either[ConfigReaderFailures, Set[ExtendedKeyUsage]] =
     cursor
       .atKey("required-oids")
       .flatMap { requiredOidsCursor =>
         ConfigReader[List[ExtendedKeyUsage]].from(requiredOidsCursor).map(_.toSet)
       }
-  }
 
-  private def parseCrlChecks(cursor: ConfigObjectCursor) = {
+  private def parseCrlChecks(cursor: ConfigObjectCursor): Either[ConfigReaderFailures, Boolean] =
     cursor.atKey("crl-checks-enabled").flatMap(ConfigReader[Boolean].from)
-  }
+
+  private def validatePkiConfig(cryptoSettings: CryptoSettings): Either[ConfigReaderFailures, Unit] =
+    Either.cond(
+      cryptoSettings.allowedPkiModes.contains(cryptoSettings.pkiSettings.getPkiMode),
+      (),
+      ConfigReaderFailures {
+        val currentType = cryptoSettings.getClass.getSimpleName
+        ThrowableFailure(
+          throwable = new IllegalArgumentException(s"Usage of 'node.crypto.pki = ON | TEST' is forbidden for 'node.crypto.type = $currentType'"),
+          location = None
+        )
+      }
+    )
 }
 
 sealed abstract class PkiCryptoSettings(val isPkiActive: Boolean) { self =>
@@ -161,22 +167,6 @@ object PkiCryptoSettings {
          |crlChecksEnabled: $crlChecksEnabled
        """.stripMargin
   }
-}
-
-sealed trait CryptoType extends EnumEntry with Uppercase
-
-object CryptoType extends enumeratum.Enum[CryptoType] {
-
-  case object WAVES extends CryptoType
-  case object GOST  extends CryptoType
-
-  override val values: immutable.IndexedSeq[CryptoType] = findValues
-
-  val configReader: ConfigReader[CryptoType] = ConfigReader.fromString { str =>
-    fromStr(str).toRight(CannotConvert(str, classOf[CryptoType].getSimpleName, s"possible values are: [${values.mkString(",")}]"))
-  }
-
-  def fromStr(str: String): Option[CryptoType] = withNameInsensitiveOption(str)
 }
 
 sealed trait PkiMode extends EnumEntry with Uppercase

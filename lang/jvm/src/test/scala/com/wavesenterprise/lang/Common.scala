@@ -19,7 +19,7 @@ import scala.util.{Left, Right, Try}
 object Common {
   import com.wavesenterprise.lang.v1.evaluator.ctx.impl.converters._
 
-  val global = Global
+  val global = WavesGlobal
 
   def ev[T <: EVALUATED](context: EvaluationContext = PureContext.build(V1).evaluationContext, expr: EXPR): Either[ExecutionError, T] =
     EvaluatorV1[T](context, expr)
@@ -93,7 +93,7 @@ object Common {
 
   def addressFromString(chainId: Byte, str: String): Either[String, Option[Array[Byte]]] = {
     val base58String = if (str.startsWith(EnvironmentFunctions.AddressPrefix)) str.drop(EnvironmentFunctions.AddressPrefix.length) else str
-    global.base58Decode(base58String, Global.MaxAddressLength) match {
+    global.base58Decode(base58String, WavesGlobal.MaxAddressLength) match {
       case Left(e) => Left(e)
       case Right(addressBytes) =>
         val version = addressBytes.head

@@ -3,10 +3,6 @@ import sbt._
 
 object Dependencies {
 
-  val supportedCspVersion             = "5.0R2"
-  val supportedJcspVersion            = "5.0.42119-A"
-  val supportedExperimentalCspVersion = "5R2-RC7"
-
   lazy val serialization = Seq(
     "com.google.guava"  % "guava"                     % "28.1-jre",
     "com.typesafe.play" %% "play-json"                % "2.7.4",
@@ -67,4 +63,6 @@ object Dependencies {
   )
 
   lazy val protobuf = Seq("com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf")
+
+  lazy val reflections= Seq("org.reflections" % "reflections" % "0.10.2")
 }
