@@ -138,7 +138,8 @@ publish-nexus-artifacts:
     - test-core
   script:
     - *unpack-build-products
-    - echo $PGP_SECRET > mrpickles_private.key && gpg --batch --import mrpickles_private.key
+    #- echo $PGP_SECRET > mrpickles_private.key && gpg --batch --import mrpickles_private.key
+    - gpg --batch --import $PGP_SECRET
     - sbt -mem 2048 ";core/publishSigned;testCore/publishSigned;protobufArchives/publishSigned"
   only:
     - tags
