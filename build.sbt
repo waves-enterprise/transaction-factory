@@ -201,7 +201,7 @@ excludedCryptoProJars in ThisBuild := (unmanagedJars in (crypto, Compile)).value
 
 inConfig(Compile)(
   Seq(
-    publishArtifact in packageDoc := true,
+    publishArtifact in packageDoc := !isSnapshotVersion.value,
     publishArtifact in packageSrc := true,
     publishArtifact in packageBin := true,
     sourceGenerators += coreVersionSource
@@ -292,6 +292,7 @@ lazy val langJVM = lang.jvm
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val utils = (project in file("utils"))
@@ -308,6 +309,7 @@ lazy val utils = (project in file("utils"))
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value
   )
 
 lazy val models = (project in file("models"))
@@ -332,6 +334,7 @@ lazy val models = (project in file("models"))
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val crypto: Project = project
@@ -352,6 +355,7 @@ lazy val crypto: Project = project
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value
   )
 
 lazy val testCore: Project = (project in file("test-core"))
@@ -364,6 +368,7 @@ lazy val testCore: Project = (project in file("test-core"))
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 val grpcProtobufVersion = "1.5"
@@ -389,6 +394,7 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val transactionProtobuf = (project in file("transaction-protobuf"))
@@ -401,6 +407,7 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
     publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val typeScriptZipTask = taskKey[File]("archive-typescript")
