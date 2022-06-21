@@ -468,6 +468,7 @@ lazy val protobufArchives = (project in file("we-transaction-protobuf"))
   .dependsOn(grpcProtobuf)
   .settings(
     name := "we-transaction-protobuf-archive",
+    publish / skip := !isSnapshotVersion.value,
     publishTo := publishingRepo.value,
     publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
