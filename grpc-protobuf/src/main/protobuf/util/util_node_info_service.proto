@@ -17,7 +17,7 @@ service NodeInfoService {
 
 message NodeConfigResponse {
   string version = 1;
-  CryptoType crypto_type = 2;
+  reserved 2;
   int32 chain_id = 3;
   ConsensusType consensus = 4;
   map<string, int64> minimum_fee = 5;
@@ -32,6 +32,7 @@ message NodeConfigResponse {
     PoaRoundInfo poa_round_info = 101;
     PosRoundInfo pos_round_info = 102;
   }
+  string crypto_type = 13;
 }
 
 message PoaRoundInfo {
