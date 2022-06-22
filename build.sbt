@@ -13,10 +13,55 @@ import java.io.File
 
 enablePlugins(GitVersioning)
 scalafmtOnCompile in ThisBuild := true
+
 Global / cancelable := true
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 fork in run := true
 
 name := "we-core"
+
+inThisBuild(
+  Seq(
+    scalaVersion := "2.12.10",
+    organization := "com.wavesenterprise",
+    organizationName := "wavesenterprise",
+    organizationHomepage := Some(url("https://wavesenterprise.com")),
+    description := "Library for Waves Enterprise blockchain platform",
+    homepage := Some(url("https://github.com/waves-enterprise/we-core")),
+    pomIncludeRepository := { _ =>
+      false
+    },
+    publishMavenStyle := true,
+    licenses ++= Seq(
+      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+    ),
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/waves-enterprise/we-core"),
+        "scm:git@github.com:waves-enterprise/we-core.git"
+      )
+    ),
+    developers ++= List(
+      Developer("vaan", "Vadim Anufriev", "vanufriev@web3tech.ru", url("https://vaan.io/")),
+      Developer("squadgazzz", "Ilia Zhavoronkov", "izhavoronkov89@list.ru", url("https://www.linkedin.com/in/ilya-zhavoronkov/")),
+      Developer("sathembite", "Anton Mazur", "sathembite@gmail.com", url("https://github.com/AntonMazur")),
+      Developer("kantefier", "Kirill Nebogin", "kinebogin@gmail.com", url("https://github.com/kantefier")),
+      Developer("gamzaliev", "Ruslan Gamzaliev", "gamzaliev.ruslan.94@gmail.com", url("https://github.com/gamzaliev")),
+      Developer("1estart", "Artemiy Pospelov", "artemiywaves@gmail.com", url("https://github.com/1estart")),
+    ),
+    crossPaths := false,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-Ywarn-unused:-implicits",
+      "-Xlint",
+      "-Ypartial-unification"
+    )
+  )
+)
 
 /**
   * You have to put your credentials in a local file ~/.sbt/.credentials
@@ -36,9 +81,14 @@ credentials += {
       println("Using credentials from environment for artifacts.wavesenterprise.com")
       Credentials("Sonatype Nexus Repository Manager", "artifacts.wavesenterprise.com", username, password)
 
-    case _ =>
+    case _ if isSnapshotVersion.value =>
       val localCredentialsFile = Path.userHome / ".sbt" / ".credentials"
       println(s"Going to use ${localCredentialsFile.getAbsolutePath} as credentials for artifacts.wavesenterprise.com")
+      Credentials(localCredentialsFile)
+
+    case _ =>
+      val localCredentialsFile = Path.userHome / ".sbt" / "sonatype_credentials"
+      println(s"Going to use ${localCredentialsFile.getAbsolutePath} as credentials for s01.oss.sonatype.org")
       Credentials(localCredentialsFile)
   }
 }
@@ -120,20 +170,6 @@ scalacOptions ++= Seq(
   "-language:postfixOps"
 )
 
-inThisBuild(
-  Seq(
-    scalaVersion := "2.12.10",
-    organization := "com.wavesenterprise",
-    crossPaths := false,
-    scalacOptions ++= Seq("-feature",
-                          "-deprecation",
-                          "-language:higherKinds",
-                          "-language:implicitConversions",
-                          "-Ywarn-unused:-implicits",
-                          "-Xlint",
-                          "-Ypartial-unification")
-  ))
-
 scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true)))
 
 // for sbt plugins sources resolving
@@ -165,7 +201,7 @@ excludedCryptoProJars in ThisBuild := (unmanagedJars in (crypto, Compile)).value
 
 inConfig(Compile)(
   Seq(
-    publishArtifact in packageDoc := false,
+    publishArtifact in packageDoc := !isSnapshotVersion.value,
     publishArtifact in packageSrc := true,
     publishArtifact in packageBin := true,
     sourceGenerators += coreVersionSource
@@ -234,7 +270,6 @@ lazy val lang =
       }
     )
     .jvmSettings(
-      credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
       name := "RIDE Compiler",
       normalizedName := "lang",
       description := "The RIDE smart contract language compiler",
@@ -254,10 +289,10 @@ lazy val langJVM = lang.jvm
   .aggregate(crypto, utils)
   .settings(
     moduleName := "we-lang",
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val utils = (project in file("utils"))
@@ -271,10 +306,10 @@ lazy val utils = (project in file("utils"))
       Dependencies.catsCore,
       Dependencies.scorex
     ).flatten,
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value
   )
 
 lazy val models = (project in file("models"))
@@ -296,10 +331,10 @@ lazy val models = (project in file("models"))
       Dependencies.serialization,
       Dependencies.commonsNet
     ).flatten,
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val crypto: Project = project
@@ -317,10 +352,10 @@ lazy val crypto: Project = project
       Dependencies.scalaCollectionCompat,
       Dependencies.reflections
     ).flatten,
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value
   )
 
 lazy val testCore: Project = (project in file("test-core"))
@@ -330,10 +365,10 @@ lazy val testCore: Project = (project in file("test-core"))
     moduleName := "we-test-core",
     libraryDependencies ++= Seq(Dependencies.commonsLang, Dependencies.netty).flatten,
     scalacOptions += "-Yresolve-term-conflict:object",
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 val grpcProtobufVersion = "1.5"
@@ -356,10 +391,10 @@ lazy val grpcProtobuf = (project in file("grpc-protobuf"))
     },
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val transactionProtobuf = (project in file("transaction-protobuf"))
@@ -369,10 +404,10 @@ lazy val transactionProtobuf = (project in file("transaction-protobuf"))
     moduleName := "we-transaction-protobuf",
     scalacOptions += "-Yresolve-term-conflict:object",
     libraryDependencies ++= Dependencies.protobuf,
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
     publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishArtifact in (Compile, packageDoc) := false
+    publishArtifact in (Compile, packageDoc) := !isSnapshotVersion.value,
   )
 
 lazy val typeScriptZipTask = taskKey[File]("archive-typescript")
@@ -433,8 +468,8 @@ lazy val protobufArchives = (project in file("we-transaction-protobuf"))
   .dependsOn(grpcProtobuf)
   .settings(
     name := "we-transaction-protobuf-archive",
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := wePublishingRepo.value,
+    publish / skip := !isSnapshotVersion.value,
+    publishTo := publishingRepo.value,
     publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
@@ -447,8 +482,7 @@ lazy val typescriptArchives = (project in file("we-transaction-typescript"))
   .dependsOn(transactionTypeScript)
   .settings(
     name := "we-transaction-typescript-archive",
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := wePublishingRepo.value,
+    publishTo := publishingRepo.value,
     publishArtifact in (Compile, packageSrc) := false,
     publishArtifact in (Compile, packageBin) := false,
     publishArtifact in (Compile, packageDoc) := false,
@@ -465,11 +499,11 @@ addCommandAlias(
 
 lazy val isSnapshotVersion: Def.Initialize[Boolean] = version(_ endsWith "-SNAPSHOT")
 
-lazy val wePublishingRepo: Def.Initialize[Some[Resolver]] = isSnapshotVersion {
+lazy val publishingRepo: Def.Initialize[Some[Resolver]] = isSnapshotVersion {
   case true =>
     Some("Sonatype Nexus Snapshots Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-snapshots")
   case _ =>
-    Some("Sonatype Nexus Repository Manager" at "https://artifacts.wavesenterprise.com/repository/we-releases")
+    Some("releases" at "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
 }
 
 lazy val core = project
@@ -490,8 +524,7 @@ lazy val core = project
     ).flatten
   )
   .settings(
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    publishTo := wePublishingRepo.value
+    publishTo := publishingRepo.value
   )
 
 lazy val javaHomeProguardOption = Def.task[String] {
