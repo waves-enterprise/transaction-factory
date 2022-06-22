@@ -138,7 +138,6 @@ publish-nexus-artifacts:
     - test-core
   script:
     - *unpack-build-products
-    #- gpg --batch --import $PGP_SECRET
     - echo $PGP_KEY | base64 --decode > pgp.key && gpg --batch --import pgp.key
     - sbt -mem 2048 ";core/publishSigned;testCore/publishSigned;protobufArchives/publishSigned"
   only:
