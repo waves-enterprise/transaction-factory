@@ -61,6 +61,7 @@ stages:
   before_script:
     - *jcsp-install-script
     - cat "$SBT_CREDENTIALS" > /root/.sbt/.credentials
+    - cat "$SBT_CREDENTIALS_SONATYPE" > /root/.sbt/sonatype_credentials
 
 # Sbt cache invalidation fix [https://github.com/sbt/sbt/issues/4168]
 .pack-build-products: &pack-build-products
@@ -137,7 +138,8 @@ publish-nexus-artifacts:
     - test-core
   script:
     - *unpack-build-products
-    - sbt -mem 2048 ";core/publish;testCore/publish;protobufArchives/publish"
+    - echo $PGP_KEY | base64 --decode > pgp.key && gpg --batch --import pgp.key
+    - sbt -mem 2048 ";core/publishSigned;testCore/publishSigned;protobufArchives/publishSigned"
   only:
     - tags
     - branches
