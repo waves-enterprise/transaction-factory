@@ -17,7 +17,7 @@ service NodeInfoService {
 
 message NodeConfigResponse {
   string version = 1;
-  CryptoType crypto_type = 2;
+  reserved 2;
   int32 chain_id = 3;
   ConsensusType consensus = 4;
   map<string, int64> minimum_fee = 5;
@@ -28,6 +28,7 @@ message NodeConfigResponse {
   PkiMode pki_mode = 10;
   repeated string required_oids = 11;
   bool crl_check_enabled = 12;
+  string crypto_type = 13;
   oneof block_timing {
     PoaRoundInfo poa_round_info = 101;
     PosRoundInfo pos_round_info = 102;
