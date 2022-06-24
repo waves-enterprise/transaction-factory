@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "module": "commonjs",
+    "target": "ES2018",
+    "lib": [
+      "es5",
+      "es2015",
+      "es2015.promise",
+      "dom"
+    ],
+    "sourceMap": true,
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": [
+    "src"
+  ]
+}
