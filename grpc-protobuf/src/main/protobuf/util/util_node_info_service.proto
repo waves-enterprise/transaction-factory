@@ -28,11 +28,11 @@ message NodeConfigResponse {
   PkiMode pki_mode = 10;
   repeated string required_oids = 11;
   bool crl_check_enabled = 12;
+  string crypto_type = 13;
   oneof block_timing {
     PoaRoundInfo poa_round_info = 101;
     PosRoundInfo pos_round_info = 102;
   }
-  string crypto_type = 13;
 }
 
 message PoaRoundInfo {
