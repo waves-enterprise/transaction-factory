@@ -5,19 +5,6 @@ option java_package = "com.wavesenterprise.protobuf.constants";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
-enum CryptoAlgo {
-  reserved 1; // GOST_28147 is not supported anymore
-  UNKNOWN_CRYPTO_ALGO = 0;
-  GOST_3412_2015_K = 2;
-  AES = 3;
-}
-
-enum CryptoType {
-  UNKNOWN_CRYPTO_TYPE = 0;
-  GOST = 1;
-  CURVE_25519 = 2;
-}
-
 enum ConsensusType {
   UNKNOWN_CONSENSUS_TYPE = 0;
   POA = 1;
