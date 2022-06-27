@@ -1,3 +1,0 @@
-[submodule "transactions-factory"]
-	path = transactions-factory
-	url = ../../waves-enterprise/transactions-factory.git
