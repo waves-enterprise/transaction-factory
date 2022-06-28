@@ -39,9 +39,8 @@ app.post('/', async (req, res) => {
     }
 
     const signatureGenerator = generator(tx);
-    const Uint8Bytes = await signatureGenerator.getSignatureBytes();
-    const Int8Bytes = Int8Array.from(Uint8Bytes)
-    return res.send({bytes: Array.from(Int8Bytes)})
+    const isValid = await signatureGenerator.isValid();
+    return res.send({isValid: isValid})
   } catch (err) {
     console.trace(err)
     res.send({error: err.message || err})
