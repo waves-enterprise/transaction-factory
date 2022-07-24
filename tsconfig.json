@@ -1,19 +1,30 @@
 {
-  "compilerOptions": {
-    "alwaysStrict": true,
-    "module": "commonjs",
-    "target": "ES2018",
-    "lib": [
-      "es5",
-      "es2015",
-      "es2015.promise",
-      "dom"
-    ],
-    "sourceMap": true,
-    "outDir": "dist",
-    "declaration": true
-  },
   "include": [
-    "src"
-  ]
+    "src",
+    "types"
+  ],
+  "compilerOptions": {
+    "module": "esnext",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": "./src",
+    "strict": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "moduleResolution": "node",
+    "jsx": "react",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "outDir": "./dist"
+  }
 }
