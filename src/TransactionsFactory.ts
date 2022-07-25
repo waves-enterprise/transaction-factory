@@ -1,6 +1,6 @@
 import {ByteProcessor, TxType, TxVersion, utils} from '@wavesenterprise/signature-generator'
 
-const {concatUint8Arrays} = utils;
+const {concatUint8Arrays, crypto} = utils;
 
 export interface Processor<T> {
     isValid(): boolean;
@@ -13,6 +13,8 @@ export interface Processor<T> {
         version: number,
         type: number
     } & Omit<T, 'tx_type'>
+
+    getId(): Promise<string>;
 }
 
 type TransactionFields = { tx_type: TxType<any>, version: TxVersion<any> } & Record<string, ByteProcessor<any>>
@@ -70,6 +72,12 @@ export class TransactionClass<T extends TransactionFields> {
         } else {
             return concatUint8Arrays(...multipleDataBytes)
         }
+    }
+
+    getId = async () => {
+        const dataBytes = await this.getSignatureBytes()
+
+        return crypto.buildTransactionId(dataBytes)
     }
 
     isValid = () => {
