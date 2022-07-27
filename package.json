@@ -15,7 +15,7 @@
     "prepare": "npm run build",
     "build": "tsdx build",
     "test": "export TS_NODE_PROJECT='./tsconfig.tests.json' &&  node_modules/.bin/mocha -r ts-node/register tests/*.ts",
-    "test-server": "node_modules/.bin/ts-node -P tsconfig.server.json tests/server/server.ts"
+    "test-server": "node_modules/.bin/ts-node -P tsconfig.tests.json tests/server/server.ts"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",
