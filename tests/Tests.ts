@@ -175,14 +175,14 @@ describe('', () => {
 
   it('TransferV2', async () => {
     const transaction = {
-      senderPublicKey: "base58:34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
+      senderPublicKey: "34qsNWsKKQaysTzpsf4aTyRS6Q1BoUuBntgGVj6SHZg3",
       assetId: "WAVES",
       feeAssetId: "WAVES",
       timestamp: 1598008066632,
       amount: "100000000",
       fee: 1000000,
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
     const Tx = TRANSACTIONS.Transfer.V2(transaction);
 
@@ -198,7 +198,7 @@ describe('', () => {
       amount: "100000000",
       fee: 1000000,
       recipient: "3NiVPB1t32jC3SJpLomY3Zv6kwvfaJpRkqS",
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       atomicBadge: {
         trustedSender: ""
       }
@@ -220,7 +220,7 @@ describe('', () => {
       ],
       timestamp: 1598008066632,
       fee: 1000000,
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ"
     };
     const Tx = TRANSACTIONS.MassTransfer.V1(transaction);
 
@@ -239,7 +239,7 @@ describe('', () => {
       ],
       timestamp: 1598008066632,
       fee: 1000000,
-      attachment: "base64:3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
+      attachment: "3rbFDtbPwAvSp2vBvqGfGR9PxYf34SocMRkRKFgzTtXXnnv7upRHXJzZrLSQo8tUW6yMtEiZ",
       feeAssetId: "WAVES"
     };
     const Tx = TRANSACTIONS.MassTransfer.V2(transaction);
