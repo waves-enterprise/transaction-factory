@@ -25,7 +25,7 @@ callTx.contractVersion = 2
 ...
 
 // get bytes
-const bytes = callTx.getBytes()
+const bytes = callTx.getSignatureBytes()
 
 // get validation errors
 const errors = callTx.getErrors()
