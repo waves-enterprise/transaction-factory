@@ -1,6 +1,6 @@
 {
   "name": "@wavesenterprise/transactions-factory",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0",
   "files": [
     "dist"
   ],
@@ -9,12 +9,12 @@
   "module": "dist/transactions-factory.esm.js",
   "dependencies": {
     "@wavesenterprise/crypto-utils": "^1.0.0-rc.1",
-    "@wavesenterprise/signature-generator": "^3.0.0-rc.3"
+    "@wavesenterprise/signature-generator": "^3.0.0"
   },
   "scripts": {
     "prepare": "npm run build",
     "build": "tsdx build",
-    "test": "export TS_NODE_PROJECT='./tsconfig.tests.json' &&  node_modules/.bin/mocha -r ts-node/register tests/*.ts",
+    "test": "export TS_NODE_PROJECT='./tsconfig.tests.json' &&  node_modules/.bin/mocha -r ts-node/register tests/base-tx.ts",
     "test-server": "node_modules/.bin/ts-node -P tsconfig.tests.json tests/server/server.ts"
   },
   "devDependencies": {
