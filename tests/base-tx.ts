@@ -23,7 +23,7 @@ describe('', () => {
             decimals: 8,
             quantity: 10000,
             description: "Test",
-            reissuable: true,
+            reissuable: false,
             name: 'SWAP',
             timestamp: 1663935233358,
             senderPublicKey: '4znB9RB4uPWdVxzfTDPhd78KdpAQc4co8A3WVhdoZEhL',
@@ -31,7 +31,6 @@ describe('', () => {
         });
 
         const bytes = await tx.getBytes();
-
 
 
         expect(Buffer.from(bytes).toString('base64')).toEqual("AwJWO2A/D+hrJC4DAv2h//GoY4Jzio2w9VVg+yW7uk84SVcABFNXQVAABFRlc3QAAAAAAAAnEAgAAAAAAAAAAAAAAAGDakS9TgA=")
