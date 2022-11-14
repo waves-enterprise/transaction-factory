@@ -1,6 +1,6 @@
 import {IntProcessor} from "@wavesenterprise/signature-generator";
 import {FromTxProcessor, TxProcessor} from "./types";
-import {concatBytes, toBase58} from "@wavesenterprise/crypto-utils";
+import {concatBytes} from "@wavesenterprise/crypto-utils";
 
 const excludeFields = ['tx_type', 'version']
 
@@ -70,9 +70,6 @@ export class BaseTx<T extends TxProcessor> {
             } catch (e) {
                 throw new Error(`${key}: ${e.message || e}`)
             }
-
-            console.log(key, bytes)
-
 
             return bytes
         }))
