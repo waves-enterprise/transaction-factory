@@ -1,6 +1,6 @@
 import express = require('express');
 import bodyParser = require('body-parser-bigint')
-import { TRANSACTION_TYPES, TRANSACTIONS } from '../../src'
+import {TRANSACTION_TYPES, TRANSACTIONS, TxFactory} from '../../src'
 import {config} from '@wavesenterprise/signature-generator'
 
 config.set({
@@ -33,14 +33,16 @@ app.post('/', async (req, res) => {
         const versionKey = `V${version}`
         const typeKey = Object.keys(TRANSACTION_TYPES).find(key => TRANSACTION_TYPES[key] === type)
 
-        const generator = TRANSACTIONS[typeKey][versionKey]
+        const generator: TxFactory<any> = TRANSACTIONS[typeKey][versionKey]
 
         if (!generator) {
             return res.send({error: 'No such tx type'})
         }
 
         const signatureGenerator = generator(tx);
-        const Uint8Bytes = await signatureGenerator.getSignatureBytes();
+        signatureGenerator.setNetworkByte(config.getNetworkByte())
+
+        const Uint8Bytes = await signatureGenerator.getBytes();
         const Int8Bytes = Int8Array.from(Uint8Bytes)
         return res.send({bytes: Array.from(Int8Bytes)})
     } catch (err) {
