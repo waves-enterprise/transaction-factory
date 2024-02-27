@@ -4,7 +4,7 @@ import {BaseTx} from "./base-tx";
 
 export class Processor extends BaseProcessor {
     getSignatureBytes(_: any): Promise<Uint8Array> {
-        throw new Error("Deprecetad")
+        throw new Error("Deprecated")
     }
 }
 
