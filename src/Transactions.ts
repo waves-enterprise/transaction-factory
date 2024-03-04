@@ -15,6 +15,7 @@ import {
   Byte,
   ByteArrayWithSize,
   ContractApiVersion,
+  ContractTransferIn,
   DataEntry,
   DataEntryMap,
   DockerParamEntry,
@@ -470,7 +471,8 @@ const CreateContractV5 = {
   feeAssetId: new AssetId(false),
   atomicBadge: new AtomicBadge(false),
   validationPolicy: new ValidationPolicy(true),
-  apiVersion: new ContractApiVersion(true)
+  apiVersion: new ContractApiVersion(true),
+  payments: new List(ContractTransferIn)
 }
 
 const CreateContract = {
@@ -499,6 +501,7 @@ const CreateContractV6 = {
   atomicBadge: new AtomicBadge(false),
   validationPolicy: new ValidationPolicy(true),
   apiVersion: new ContractApiVersion(true),
+  payments: new List(ContractTransferIn),
   isConfidential: new Bool(true),
   groupParticipants: new ArrayOfStringsWithLength(true),
   groupOwners: new ArrayOfStringsWithLength(true)
@@ -528,6 +531,7 @@ const CreateContractV7 = {
   feeAssetId: new AssetId(false),
   atomicBadge: new AtomicBadge(false),
   validationPolicy: new ValidationPolicy(true),
+  payments: new List(ContractTransferIn),
   isConfidential: new Bool(true),
   groupParticipants: new ArrayOfStringsWithLength(true),
   groupOwners: new ArrayOfStringsWithLength(true),
@@ -574,7 +578,8 @@ const CallContractV5 = {
   timestamp: new Long(true),
   contractVersion: new Integer(true),
   feeAssetId: new AssetId(false),
-  atomicBadge: new AtomicBadge(false)
+  atomicBadge: new AtomicBadge(false),
+  payments: new List(ContractTransferIn)
 }
 
 const CallContract = {
@@ -597,7 +602,8 @@ const CallContractV6 = {
   timestamp: new Long(true),
   contractVersion: new Integer(true),
   feeAssetId: new AssetId(false),
-  atomicBadge: new AtomicBadge(false)
+  atomicBadge: new AtomicBadge(false),
+  payments: new List(ContractTransferIn)
 }
 
 const CallContractV2 = {
@@ -622,6 +628,7 @@ const CallContractV7 = {
   contractVersion: new Integer(true),
   feeAssetId: new AssetId(false),
   atomicBadge: new AtomicBadge(false),
+  payments: new List(ContractTransferIn),
   contractEngine: new StringWithLength(true),
   callFunc: new StringWithLength(false)
 }
